@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
@@ -32,7 +32,7 @@ const STATUS_LABELS: Record<string, { text: string; color: string }> = {
 };
 
 export default function GamesPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -50,16 +50,9 @@ export default function GamesPage() {
 
   const [tab, setTab] = useState<"all" | "PLAYING" | "COMPLETED">("all");
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/");
-      return;
-    }
-    fetchRooms();
-  }, [status, tab]);
-
-  async function fetchRooms() {
+  const fetchRooms = useCallback(async () => {
     try {
+      setLoading(true);
       const res = await fetch(`/api/v1/games/rooms?status=${tab}`);
       const data = await res.json();
       setRooms(data.rooms || []);
@@ -68,7 +61,17 @@ export default function GamesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [tab]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
+      return;
+    }
+    if (status === "authenticated") {
+      void fetchRooms();
+    }
+  }, [status, fetchRooms, router]);
 
   async function createRoom() {
     setCreating(true);

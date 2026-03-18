@@ -25,22 +25,21 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    logger.error("Embedding generation failed", { status: res.status, body: text });
-    throw new Error(`Embedding failed: ${res.status} ${text}`);
+    logger.error("Embedding generation failed", { status: res.status });
+    throw new Error(`Embedding failed: ${res.status}`);
   }
 
   const data = await res.json();
   logger.debug("Embedding response structure", { keys: Object.keys(data), dataType: typeof data.data, dataLength: data.data?.length });
 
   if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
-    logger.error("Unexpected embedding response", { body: JSON.stringify(data).slice(0, 500) });
+    logger.error("Unexpected embedding response shape", { hasData: !!data.data });
     throw new Error("Embedding response missing data array");
   }
 
   const embedding = data.data[0].embedding as number[];
   if (!embedding || !Array.isArray(embedding)) {
-    logger.error("Unexpected embedding format", { firstItem: JSON.stringify(data.data[0]).slice(0, 200) });
+    logger.error("Unexpected embedding format");
     throw new Error("Embedding response missing embedding array");
   }
 

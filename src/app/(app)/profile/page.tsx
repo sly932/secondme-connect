@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image, { type ImageLoaderProps } from "next/image";
 
 interface Profile {
   id: string;
@@ -16,8 +17,10 @@ interface Profile {
   createdAt: string;
 }
 
+const passthroughImageLoader = ({ src }: ImageLoaderProps) => src;
+
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +56,15 @@ export default function ProfilePage() {
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-2xl font-bold text-white">
               {profile.avatar ? (
-                <img src={profile.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                <Image
+                  loader={passthroughImageLoader}
+                  unoptimized
+                  src={profile.avatar}
+                  alt={profile.name}
+                  width={80}
+                  height={80}
+                  className="w-full h-full rounded-full object-cover"
+                />
               ) : (
                 profile.name[0]
               )}

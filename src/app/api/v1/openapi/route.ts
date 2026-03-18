@@ -129,7 +129,7 @@ const openApiSpec = {
       get: {
         summary: "获取用户设置",
         tags: ["用户"],
-        responses: { "200": { description: "成功" } },
+        responses: { "200": { description: "成功（仅返回 API Key 掩码，不返回完整值）" } },
       },
       patch: {
         summary: "更新用户设置",
@@ -148,7 +148,7 @@ const openApiSpec = {
             },
           },
         },
-        responses: { "200": { description: "成功" } },
+        responses: { "200": { description: "成功（仅在重新生成时返回一次完整 API Key）" } },
       },
     },
   },

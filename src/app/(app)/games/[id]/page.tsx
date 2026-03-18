@@ -106,7 +106,7 @@ const EVENT_STYLES: Record<string, { color: string; icon: string }> = {
 };
 
 export default function SpectatorPage() {
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const router = useRouter();
   const params = useParams();
   const roomId = params.id as string;
@@ -129,13 +129,15 @@ export default function SpectatorPage() {
 
   const fetchRoom = useCallback(async (replaceEvents = false) => {
     try {
-      const res = await fetch(`/api/v1/games/rooms/${roomId}`);
+      const res = await fetch(`/api/v1/games/rooms/${roomId}?eventsLimit=120`);
       const data = await res.json();
       setRoom(data.room);
       // 只在初始加载时用服务端 events，后续由 SSE 追加
       if (replaceEvents && data.events) setEvents(data.events);
+      return data.events?.[data.events.length - 1]?.timestamp ?? 0;
     } catch {
       // ignore
+      return 0;
     } finally {
       setLoading(false);
     }
@@ -205,36 +207,52 @@ export default function SpectatorPage() {
   }, [userLockedTab]);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (authStatus === "unauthenticated") {
       router.push("/");
       return;
     }
-    fetchRoom(true);
 
-    const es = new EventSource(`/api/v1/games/rooms/${roomId}/stream`);
-    eventSourceRef.current = es;
-    es.onopen = () => setConnected(true);
-    es.onmessage = (e) => {
-      try {
-        const event = JSON.parse(e.data);
-        if (event.type === "done") {
+    if (authStatus === "authenticated") {
+      void (async () => {
+        const lastTimestamp = await fetchRoom(true);
+        if (cancelled) return;
+
+        const streamUrl = lastTimestamp > 0
+          ? `/api/v1/games/rooms/${roomId}/stream?since=${lastTimestamp}`
+          : `/api/v1/games/rooms/${roomId}/stream`;
+        const es = new EventSource(streamUrl);
+        eventSourceRef.current = es;
+        es.onopen = () => setConnected(true);
+        es.onmessage = (e) => {
+          try {
+            const event = JSON.parse(e.data);
+            if (event.type === "done") {
+              setConnected(false);
+              es.close();
+              void fetchRoom(false);
+              return;
+            }
+            setEvents((prev) => [...prev, event]);
+            processEvent(event);
+            if (event.type === "system") void fetchRoom(false);
+          } catch {
+            // ignore
+          }
+        };
+        es.onerror = () => {
           setConnected(false);
           es.close();
-          fetchRoom(true);
-          return;
-        }
-        setEvents((prev) => [...prev, event]);
-        processEvent(event);
-        if (event.type === "system") fetchRoom();
-      } catch {
-        // ignore
-      }
-    };
-    es.onerror = () => {
+        };
+      })();
+    }
+
+    return () => {
+      cancelled = true;
+      eventSourceRef.current?.close();
       setConnected(false);
-      es.close();
     };
-    return () => es.close();
   }, [authStatus, roomId, fetchRoom, processEvent, router]);
 
   // 初始化 activeTab

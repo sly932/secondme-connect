@@ -15,6 +15,7 @@ export async function GET(
   }
 
   const { id: roomId } = await params;
+  const since = Number(new URL(req.url).searchParams.get("since")) || 0;
 
   // 验证房间存在
   const room = await prisma.gameRoom.findUnique({ where: { id: roomId } });
@@ -32,7 +33,10 @@ export async function GET(
     async start(controller) {
       // 发送已有事件
       const existingEvents = getRoomEvents(roomId);
-      for (const event of existingEvents) {
+      const initialEvents = since > 0
+        ? existingEvents.filter((event) => event.timestamp > since)
+        : existingEvents;
+      for (const event of initialEvents) {
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
         );

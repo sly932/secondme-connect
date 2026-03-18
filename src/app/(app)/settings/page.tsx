@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation";
 interface Settings {
   orderMode: "AUTO" | "MANUAL";
   autoTopN: number;
-  apiKey: string | null;
+  hasApiKey: boolean;
+  apiKeyPreview: string | null;
+  newApiKey?: string | null;
 }
 
 export default function SettingsPage() {
@@ -18,6 +20,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showKey, setShowKey] = useState(false);
+  const [freshApiKey, setFreshApiKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -41,12 +44,14 @@ export default function SettingsPage() {
     });
     const updated = await res.json();
     setSettings(updated);
+    setFreshApiKey(updated.newApiKey || null);
+    setShowKey(false);
     setSaving(false);
   };
 
   const copyApiKey = () => {
-    if (settings?.apiKey) {
-      navigator.clipboard.writeText(settings.apiKey);
+    if (freshApiKey) {
+      navigator.clipboard.writeText(freshApiKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -129,21 +134,31 @@ export default function SettingsPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex-1 px-4 py-3 bg-gray-50 dark:bg-zinc-800 rounded-lg font-mono text-sm text-gray-700 dark:text-zinc-300 overflow-hidden">
-              {showKey ? settings.apiKey : settings.apiKey?.replace(/(?<=.{8}).*/g, "••••••••••••••••")}
+              {showKey && freshApiKey
+                ? freshApiKey
+                : settings.hasApiKey
+                ? settings.apiKeyPreview
+                : "尚未生成 API Key"}
             </div>
             <button
-              onClick={() => setShowKey(!showKey)}
+              onClick={() => setShowKey((value) => !value)}
+              disabled={!freshApiKey}
               className="px-3 py-3 bg-gray-100 dark:bg-zinc-800 rounded-lg text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
-              {showKey ? "隐藏" : "显示"}
+              {showKey ? "隐藏" : "显示一次"}
             </button>
             <button
               onClick={copyApiKey}
+              disabled={!freshApiKey}
               className="px-3 py-3 bg-gray-100 dark:bg-zinc-800 rounded-lg text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               {copied ? "已复制" : "复制"}
             </button>
           </div>
+
+          <p className="text-xs text-gray-400 dark:text-zinc-500">
+            出于安全原因，完整 API Key 只会在生成或重新生成后显示一次。
+          </p>
 
           <button
             onClick={() => {

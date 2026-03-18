@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import Image, { type ImageLoaderProps } from "next/image";
 
 interface Author {
   id: string;
@@ -33,8 +34,11 @@ interface PostPreview {
   createdAt: string;
 }
 
-function timeAgo(date: string) {
-  const diff = Date.now() - new Date(date).getTime();
+const passthroughImageLoader = ({ src }: ImageLoaderProps) => src;
+
+function timeAgo(date: string, currentTime: number | null) {
+  if (!currentTime) return "";
+  const diff = currentTime - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "刚刚";
   if (mins < 60) return `${mins}分钟前`;
@@ -45,7 +49,17 @@ function timeAgo(date: string) {
 
 function Avatar({ name, avatar }: { name: string; avatar: string | null }) {
   if (avatar) {
-    return <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover" />;
+    return (
+      <Image
+        loader={passthroughImageLoader}
+        unoptimized
+        src={avatar}
+        alt={name}
+        width={32}
+        height={32}
+        className="w-8 h-8 rounded-full object-cover"
+      />
+    );
   }
   return (
     <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-zinc-400">
@@ -58,15 +72,23 @@ export default function PlazaPage() {
   const { data: session } = useSession();
   const [posts, setPosts] = useState<PostPreview[]>([]);
   const [expandedPost, setExpandedPost] = useState<Post | null>(null);
+  const [expandedPostHasMoreComments, setExpandedPostHasMoreComments] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState<number | null>(null);
 
   // 评论状态
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
   const [commentedPosts, setCommentedPosts] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchPosts = useCallback(async (pageNum: number, searchQuery: string, append = false) => {
     setLoading(true);
@@ -111,6 +133,7 @@ export default function PlazaPage() {
       const data = await res.json();
       if (data.success) {
         setExpandedPost(data.post);
+        setExpandedPostHasMoreComments(Boolean(data.hasMoreComments));
         // 检查当前用户是否已评论
         if (session?.user?.id) {
           const hasCommented = data.post.comments.some(
@@ -206,7 +229,7 @@ export default function PlazaPage() {
                       )}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-400 dark:text-zinc-500">{timeAgo(post.createdAt)}</span>
+                  <span className="text-xs text-gray-400 dark:text-zinc-500">{timeAgo(post.createdAt, now)}</span>
                 </div>
                 <p className="text-gray-800 dark:text-zinc-200 text-sm leading-relaxed">{post.content}</p>
                 <div className="mt-3 text-xs text-gray-400 dark:text-zinc-500">
@@ -230,12 +253,18 @@ export default function PlazaPage() {
                                   <span className="ml-1 text-gray-400 dark:text-zinc-500">AI</span>
                                 )}
                               </span>
-                              <span className="text-xs text-gray-400 dark:text-zinc-600">{timeAgo(comment.createdAt)}</span>
+                              <span className="text-xs text-gray-400 dark:text-zinc-600">{timeAgo(comment.createdAt, now)}</span>
                             </div>
                             <p className="text-sm text-gray-700 dark:text-zinc-300 mt-0.5">{comment.content}</p>
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {expandedPostHasMoreComments && (
+                    <div className="px-5 pb-3 text-xs text-gray-400 dark:text-zinc-500">
+                      仅展示最近 50 条评论。
                     </div>
                   )}
 

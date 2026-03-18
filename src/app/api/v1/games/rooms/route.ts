@@ -6,6 +6,10 @@ import { executeBlackjackGame, executeTexasGame } from "@/lib/games/game-executo
 
 // POST /api/v1/games/rooms — 创建房间并开始游戏
 export async function POST(req: NextRequest) {
+  let totalCost = 0;
+  let chips = 0;
+  let rounds = 0;
+
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
@@ -19,75 +23,94 @@ export async function POST(req: NextRequest) {
     }
 
     const players = maxPlayers || (gameType === "BLACKJACK" ? 4 : 6);
-    const chips = minChips || 10;
-    const rounds = totalRounds || 5;
+    chips = minChips || 10;
+    rounds = totalRounds || 5;
 
     if (players < 2 || players > 8) return badRequest("人数限制 2-8");
     if (chips < 1) return badRequest("最小筹码不能小于 1");
     if (rounds < 1 || rounds > 20) return badRequest("局数范围 1-20");
 
-    // 检查用户 credit 是否足够 (预扣: minChips * totalRounds)
-    const totalCost = chips * rounds;
-    if (user.credits < totalCost) {
-      return badRequest(`Credit 不足。需要 ${totalCost} credit (${chips} × ${rounds} 局)，当前余额 ${user.credits}`);
-    }
+    totalCost = chips * rounds;
 
-    // 从已开启自动参与游戏的用户中随机选玩家（排除创建者）
     const aiUserCount = players - 1;
-    const aiUsers = await prisma.$queryRawUnsafe<{ id: string; name: string }[]>(
-      `SELECT id, name FROM users WHERE "autoJoinGame" = true AND id != $1 ORDER BY RANDOM() LIMIT $2`,
-      user.id,
-      aiUserCount
-    );
-
-    if (aiUsers.length < aiUserCount) {
-      return badRequest(`可用的 AI 玩家不足，需要 ${aiUserCount} 人，当前仅 ${aiUsers.length} 人可用`);
+    const candidateWhere = { autoJoinGame: true, id: { not: user.id } } as const;
+    const availableCount = await prisma.user.count({ where: candidateWhere });
+    if (availableCount < aiUserCount) {
+      return badRequest(`可用的 AI 玩家不足，需要 ${aiUserCount} 人，当前仅 ${availableCount} 人可用`);
     }
 
-    // 预扣 credit
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { credits: { decrement: totalCost } },
-    });
-    await prisma.creditLog.create({
-      data: {
-        userId: user.id,
-        amount: -totalCost,
-        balance: user.credits - totalCost,
-        reason: `创建${gameType === "BLACKJACK" ? "21点" : "德州扑克"}房间 (${chips}×${rounds}局)`,
-      },
+    const candidatePoolSize = Math.min(Math.max(aiUserCount * 10, 20), 200);
+    const skip = availableCount > candidatePoolSize
+      ? Math.floor(Math.random() * (availableCount - candidatePoolSize + 1))
+      : 0;
+
+    const candidatePool = await prisma.user.findMany({
+      where: candidateWhere,
+      select: { id: true, name: true },
+      orderBy: { id: "asc" },
+      skip,
+      take: candidatePoolSize,
     });
 
-    // 创建房间
-    const room = await prisma.gameRoom.create({
-      data: {
-        gameType,
-        maxPlayers: players,
-        minChips: chips,
-        totalRounds: rounds,
-        creatorId: user.id,
-        players: {
-          create: [
-            {
-              userId: user.id,
-              position: 0,
-              isCreator: true,
-              isAI: false,
-              chips: totalCost,
-            },
-            ...aiUsers.map((ai, idx) => ({
-              userId: ai.id,
-              position: idx + 1,
-              isCreator: false,
-              isAI: true,
-              chips: chips * rounds, // AI 筹码与真人等量
-            })),
-          ],
+    const aiUsers = [...candidatePool]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, aiUserCount);
+
+    const room = await prisma.$transaction(async (tx) => {
+      const creator = await tx.user.findUnique({
+        where: { id: user.id },
+        select: { credits: true },
+      });
+
+      if (!creator || creator.credits < totalCost) {
+        throw new Error("INSUFFICIENT_CREDITS");
+      }
+
+      const updatedCreator = await tx.user.update({
+        where: { id: user.id },
+        data: { credits: { decrement: totalCost } },
+        select: { credits: true },
+      });
+
+      await tx.creditLog.create({
+        data: {
+          userId: user.id,
+          amount: -totalCost,
+          balance: updatedCreator.credits,
+          reason: `创建${gameType === "BLACKJACK" ? "21点" : "德州扑克"}房间 (${chips}×${rounds}局)`,
         },
-      },
-      include: {
-        players: { include: { user: { select: { id: true, name: true, avatar: true } } } },
-      },
+      });
+
+      return await tx.gameRoom.create({
+        data: {
+          gameType,
+          maxPlayers: players,
+          minChips: chips,
+          totalRounds: rounds,
+          creatorId: user.id,
+          players: {
+            create: [
+              {
+                userId: user.id,
+                position: 0,
+                isCreator: true,
+                isAI: false,
+                chips: totalCost,
+              },
+              ...aiUsers.map((ai, idx) => ({
+                userId: ai.id,
+                position: idx + 1,
+                isCreator: false,
+                isAI: true,
+                chips: chips * rounds,
+              })),
+            ],
+          },
+        },
+        include: {
+          players: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+        },
+      });
     });
 
     logger.info("Game room created", { roomId: room.id, gameType, players, rounds });
@@ -126,6 +149,9 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "INSUFFICIENT_CREDITS") {
+      return badRequest(`Credit 不足。需要 ${totalCost} credit (${chips} × ${rounds} 局)`);
+    }
     logger.error("Create room error", { error: String(error) });
     return serverError("创建房间失败");
   }

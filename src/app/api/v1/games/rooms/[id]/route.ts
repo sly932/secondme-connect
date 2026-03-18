@@ -49,7 +49,8 @@ export async function GET(
     // 从 query 获取 since 参数 (只返回该时间戳之后的事件)
     const { searchParams } = new URL(req.url);
     const since = Number(searchParams.get("since")) || 0;
-    const filteredEvents = since > 0 ? events.filter((e) => e.timestamp > since) : events;
+    const limit = Math.min(200, Math.max(20, Number(searchParams.get("eventsLimit")) || 120));
+    const filteredEvents = since > 0 ? events.filter((e) => e.timestamp > since) : events.slice(-limit);
 
     return NextResponse.json({
       room: {

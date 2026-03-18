@@ -27,12 +27,14 @@ export function GameCreatingOverlay({
 }: GameCreatingOverlayProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  const startTimeRef = useRef(Date.now());
+  const startTimeRef = useRef<number | null>(null);
 
   // 根据时间推进步骤和进度条
   useEffect(() => {
+    startTimeRef.current = Date.now();
+
     const interval = setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
+      const elapsed = Date.now() - (startTimeRef.current ?? Date.now());
 
       // 计算当前应该在哪一步
       let acc = 0;
@@ -56,7 +58,7 @@ export function GameCreatingOverlay({
         const fakeProgress = Math.min((elapsed / TOTAL_FAKE_DURATION) * 85, 85);
         setProgress(fakeProgress);
       }
-    }, 50);
+    }, 100);
 
     return () => clearInterval(interval);
   }, [apiDone, error]);

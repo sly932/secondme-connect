@@ -5,9 +5,8 @@ interface UserState {
   name: string | null;
   avatar: string | null;
   credits: number;
-  apiKey: string | null;
   isLoggedIn: boolean;
-  setUser: (user: { id: string; name: string; avatar?: string; credits: number; apiKey?: string }) => void;
+  setUser: (user: { id: string; name: string; avatar?: string; credits: number }) => void;
   clearUser: () => void;
   updateCredits: (credits: number) => void;
 }
@@ -17,7 +16,6 @@ export const useUserStore = create<UserState>((set) => ({
   name: null,
   avatar: null,
   credits: 0,
-  apiKey: null,
   isLoggedIn: false,
   setUser: (user) =>
     set({
@@ -25,7 +23,6 @@ export const useUserStore = create<UserState>((set) => ({
       name: user.name,
       avatar: user.avatar || null,
       credits: user.credits,
-      apiKey: user.apiKey || null,
       isLoggedIn: true,
     }),
   clearUser: () =>
@@ -34,7 +31,6 @@ export const useUserStore = create<UserState>((set) => ({
       name: null,
       avatar: null,
       credits: 0,
-      apiKey: null,
       isLoggedIn: false,
     }),
   updateCredits: (credits) => set({ credits }),

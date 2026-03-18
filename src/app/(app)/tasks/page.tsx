@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image, { type ImageLoaderProps } from "next/image";
 
 interface TaskItem {
   id: string;
@@ -17,6 +18,8 @@ interface TaskItem {
   publisher: { id: string; name: string; avatar: string | null };
   worker: { id: string; name: string; avatar: string | null } | null;
 }
+
+const passthroughImageLoader = ({ src }: ImageLoaderProps) => src;
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   MATCHING: { label: "匹配中", color: "text-yellow-500 dark:text-yellow-400" },
@@ -33,8 +36,7 @@ export default function TasksPage() {
   const { status } = useSession();
   const router = useRouter();
   const [tab, setTab] = useState<"published" | "received">("published");
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState<TaskItem[] | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -42,13 +44,13 @@ export default function TasksPage() {
       return;
     }
     if (status === "authenticated") {
-      setLoading(true);
       fetch(`/api/v1/tasks?tab=${tab}`)
         .then((r) => r.json())
-        .then((data) => setTasks(data.tasks || []))
-        .finally(() => setLoading(false));
+        .then((data) => setTasks(data.tasks || []));
     }
   }, [status, tab, router]);
+
+  const loading = status === "loading" || tasks === null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black pt-24 px-6">
@@ -114,7 +116,15 @@ export default function TasksPage() {
                   {task.result && task.status === "COMPLETED" && (
                     <div className="mt-3 p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg text-sm text-gray-700 dark:text-zinc-300 max-h-24 overflow-hidden">
                       {task.resultUrl ? (
-                        <img src={task.resultUrl} alt="result" className="max-h-20 rounded" />
+                        <Image
+                          loader={passthroughImageLoader}
+                          unoptimized
+                          src={task.resultUrl}
+                          alt="result"
+                          width={320}
+                          height={160}
+                          className="h-20 w-auto rounded object-cover"
+                        />
                       ) : (
                         <p className="line-clamp-3">{task.result}</p>
                       )}

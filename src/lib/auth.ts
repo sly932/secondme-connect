@@ -12,9 +12,14 @@ declare module "next-auth" {
       name: string;
       avatar?: string;
       credits: number;
-      apiKey?: string;
     };
   }
+}
+
+export function getSessionCookieName() {
+  return process.env.NODE_ENV === "production"
+    ? "__Secure-authjs.session-token"
+    : "authjs.session-token";
 }
 
 export const authConfig: NextAuthConfig = {
@@ -32,7 +37,7 @@ export const authConfig: NextAuthConfig = {
 
         const user = await prisma.user.findUnique({
           where: { id: userId },
-          select: { id: true, name: true, avatar: true, credits: true, apiKey: true },
+          select: { id: true, name: true, avatar: true, credits: true },
         });
 
         if (!user) return null;
@@ -55,14 +60,13 @@ export const authConfig: NextAuthConfig = {
         // 登录时从数据库获取完整信息（领取后的最新余额）
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id! },
-          select: { id: true, name: true, avatar: true, credits: true, apiKey: true },
+          select: { id: true, name: true, avatar: true, credits: true },
         });
         if (dbUser) {
           token.userId = dbUser.id;
           token.userName = dbUser.name;
           token.avatar = dbUser.avatar;
           token.credits = dbUser.credits;
-          token.apiKey = dbUser.apiKey;
         }
       }
       return token;
@@ -73,7 +77,6 @@ export const authConfig: NextAuthConfig = {
       session.user.name = token.userName as string;
       session.user.avatar = token.avatar as string;
       session.user.credits = token.credits as number;
-      session.user.apiKey = token.apiKey as string;
       return session;
     },
   },

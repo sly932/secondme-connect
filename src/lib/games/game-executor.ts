@@ -3,13 +3,14 @@
 import prisma from "../prisma";
 import logger from "../logger";
 import { chatStream } from "../secondme";
+import { adjustCredits } from "../credits";
+import { Prisma } from "@prisma/client";
 import {
   initBlackjackRound,
   applyBlackjackAction,
   playDealerTurn,
   settleBlackjackRound,
   buildBlackjackPrompt,
-  BlackjackState,
   BlackjackAction,
 } from "./blackjack";
 import {
@@ -30,6 +31,17 @@ function buildNpcSystemPrompt(name: string, bio: string | null): string | undefi
 
 // 全局事件存储 (roomId -> events[])
 const roomEvents: Map<string, GameEvent[]> = new Map();
+const roomEventCleanupTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+const MAX_EVENTS_PER_ROOM = 500;
+const ROOM_EVENT_TTL_MS = 5 * 60 * 1000;
+
+function toJsonArray(value: unknown): Prisma.InputJsonArray {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonArray;
+}
+
+function toJsonObject(value: unknown): Prisma.InputJsonObject {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonObject;
+}
 
 export interface GameEvent {
   timestamp: number;
@@ -45,7 +57,32 @@ export function getRoomEvents(roomId: string): GameEvent[] {
 
 function pushEvent(roomId: string, event: GameEvent) {
   if (!roomEvents.has(roomId)) roomEvents.set(roomId, []);
-  roomEvents.get(roomId)!.push(event);
+  const events = roomEvents.get(roomId)!;
+  events.push(event);
+  if (events.length > MAX_EVENTS_PER_ROOM) {
+    events.splice(0, events.length - MAX_EVENTS_PER_ROOM);
+  }
+}
+
+function resetRoomEvents(roomId: string) {
+  roomEvents.set(roomId, []);
+  const cleanupTimer = roomEventCleanupTimers.get(roomId);
+  if (cleanupTimer) {
+    clearTimeout(cleanupTimer);
+    roomEventCleanupTimers.delete(roomId);
+  }
+}
+
+function scheduleRoomEventCleanup(roomId: string) {
+  const existingTimer = roomEventCleanupTimers.get(roomId);
+  if (existingTimer) clearTimeout(existingTimer);
+
+  const timer = setTimeout(() => {
+    roomEvents.delete(roomId);
+    roomEventCleanupTimers.delete(roomId);
+  }, ROOM_EVENT_TTL_MS);
+
+  roomEventCleanupTimers.set(roomId, timer);
 }
 
 /** 解析 AI 的 Chat 响应中的 JSON */
@@ -184,6 +221,7 @@ async function getUserToken(userId: string): Promise<string | null> {
 
 export async function executeBlackjackGame(roomId: string): Promise<void> {
   logger.info("Starting Blackjack game", { roomId });
+  resetRoomEvents(roomId);
 
   const room = await prisma.gameRoom.findUnique({
     where: { id: roomId },
@@ -240,14 +278,14 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
     if (playersForRound.length === 0) break;
 
     // 初始化
-    let state = initBlackjackRound(playersForRound, room.minChips);
+    const state = initBlackjackRound(playersForRound, room.minChips);
 
     // 创建 GameRound 记录
     const gameRound = await prisma.gameRound.create({
       data: {
         roomId,
         roundNumber: roundNum,
-        dealerHand: state.dealer.hand as unknown as Record<string, unknown>[],
+        dealerHand: toJsonArray(state.dealer.hand),
       },
     });
 
@@ -316,7 +354,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
           roundId: gameRound.id,
           playerId: currentPlayer.id,
           action: action.toUpperCase(),
-          cards: currentPlayer.hand as unknown as Record<string, unknown>[],
+          cards: toJsonArray(currentPlayer.hand),
         },
       });
 
@@ -361,18 +399,11 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
       const gp = room.players.find((p) => p.id === r.playerId);
       if (gp && !gp.isAI) {
         if (r.payout !== 0) {
-          await prisma.user.update({
-            where: { id: gp.userId },
-            data: { credits: { increment: r.payout } },
-          });
-          await prisma.creditLog.create({
-            data: {
-              userId: gp.userId,
-              amount: r.payout,
-              balance: (await prisma.user.findUnique({ where: { id: gp.userId } }))!.credits,
-              reason: `21点第${roundNum}局 ${r.outcome === "win" ? "赢" : r.outcome === "lose" ? "输" : r.outcome === "blackjack" ? "Blackjack!" : "平局"}`,
-            },
-          });
+          await adjustCredits(
+            gp.userId,
+            r.payout,
+            `21点第${roundNum}局 ${r.outcome === "win" ? "赢" : r.outcome === "lose" ? "输" : r.outcome === "blackjack" ? "Blackjack!" : "平局"}`
+          );
         }
       }
 
@@ -415,9 +446,9 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
       data: {
         status: "COMPLETED",
         pot: room.minChips * playersForRound.length,
-        dealerHand: state.dealer.hand as unknown as Record<string, unknown>[],
-        resultLog: results as unknown as Record<string, unknown>[],
-        roundSnapshot: roundSnapshot as unknown as Record<string, unknown>,
+        dealerHand: toJsonArray(state.dealer.hand),
+        resultLog: toJsonArray(results),
+        roundSnapshot: toJsonObject(roundSnapshot),
         winnerId: results.find((r) => r.outcome === "win" || r.outcome === "blackjack")?.playerId,
       },
     });
@@ -428,14 +459,6 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
     });
 
     // 刷新玩家数据
-    const refreshedPlayers = await prisma.gamePlayer.findMany({
-      where: { roomId },
-      include: { user: true },
-      orderBy: { position: "asc" },
-    });
-    room.players.length = 0;
-    room.players.push(...refreshedPlayers);
-
     pushEvent(roomId, {
       timestamp: Date.now(),
       round: roundNum,
@@ -458,6 +481,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
     type: "system",
     message: "游戏结束！",
   });
+  scheduleRoomEventCleanup(roomId);
 
   logger.info("Blackjack game completed", { roomId });
 }
@@ -468,6 +492,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
 
 export async function executeTexasGame(roomId: string): Promise<void> {
   logger.info("Starting Texas Hold'em game", { roomId });
+  resetRoomEvents(roomId);
 
   const room = await prisma.gameRoom.findUnique({
     where: { id: roomId },
@@ -525,7 +550,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
 
     if (playersForRound.length < 2) break;
 
-    let state = initTexasRound(playersForRound, room.minChips, dealerIndex % playersForRound.length);
+    const state = initTexasRound(playersForRound, room.minChips, dealerIndex % playersForRound.length);
 
     const gameRound = await prisma.gameRound.create({
       data: {
@@ -597,7 +622,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
           playerId: currentPlayer.id,
           action: action.type.toUpperCase(),
           amount: "amount" in action ? action.amount : undefined,
-          cards: currentPlayer.hand as unknown as Record<string, unknown>[],
+          cards: toJsonArray(currentPlayer.hand),
         },
       });
 
@@ -610,7 +635,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
       });
 
       // 阶段变化通知
-      if (state.phase !== prevPhase && state.phase !== "showdown") {
+      if (state.phase !== prevPhase && (state.phase === "flop" || state.phase === "turn" || state.phase === "river")) {
         const phaseNames: Record<string, string> = {
           flop: "翻牌",
           turn: "转牌",
@@ -643,18 +668,11 @@ export async function executeTexasGame(roomId: string): Promise<void> {
 
       // 真人玩家 credit 更新
       if (!gp.isAI && r.payout !== 0) {
-        await prisma.user.update({
-          where: { id: gp.userId },
-          data: { credits: { increment: r.payout } },
-        });
-        await prisma.creditLog.create({
-          data: {
-            userId: gp.userId,
-            amount: r.payout,
-            balance: (await prisma.user.findUnique({ where: { id: gp.userId } }))!.credits,
-            reason: `德州扑克第${roundNum}局 ${r.outcome === "win" ? "赢" : r.outcome === "split" ? "平分" : "输"}`,
-          },
-        });
+        await adjustCredits(
+          gp.userId,
+          r.payout,
+          `德州扑克第${roundNum}局 ${r.outcome === "win" ? "赢" : r.outcome === "split" ? "平分" : "输"}`
+        );
       }
 
       pushEvent(roomId, {
@@ -697,9 +715,9 @@ export async function executeTexasGame(roomId: string): Promise<void> {
       data: {
         status: "COMPLETED",
         pot: state.pot,
-        communityCards: state.communityCards as unknown as Record<string, unknown>[],
-        resultLog: results as unknown as Record<string, unknown>[],
-        roundSnapshot: roundSnapshot as unknown as Record<string, unknown>,
+        communityCards: toJsonArray(state.communityCards),
+        resultLog: toJsonArray(results),
+        roundSnapshot: toJsonObject(roundSnapshot),
         winnerId: results.find((r) => r.outcome === "win")?.playerId,
       },
     });
@@ -710,14 +728,6 @@ export async function executeTexasGame(roomId: string): Promise<void> {
     });
 
     // 刷新
-    const refreshedPlayers = await prisma.gamePlayer.findMany({
-      where: { roomId },
-      include: { user: true },
-      orderBy: { position: "asc" },
-    });
-    room.players.length = 0;
-    room.players.push(...refreshedPlayers);
-
     dealerIndex++;
 
     pushEvent(roomId, {
@@ -741,6 +751,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
     type: "system",
     message: "游戏结束！",
   });
+  scheduleRoomEventCleanup(roomId);
 
   logger.info("Texas Hold'em game completed", { roomId });
 }

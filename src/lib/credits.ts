@@ -78,6 +78,40 @@ export async function addCredits(
   });
 }
 
+/**
+ * 调整用户 credit，并记录流水。
+ * 适用于游戏结算等不应影响 totalOrders / totalEarnings 的场景。
+ */
+export async function adjustCredits(
+  userId: string,
+  amount: number,
+  reason: string,
+  taskId?: string
+): Promise<number> {
+  logger.info("Adjusting credits", { userId, amount, reason, taskId });
+
+  return await prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: { id: userId },
+      data: { credits: { increment: amount } },
+      select: { credits: true },
+    });
+
+    await tx.creditLog.create({
+      data: {
+        userId,
+        amount,
+        balance: user.credits,
+        reason,
+        taskId,
+      },
+    });
+
+    logger.info("Credits adjusted", { userId, amount, newBalance: user.credits });
+    return user.credits;
+  });
+}
+
 const DAILY_BONUS = 100;
 const CREDIT_CAP = 500;
 

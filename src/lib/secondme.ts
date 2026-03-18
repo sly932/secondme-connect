@@ -14,7 +14,6 @@ export function getAuthorizationUrl() {
   const redirectUri = process.env.SECONDME_REDIRECT_URI!;
   const scopes = "user.info,user.info.shades,user.info.softmemory,chat";
   const url = `${OAUTH_URL}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code`;
-  logger.debug("Generated authorization URL", { url });
   return url;
 }
 
@@ -33,9 +32,8 @@ export async function exchangeCodeForToken(code: string) {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    logger.error("Token exchange failed", { status: res.status, body: text });
-    throw new Error(`Token exchange failed: ${res.status} ${text}`);
+    logger.error("Token exchange failed", { status: res.status });
+    throw new Error(`Token exchange failed: ${res.status}`);
   }
 
   const data = await res.json();
@@ -57,9 +55,8 @@ export async function refreshAccessToken(refreshToken: string) {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    logger.error("Token refresh failed", { status: res.status, body: text });
-    throw new Error(`Token refresh failed: ${res.status} ${text}`);
+    logger.error("Token refresh failed", { status: res.status });
+    throw new Error(`Token refresh failed: ${res.status}`);
   }
 
   const data = await res.json();
@@ -85,9 +82,8 @@ async function apiCall(endpoint: string, accessToken: string, options: RequestIn
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    logger.error("SecondMe API error", { endpoint, status: res.status, body: text });
-    throw new Error(`SecondMe API error: ${res.status} ${text}`);
+    logger.error("SecondMe API error", { endpoint, status: res.status });
+    throw new Error(`SecondMe API error: ${res.status}`);
   }
 
   return res;

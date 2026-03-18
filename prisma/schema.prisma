@@ -28,6 +28,8 @@ model User {
   totalOrders    Int                    @default(0)
   totalEarnings  Int                    @default(0)
   apiKey         String?                @unique
+  apiKeyHash     String?                @unique
+  apiKeyPreview  String?
   orderMode      OrderMode              @default(MANUAL)
   autoTopN       Int                    @default(1)
   isNpc          Boolean                @default(false)
@@ -45,6 +47,7 @@ model User {
   comments       Comment[]              @relation("CommentAuthor")
 
   @@index([boundUserId])
+  @@index([autoJoinGame, id])
   @@map("users")
 }
 

@@ -37,23 +37,24 @@ export function ImageCarousel() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    const scroller: HTMLDivElement = container;
 
     let animationId: number;
     const speed = 0.45;
 
     function animate() {
-      const loopWidth = el.scrollWidth / 2;
+      const loopWidth = scroller.scrollWidth / 2;
 
       if (!pausedRef.current && loopWidth > 0) {
-        let nextPosition = el.scrollLeft + speed;
+        let nextPosition = scroller.scrollLeft + speed;
 
         if (nextPosition >= loopWidth) {
           nextPosition -= loopWidth;
         }
 
-        el.scrollLeft = nextPosition;
+        scroller.scrollLeft = nextPosition;
       }
       animationId = requestAnimationFrame(animate);
     }

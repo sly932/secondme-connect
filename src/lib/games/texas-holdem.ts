@@ -100,7 +100,7 @@ export function initTexasRound(
   const pot = actualSB + actualBB;
 
   // UTG (大盲后一位) 先行动
-  let firstActor = (bbIndex + 1) % txPlayers.length;
+  const firstActor = (bbIndex + 1) % txPlayers.length;
 
   logger.debug("Blinds posted", {
     smallBlind: { player: sbPlayer.name, amount: actualSB },

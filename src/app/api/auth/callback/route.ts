@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { signIn } from "@/lib/auth";
+import { encode } from "next-auth/jwt";
+import { getSessionCookieName } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { getUserInfo, getUserShades, getUserSoftmemory } from "@/lib/secondme";
+import { getUserShades, getUserSoftmemory } from "@/lib/secondme";
 import { generateEmbedding, buildProfileText } from "@/lib/embedding";
 import { saveUserEmbedding } from "@/lib/vectors";
-import { generateApiKey } from "@/lib/apikey";
+import { createApiKeyRecord } from "@/lib/apikey";
+import { claimDailyCredit } from "@/lib/credits";
 import logger from "@/lib/logger";
 
 const TOKEN_URL = "https://api.mindverse.com/gate/lab/api/oauth/token/code";
@@ -12,15 +14,24 @@ const TOKEN_URL = "https://api.mindverse.com/gate/lab/api/oauth/token/code";
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
+  const storedState = req.cookies.get("sm-oauth-state")?.value;
 
   if (!code) {
     logger.error("No authorization code in callback");
     return NextResponse.redirect(new URL("/?error=no_code", req.url));
   }
 
+  if (!state || !storedState || state !== storedState) {
+    logger.warn("OAuth callback state mismatch");
+    const response = NextResponse.redirect(new URL("/?error=invalid_state", req.url));
+    response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
+    return response;
+  }
+
   try {
     // Step 1: 用 code 换 token
-    logger.info("Exchanging code for token", { code: code.slice(0, 20) });
+    logger.info("Exchanging code for token");
 
     const tokenRes = await fetch(TOKEN_URL, {
       method: "POST",
@@ -38,8 +49,10 @@ export async function GET(req: NextRequest) {
     logger.info("Token response", { code: tokenJson.code, hasData: !!tokenJson.data });
 
     if (tokenJson.code !== 0 || !tokenJson.data) {
-      logger.error("Token exchange failed", { body: JSON.stringify(tokenJson) });
-      return NextResponse.redirect(new URL("/?error=token_failed", req.url));
+      logger.error("Token exchange failed", { code: tokenJson.code });
+      const response = NextResponse.redirect(new URL("/?error=token_failed", req.url));
+      response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
+      return response;
     }
 
     const { accessToken, refreshToken, expiresIn } = tokenJson.data;
@@ -52,8 +65,10 @@ export async function GET(req: NextRequest) {
     logger.info("User info response", { code: userInfoJson.code });
 
     if (userInfoJson.code !== 0 || !userInfoJson.data) {
-      logger.error("User info failed", { body: JSON.stringify(userInfoJson) });
-      return NextResponse.redirect(new URL("/?error=userinfo_failed", req.url));
+      logger.error("User info failed", { code: userInfoJson.code });
+      const response = NextResponse.redirect(new URL("/?error=userinfo_failed", req.url));
+      response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
+      return response;
     }
 
     const userInfo = userInfoJson.data;
@@ -93,6 +108,7 @@ export async function GET(req: NextRequest) {
         getUserSoftmemory(accessToken).catch(() => null),
       ]);
 
+      const apiKeyRecord = createApiKeyRecord();
       dbUser = await prisma.user.create({
         data: {
           secondmeId,
@@ -105,7 +121,8 @@ export async function GET(req: NextRequest) {
           shades: shades || null,
           softmemory: softmemory || null,
           credits: 100,
-          apiKey: generateApiKey(),
+          apiKeyHash: apiKeyRecord.apiKeyHash,
+          apiKeyPreview: apiKeyRecord.apiKeyPreview,
         },
       });
 
@@ -121,21 +138,50 @@ export async function GET(req: NextRequest) {
       logger.info("New user created", { userId: dbUser.id, credits: 100 });
     }
 
-    // Step 4: 用 NextAuth Credentials 登录，建立 session
-    await signIn("secondme", {
-      userId: dbUser.id,
-      redirect: false,
+    await claimDailyCredit(dbUser.id);
+
+    const sessionUser = await prisma.user.findUnique({
+      where: { id: dbUser.id },
+      select: { id: true, name: true, avatar: true, credits: true },
     });
 
-    // 手动设置 session cookie 然后重定向
-    // signIn with redirect:false 在 server-side 不直接设 cookie，
-    // 所以我们用一个中间页来完成客户端登录
+    if (!sessionUser) {
+      throw new Error("User disappeared before session creation");
+    }
+
+    const cookieName = getSessionCookieName();
+    const token = await encode({
+      token: {
+        userId: sessionUser.id,
+        userName: sessionUser.name,
+        avatar: sessionUser.avatar,
+        credits: sessionUser.credits,
+        sub: sessionUser.id,
+        name: sessionUser.name,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
+      },
+      secret: process.env.NEXTAUTH_SECRET!,
+      salt: cookieName,
+    });
+
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    return NextResponse.redirect(
-      new URL(`/api/auth/complete?userId=${dbUser.id}`, baseUrl)
-    );
+    const response = NextResponse.redirect(new URL("/", baseUrl));
+    response.cookies.set(cookieName, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60,
+    });
+    response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
+    response.headers.set("Cache-Control", "no-store");
+    logger.info("Session created for user", { userId: sessionUser.id });
+    return response;
   } catch (err) {
     logger.error("OAuth callback error", { error: (err as Error).message, stack: (err as Error).stack });
-    return NextResponse.redirect(new URL("/?error=callback_failed", req.url));
+    const response = NextResponse.redirect(new URL("/?error=callback_failed", req.url));
+    response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
+    return response;
   }
 }

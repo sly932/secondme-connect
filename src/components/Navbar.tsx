@@ -17,7 +17,6 @@ export function Navbar() {
         name: session.user.name || "User",
         avatar: session.user.avatar,
         credits: session.user.credits,
-        apiKey: session.user.apiKey,
       });
     } else {
       clearUser();
