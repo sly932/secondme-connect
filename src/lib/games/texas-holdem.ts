@@ -488,5 +488,8 @@ ${callAmount > 0 ? `- {"action": "call"} 跟注 ${callAmount}` : ""}
 - {"action": "raise", "amount": <总下注额>} 加注（总额需大于 ${currentBet * 2}）
 - {"action": "all_in"} 全押
 
-请做出你的决定，只需回答一个JSON。只输出JSON，不要输出其他内容。`;
+请做出你的决定，回答一个JSON，包含你的思考过程和决定。例如:
+{"thinking": "你的思考过程（简短一句话，用你的风格）", "action": "call"}
+
+只输出JSON，不要输出其他内容。`;
 }

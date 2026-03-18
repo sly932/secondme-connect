@@ -121,16 +121,20 @@ export async function getUserSoftmemory(accessToken: string) {
 export async function chatStream(
   accessToken: string,
   targetUserId: string,
-  message: string
+  message: string,
+  systemPrompt?: string
 ): Promise<ReadableStream> {
   logger.info("Starting chat stream", { targetUserId, messageLength: message.length });
 
+  const body: Record<string, string> = {
+    target_user_id: targetUserId,
+    message,
+  };
+  if (systemPrompt) body.systemPrompt = systemPrompt;
+
   const res = await apiCall("/api/secondme/chat/stream", accessToken, {
     method: "POST",
-    body: JSON.stringify({
-      target_user_id: targetUserId,
-      message,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.body) {

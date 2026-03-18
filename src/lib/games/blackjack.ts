@@ -271,9 +271,9 @@ export function buildBlackjackPrompt(
 规则: 手牌点数越接近21点越好，超过21点则爆牌。A可以算1或11。
 庄家必须在16点及以下要牌，17点及以上停牌。
 
-请做出你的决定，只需回答一个JSON:
-{"action": "hit"} 表示要牌
-{"action": "stand"} 表示停牌
+请做出你的决定，回答一个JSON，包含你的思考过程和决定:
+{"thinking": "你的思考过程（简短一句话，用你的风格）", "action": "hit"} 表示要牌
+{"thinking": "你的思考过程（简短一句话，用你的风格）", "action": "stand"} 表示停牌
 
 只输出JSON，不要输出其他内容。`;
 }

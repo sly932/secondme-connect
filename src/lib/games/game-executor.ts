@@ -22,6 +22,12 @@ import {
 } from "./texas-holdem";
 import { handToString } from "./deck";
 
+/** 构建 NPC 的 system prompt */
+function buildNpcSystemPrompt(name: string, bio: string | null): string | undefined {
+  if (!bio) return undefined;
+  return `你是「${name}」— ${bio}。请以这个人物的性格、语气和思维方式来回应，保持角色一致性。`;
+}
+
 // 全局事件存储 (roomId -> events[])
 const roomEvents: Map<string, GameEvent[]> = new Map();
 
@@ -94,12 +100,13 @@ const AI_DECISION_TIMEOUT = 15000; // 15 秒超时
 async function getAIDecision(
   accessToken: string,
   targetUserId: string,
-  prompt: string
+  prompt: string,
+  systemPrompt?: string
 ): Promise<string> {
   try {
     const result = await Promise.race([
       (async () => {
-        const stream = await chatStream(accessToken, targetUserId, prompt);
+        const stream = await chatStream(accessToken, targetUserId, prompt, systemPrompt);
         const reader = stream.getReader();
         const decoder = new TextDecoder();
         let rawResult = "";
@@ -267,16 +274,21 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
       const currentPlayer = state.players[state.currentPlayerIndex];
       let action: BlackjackAction;
 
+      let thinking = "";
+
       if (currentPlayer.isAI) {
         // AI 决策
         const token = await getUserToken(currentPlayer.userId);
         if (token) {
           const prompt = buildBlackjackPrompt(currentPlayer, state.dealer.hand[0]);
-          const response = await getAIDecision(token, currentPlayer.userId, prompt);
+          const npcUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
+          const systemPrompt = npcUser ? buildNpcSystemPrompt(npcUser.name, npcUser.bio) : undefined;
+          const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
           const parsed = parseAIResponse(response);
 
           if (parsed && (parsed.action === "hit" || parsed.action === "stand")) {
             action = parsed.action as BlackjackAction;
+            thinking = (parsed.thinking as string) || "";
           } else {
             // 默认策略: <17 要牌, >=17 停牌
             const { calculateHandValue } = await import("./blackjack");
@@ -313,7 +325,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
         round: roundNum,
         type: "action",
         message: event,
-        data: { playerId: currentPlayer.id, action, hand: currentPlayer.hand },
+        data: { playerId: currentPlayer.id, action, hand: currentPlayer.hand, thinking: thinking || undefined, playerName: currentPlayer.name },
       });
 
       // 短暂延迟以便观战体验
@@ -550,6 +562,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
       }
 
       let action: TexasAction;
+      let thinking = "";
 
       if (currentPlayer.isAI) {
         const token = await getUserToken(currentPlayer.userId);
@@ -561,8 +574,11 @@ export async function executeTexasGame(roomId: string): Promise<void> {
             state.currentBet,
             state.phase
           );
-          const response = await getAIDecision(token, currentPlayer.userId, prompt);
+          const npcUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
+          const systemPrompt = npcUser ? buildNpcSystemPrompt(npcUser.name, npcUser.bio) : undefined;
+          const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
           const parsed = parseAIResponse(response);
+          thinking = (parsed?.thinking as string) || "";
           action = parseTexasAction(parsed, currentPlayer, state);
         } else {
           action = getDefaultTexasAction(currentPlayer, state);
@@ -590,7 +606,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
         round: roundNum,
         type: "action",
         message: event,
-        data: { playerId: currentPlayer.id, action: action.type, hand: currentPlayer.hand },
+        data: { playerId: currentPlayer.id, action: action.type, hand: currentPlayer.hand, thinking: thinking || undefined, playerName: currentPlayer.name },
       });
 
       // 阶段变化通知

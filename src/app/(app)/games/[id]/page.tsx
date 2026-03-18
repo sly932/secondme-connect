@@ -125,6 +125,7 @@ export default function SpectatorPage() {
   const [liveCommunityCards, setLiveCommunityCards] = useState<Card[]>([]);
   const [liveAction, setLiveAction] = useState("");
   const [livePot, setLivePot] = useState(0);
+  const [liveThinking, setLiveThinking] = useState<{ playerId: string; playerName: string; text: string } | null>(null);
 
   const fetchRoom = useCallback(async (replaceEvents = false) => {
     try {
@@ -148,6 +149,7 @@ export default function SpectatorPage() {
       setLiveCommunityCards([]);
       setLiveAction("");
       setLivePot(0);
+      setLiveThinking(null);
       // 自动切换到新一局（除非用户手动锁定了 Tab）
       if (!userLockedTab) setActiveTab(event.round);
     }
@@ -173,6 +175,18 @@ export default function SpectatorPage() {
     if (event.type === "action") {
       setLiveAction(event.message);
       if (event.data?.pot) setLivePot(event.data.pot as number);
+      // 显示 AI 思考
+      if (event.data?.thinking) {
+        setLiveThinking({
+          playerId: event.data.playerId as string,
+          playerName: (event.data.playerName as string) || "",
+          text: event.data.thinking as string,
+        });
+        // 5 秒后自动消失
+        setTimeout(() => setLiveThinking(null), 5000);
+      } else {
+        setLiveThinking(null);
+      }
       // 实时更新手牌
       if (event.data?.hand && event.data?.playerId) {
         setLivePlayerHands((prev) => ({
@@ -344,6 +358,7 @@ export default function SpectatorPage() {
                 currentAction={liveAction}
                 pot={livePot}
                 status={room.status}
+                thinking={liveThinking}
               />
             ) : completedRound?.roundSnapshot ? (
               <CompletedTable
@@ -387,6 +402,7 @@ function LiveTable({
   currentAction,
   pot,
   status,
+  thinking,
 }: {
   isBlackjack: boolean;
   players: Player[];
@@ -396,6 +412,7 @@ function LiveTable({
   currentAction: string;
   pot: number;
   status: string;
+  thinking: { playerId: string; playerName: string; text: string } | null;
 }) {
   return (
     <>
@@ -446,6 +463,8 @@ function LiveTable({
           <p className="text-sm text-white/80">{currentAction}</p>
         </div>
       )}
+
+      {thinking && <ThinkingBubble playerName={thinking.playerName} text={thinking.text} />}
 
       <PlayerSeats players={players} playerHands={playerHands} status={status} />
     </>
@@ -593,6 +612,34 @@ function PlayerSeats({
 }
 
 // ============================================================
+// AI 思考气泡
+// ============================================================
+function ThinkingBubble({ playerName, text }: { playerName: string; text: string }) {
+  return (
+    <div className="mb-6 max-w-lg w-full animate-[fadeInUp_0.3s_ease-out]">
+      <div className="relative bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-md rounded-2xl border border-indigo-400/30 px-5 py-3.5 shadow-lg shadow-indigo-500/10">
+        {/* 闪烁光点 */}
+        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-400 rounded-full animate-ping opacity-75" />
+        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-400 rounded-full" />
+
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center">
+            <span className="text-xs">💭</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-indigo-300">{playerName}</span>
+            <p className="text-sm text-white/90 mt-0.5 leading-relaxed italic">&ldquo;{text}&rdquo;</p>
+          </div>
+        </div>
+
+        {/* 气泡尾巴 */}
+        <div className="absolute -bottom-2 left-8 w-4 h-4 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-b border-r border-indigo-400/30 rotate-45" />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // 事件日志
 // ============================================================
 function EventLog({
@@ -604,8 +651,8 @@ function EventLog({
 }) {
   // 已结束的局用 snapshot 里的 actions
   const items = snapshot
-    ? snapshot.actions.map((a) => ({ type: a.type, message: a.message }))
-    : events.map((e) => ({ type: e.type, message: e.message }));
+    ? snapshot.actions.map((a) => ({ type: a.type, message: a.message, thinking: (a.data?.thinking as string) || "", playerName: (a.data?.playerName as string) || "" }))
+    : events.map((e) => ({ type: e.type, message: e.message, thinking: (e.data?.thinking as string) || "", playerName: (e.data?.playerName as string) || "" }));
 
   if (items.length === 0) {
     return <div className="text-center text-gray-500 py-6 text-sm">暂无事件</div>;
@@ -616,9 +663,17 @@ function EventLog({
       {items.map((item, idx) => {
         const style = EVENT_STYLES[item.type] || EVENT_STYLES.system;
         return (
-          <div key={idx} className={`flex items-start gap-2 text-xs ${style.color}`}>
-            <span className="flex-shrink-0">{style.icon}</span>
-            <span className="flex-1">{item.message}</span>
+          <div key={idx} className="space-y-0.5">
+            <div className={`flex items-start gap-2 text-xs ${style.color}`}>
+              <span className="flex-shrink-0">{style.icon}</span>
+              <span className="flex-1">{item.message}</span>
+            </div>
+            {item.thinking && (
+              <div className="flex items-start gap-2 text-xs ml-5 text-indigo-300/70 italic">
+                <span className="flex-shrink-0">💭</span>
+                <span className="flex-1">{item.playerName ? `${item.playerName}: ` : ""}&ldquo;{item.thinking}&rdquo;</span>
+              </div>
+            )}
           </div>
         );
       })}

@@ -79,3 +79,40 @@ npm run dev
 - `src/lib/prisma.ts` — Prisma Client 的全局复用
 - `.env.local` — 当前本地连接串
 - `.next/` — 本地开发缓存
+
+## 3. 多台电脑协作时 Prisma schema 改了但数据库没同步
+
+**问题**: 在 A 电脑上修改了 `prisma/schema.prisma`（新增字段、模型等），git push 后在 B 电脑 pull 了最新代码，但 API 运行时报错：
+```text
+PrismaClientValidationError: Invalid `prisma.xxx.findUnique()` invocation
+```
+或：
+```text
+The column `xxx.newField` does not exist in the current database.
+```
+
+**原因**:
+- `git push` 只推送了代码（包括 `schema.prisma` 的改动），但不会同步远程数据库结构
+- `prisma generate` 只根据 schema 文件重新生成本地 Prisma Client，也不会改数据库
+- 只有 `prisma db push` 或 `prisma migrate deploy` 才会把 schema 变更应用到远程数据库
+- 如果 A 电脑改了 schema 却没执行 `prisma db push`，那远程数据库就一直缺少这些字段
+
+**解决方案**:
+
+在任意一台电脑上执行：
+```bash
+npx prisma db push
+```
+
+**正确的多机协作流程**:
+1. A 电脑：修改 `schema.prisma` → `npx prisma db push` → `git push`
+2. B 电脑：`git pull` → `npx prisma generate`（`db push` 已在 A 执行过，无需重复）
+
+**注意事项**:
+- 改完 schema 后，**必须先 `prisma db push` 再 git push**，否则其他人 pull 代码后必然报错
+- 如果不确定数据库是否和 schema 同步，跑一次 `prisma db push` 是安全的——没有差异时它不会做任何改动
+- `prisma generate` ≠ `prisma db push`：前者更新本地 Client 代码，后者更新远程数据库结构
+
+**相关文件**:
+- `prisma/schema.prisma` — 数据模型定义
+- `.env.local` — `DATABASE_URL` 和 `DIRECT_URL`
