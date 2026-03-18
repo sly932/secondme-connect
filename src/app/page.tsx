@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import { usePanelStore } from "@/lib/store";
 import { ConnectPanel } from "@/components/ConnectPanel";
 import Link from "next/link";
+import { ImageCarousel } from "@/components/ImageCarousel";
 
 const FEATURE_CARDS = [
   {
     id: "chat",
     tab: "chat" as const,
-    color: "from-fuchsia-600 via-violet-600 to-indigo-700",
+    image: "/images/consulting.png",
     label: "找人聊聊",
     description: "向量匹配最合适的分身，自动发起深度对话",
   },
@@ -18,7 +19,7 @@ const FEATURE_CARDS = [
     id: "writing",
     tab: "tasks" as const,
     subType: "WRITING" as const,
-    color: "from-sky-500 via-cyan-500 to-teal-600",
+    image: "/images/writing.png",
     label: "写作任务",
     description: "让分身帮你撰写文案、文章、商业计划书",
   },
@@ -26,14 +27,14 @@ const FEATURE_CARDS = [
     id: "painting",
     tab: "tasks" as const,
     subType: "PAINTING" as const,
-    color: "from-emerald-500 via-green-500 to-lime-600",
+    image: "/images/painting.png",
     label: "绘画任务",
     description: "分身生成创意提示词，AI 工具完成绘画",
   },
   {
     id: "games",
     tab: "games" as const,
-    color: "from-amber-500 via-orange-500 to-red-600",
+    image: "/images/casino.jpg",
     label: "游戏市场",
     description: "和 AI 分身博弈对战，赢取 credit",
   },
@@ -109,27 +110,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Feature Cards — 4 张可点击图片 */}
-      <section className="px-6 pb-16">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
-          {FEATURE_CARDS.map((card) => (
-            <button
-              key={card.id}
-              onClick={() => handleCardClick(card)}
-              className="group text-left"
-            >
-              <div
-                className={`relative h-48 md:h-56 rounded-2xl bg-gradient-to-br ${card.color} overflow-hidden border border-white/10 shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_40%)]" />
-                <div className="relative flex flex-col justify-end h-full p-5">
-                  <p className="text-xs text-white/70 mb-1 leading-relaxed">{card.description}</p>
-                  <span className="text-xl font-semibold text-white tracking-tight">{card.label}</span>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+      {/* Feature Cards — 轮播 */}
+      <section className="pb-16">
+        <ImageCarousel
+          cards={FEATURE_CARDS.map((card) => ({
+            id: card.id,
+            image: card.image,
+            label: card.label,
+            description: card.description,
+            onClick: () => handleCardClick(card),
+          }))}
+        />
       </section>
 
       {/* 内嵌对话区 */}

@@ -1,66 +1,42 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
-const CARD_SET = [
-  {
-    id: "matching",
-    color: "from-fuchsia-600 via-violet-600 to-indigo-700",
-    eyebrow: "AGENT LAYER",
-    label: "AI Agent Matching",
-    description: "Route every incoming request to the right SecondMe identity in real time.",
-    metric: "Live routing",
-  },
-  {
-    id: "execution",
-    color: "from-sky-500 via-cyan-500 to-teal-600",
-    eyebrow: "TASK FLOW",
-    label: "Smart Task Execution",
-    description: "Turn conversations into deliverables with automated execution and follow-through.",
-    metric: "Auto execute",
-  },
-  {
-    id: "credits",
-    color: "from-emerald-500 via-green-500 to-lime-600",
-    eyebrow: "VALUE LOOP",
-    label: "Credit Economy",
-    description: "Keep incentives aligned with a visible credit layer across the agent network.",
-    metric: "Credit sync",
-  },
-];
+export interface CarouselCard {
+  id: string;
+  image: string;
+  label: string;
+  description: string;
+  onClick?: () => void;
+}
 
-export function ImageCarousel() {
-  const cards = [...CARD_SET, ...CARD_SET];
+export function ImageCarousel({ cards: cardSet }: { cards: CarouselCard[] }) {
+  const cards = [...cardSet, ...cardSet];
   const scrollRef = useRef<HTMLDivElement>(null);
   const slotRefs = useRef<Array<HTMLDivElement | null>>([]);
   const pausedRef = useRef(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const scroller: HTMLDivElement = container;
+    const scroller = scrollRef.current;
+    if (!scroller) return;
 
     let animationId: number;
     const speed = 0.45;
 
     function animate() {
-      const loopWidth = scroller.scrollWidth / 2;
+      const loopWidth = scroller!.scrollWidth / 2;
 
       if (!pausedRef.current && loopWidth > 0) {
-        let nextPosition = scroller.scrollLeft + speed;
-
-        if (nextPosition >= loopWidth) {
-          nextPosition -= loopWidth;
-        }
-
-        scroller.scrollLeft = nextPosition;
+        let next = scroller!.scrollLeft + speed;
+        if (next >= loopWidth) next -= loopWidth;
+        scroller!.scrollLeft = next;
       }
       animationId = requestAnimationFrame(animate);
     }
 
     animationId = requestAnimationFrame(animate);
-
     return () => cancelAnimationFrame(animationId);
   }, []);
 
@@ -78,16 +54,12 @@ export function ImageCarousel() {
       ),
     );
 
-    container.scrollTo({
-      left: target,
-      behavior: "smooth",
-    });
+    container.scrollTo({ left: target, behavior: "smooth" });
   }
 
   function normalizeScrollPosition() {
     const container = scrollRef.current;
     if (!container) return;
-
     const loopWidth = container.scrollWidth / 2;
     if (loopWidth > 0 && container.scrollLeft >= loopWidth) {
       container.scrollLeft -= loopWidth;
@@ -96,8 +68,8 @@ export function ImageCarousel() {
 
   return (
     <div className="relative w-full py-6 md:py-10">
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-black via-black/80 to-transparent md:w-20" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-black via-black/80 to-transparent md:w-20" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-white dark:from-black via-white/80 dark:via-black/80 to-transparent md:w-20" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white dark:from-black via-white/80 dark:via-black/80 to-transparent md:w-20" />
 
       <div
         ref={scrollRef}
@@ -109,60 +81,54 @@ export function ImageCarousel() {
         }}
       >
         <div className="flex w-max items-center gap-4 md:gap-6">
-          {cards.map((img, index) => {
+          {cards.map((card, index) => {
             const isActive = hoveredIndex === index;
             const isInactive = hoveredIndex !== null && hoveredIndex !== index;
+            const originalIndex = index % cardSet.length;
 
             return (
               <div
-                key={`${img.id}-${index}`}
+                key={`${card.id}-${index}`}
                 ref={(node) => {
                   slotRefs.current[index] = node;
                 }}
-                className="relative h-56 w-[19rem] shrink-0 md:h-64 md:w-[23rem]"
+                className="relative shrink-0 w-[20rem] md:w-[28rem] cursor-pointer"
+                style={{ aspectRatio: "16 / 9" }}
                 onMouseEnter={() => {
                   pausedRef.current = true;
                   setHoveredIndex(index);
                   centerCard(index);
                 }}
+                onClick={() => cardSet[originalIndex]?.onClick?.()}
               >
                 <div
                   className={[
-                    "pointer-events-none relative h-full overflow-hidden rounded-[28px] border border-white/12",
-                    `bg-gradient-to-br ${img.color}`,
+                    "pointer-events-none relative h-full overflow-hidden rounded-2xl border border-white/10",
                     "transform-gpu transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
                     "shadow-[0_18px_45px_rgba(0,0,0,0.34)]",
-                    isActive && "z-20 -translate-y-4 scale-[1.12] shadow-[0_30px_90px_rgba(0,0,0,0.5)]",
-                    isInactive && "scale-[0.9] opacity-55 saturate-75 brightness-75",
+                    isActive &&
+                      "z-20 -translate-y-4 scale-[1.08] shadow-[0_30px_90px_rgba(0,0,0,0.5)]",
+                    isInactive && "scale-[0.92] opacity-55 brightness-75",
                   ]
                     .filter(Boolean)
                     .join(" ")}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.28),transparent_34%)]" />
-                  <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,255,255,0.18),transparent_38%,rgba(8,8,8,0.28)_100%)]" />
-                  <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:24px_24px]" />
+                  <Image
+                    src={card.image}
+                    alt={card.label}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 20rem, 28rem"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                  <div className="relative flex h-full flex-col justify-between p-6 md:p-7">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="rounded-full border border-white/20 bg-black/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-white/75 backdrop-blur-sm">
-                        {img.eyebrow}
-                      </span>
-                      <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/70 backdrop-blur-sm">
-                        {img.metric}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      <p className="max-w-[15rem] text-sm leading-6 text-white/75 md:text-[15px]">
-                        {img.description}
-                      </p>
-                      <div className="flex items-end justify-between gap-4">
-                        <span className="max-w-[14rem] text-2xl font-semibold tracking-tight text-white md:text-[1.75rem]">
-                          {img.label}
-                        </span>
-                        <span className="h-3 w-3 rounded-full bg-white/80 shadow-[0_0_24px_rgba(255,255,255,0.8)]" />
-                      </div>
-                    </div>
+                  <div className="relative flex h-full flex-col justify-end p-5 md:p-6">
+                    <p className="text-xs text-white/70 mb-1 leading-relaxed">
+                      {card.description}
+                    </p>
+                    <span className="text-xl md:text-2xl font-semibold tracking-tight text-white">
+                      {card.label}
+                    </span>
                   </div>
                 </div>
               </div>
