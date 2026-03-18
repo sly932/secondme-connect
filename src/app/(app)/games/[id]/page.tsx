@@ -127,6 +127,10 @@ export default function SpectatorPage() {
   const [livePot, setLivePot] = useState(0);
   const [liveThinking, setLiveThinking] = useState<{ playerId: string; playerName: string; text: string } | null>(null);
 
+  // 事件队列 — 收到的事件先入队，按间隔逐条播放
+  const eventQueueRef = useRef<GameEvent[]>([]);
+  const playingRef = useRef(false);
+
   const fetchRoom = useCallback(async (replaceEvents = false) => {
     try {
       const res = await fetch(`/api/v1/games/rooms/${roomId}?eventsLimit=120`);
@@ -177,17 +181,13 @@ export default function SpectatorPage() {
     if (event.type === "action") {
       setLiveAction(event.message);
       if (event.data?.pot) setLivePot(event.data.pot as number);
-      // 显示 AI 思考
+      // 显示 AI 思考（有 thinking 才更新，没有就保持当前不清除）
       if (event.data?.thinking) {
         setLiveThinking({
           playerId: event.data.playerId as string,
           playerName: (event.data.playerName as string) || "",
           text: event.data.thinking as string,
         });
-        // 5 秒后自动消失
-        setTimeout(() => setLiveThinking(null), 5000);
-      } else {
-        setLiveThinking(null);
       }
       // 实时更新手牌
       if (event.data?.hand && event.data?.playerId) {
@@ -203,6 +203,11 @@ export default function SpectatorPage() {
 
     if (event.type === "phase" && event.data?.communityCards) {
       setLiveCommunityCards(event.data.communityCards as Card[]);
+    }
+
+    // 结算时清除 thinking
+    if (event.type === "result") {
+      setLiveThinking(null);
     }
   }, [userLockedTab]);
 
@@ -234,9 +239,28 @@ export default function SpectatorPage() {
               void fetchRoom(false);
               return;
             }
-            setEvents((prev) => [...prev, event]);
-            processEvent(event);
-            if (event.type === "system") void fetchRoom(false);
+            // 入队，间隔播放
+            eventQueueRef.current.push(event);
+            if (!playingRef.current) {
+              playingRef.current = true;
+              const playNext = () => {
+                const next = eventQueueRef.current.shift();
+                if (!next) {
+                  playingRef.current = false;
+                  return;
+                }
+                setEvents((prev) => [...prev, next]);
+                processEvent(next);
+                if (next.type === "system") void fetchRoom(false);
+                // 不同事件类型用不同间隔
+                const delay = next.type === "result" ? 600
+                  : next.type === "action" ? 800
+                  : next.type === "deal" ? 400
+                  : 300;
+                setTimeout(playNext, delay);
+              };
+              playNext();
+            }
           } catch {
             // ignore
           }
@@ -509,12 +533,16 @@ function CompletedTable({
           </div>
           <CardGroup cards={snapshot.dealer.hand} size="lg" />
         </div>
-      ) : !isBlackjack && snapshot.communityCards ? (
+      ) : !isBlackjack && snapshot.communityCards && snapshot.communityCards.length > 0 ? (
         <div className="mb-6">
           <div className="text-center mb-3">
             <span className="text-xs font-semibold uppercase tracking-widest text-white/50">公共牌</span>
           </div>
           <CardGroup cards={snapshot.communityCards} size="lg" />
+        </div>
+      ) : !isBlackjack ? (
+        <div className="mb-6 text-center">
+          <span className="text-xs text-white/30">本局未翻出公共牌（提前结束）</span>
         </div>
       ) : null}
 

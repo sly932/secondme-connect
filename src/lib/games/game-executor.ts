@@ -314,34 +314,28 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
 
       let thinking = "";
 
-      if (currentPlayer.isAI) {
-        // AI 决策
-        const token = await getUserToken(currentPlayer.userId);
-        if (token) {
-          const prompt = buildBlackjackPrompt(currentPlayer, state.dealer.hand[0]);
-          const npcUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
-          const systemPrompt = npcUser ? buildNpcSystemPrompt(npcUser.name, npcUser.bio) : undefined;
-          const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
-          const parsed = parseAIResponse(response);
+      // 所有玩家（AI 和真人）都通过 SecondMe 分身做决策
+      const token = await getUserToken(currentPlayer.userId);
+      if (token) {
+        const prompt = buildBlackjackPrompt(currentPlayer, state.dealer.hand[0]);
+        const playerUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
+        const systemPrompt = playerUser ? buildNpcSystemPrompt(playerUser.name, playerUser.bio) : undefined;
+        const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
+        const parsed = parseAIResponse(response);
 
-          if (parsed && (parsed.action === "hit" || parsed.action === "stand")) {
-            action = parsed.action as BlackjackAction;
-            thinking = (parsed.thinking as string) || "";
-          } else {
-            // 默认策略: <17 要牌, >=17 停牌
-            const { calculateHandValue } = await import("./blackjack");
-            action = calculateHandValue(currentPlayer.hand) < 17 ? "hit" : "stand";
-            logger.warn("AI response parse failed, using default strategy", {
-              playerId: currentPlayer.id,
-              rawResponse: response.substring(0, 100),
-            });
-          }
+        if (parsed && (parsed.action === "hit" || parsed.action === "stand")) {
+          action = parsed.action as BlackjackAction;
+          thinking = (parsed.thinking as string) || "";
         } else {
           const { calculateHandValue } = await import("./blackjack");
           action = calculateHandValue(currentPlayer.hand) < 17 ? "hit" : "stand";
+          logger.warn("AI response parse failed, using default strategy", {
+            playerId: currentPlayer.id,
+            rawResponse: response.substring(0, 100),
+          });
         }
       } else {
-        // 真人玩家 — 目前也用默认策略 (后续可改为等待用户输入)
+        // 无 token 时用默认策略
         const { calculateHandValue } = await import("./blackjack");
         action = calculateHandValue(currentPlayer.hand) < 17 ? "hit" : "stand";
       }
@@ -589,27 +583,24 @@ export async function executeTexasGame(roomId: string): Promise<void> {
       let action: TexasAction;
       let thinking = "";
 
-      if (currentPlayer.isAI) {
-        const token = await getUserToken(currentPlayer.userId);
-        if (token) {
-          const prompt = buildTexasPrompt(
-            currentPlayer,
-            state.communityCards,
-            state.pot,
-            state.currentBet,
-            state.phase
-          );
-          const npcUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
-          const systemPrompt = npcUser ? buildNpcSystemPrompt(npcUser.name, npcUser.bio) : undefined;
-          const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
-          const parsed = parseAIResponse(response);
-          thinking = (parsed?.thinking as string) || "";
-          action = parseTexasAction(parsed, currentPlayer, state);
-        } else {
-          action = getDefaultTexasAction(currentPlayer, state);
-        }
+      // 所有玩家（AI 和真人）都通过 SecondMe 分身做决策
+      const token = await getUserToken(currentPlayer.userId);
+      if (token) {
+        const prompt = buildTexasPrompt(
+          currentPlayer,
+          state.communityCards,
+          state.pot,
+          state.currentBet,
+          state.phase
+        );
+        const playerUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
+        const systemPrompt = playerUser ? buildNpcSystemPrompt(playerUser.name, playerUser.bio) : undefined;
+        const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
+        const parsed = parseAIResponse(response);
+        thinking = (parsed?.thinking as string) || "";
+        action = parseTexasAction(parsed, currentPlayer, state);
       } else {
-        // 真人玩家 — 目前也用默认策略
+        // 无 token 时用默认策略
         action = getDefaultTexasAction(currentPlayer, state);
       }
 

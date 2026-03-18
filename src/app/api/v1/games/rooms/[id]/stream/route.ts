@@ -4,6 +4,10 @@ import { getAuthUser } from "@/lib/api-auth";
 import { getRoomEvents } from "@/lib/games/game-executor";
 import prisma from "@/lib/prisma";
 
+// 让 Vercel Node.js runtime 支持流式响应
+export const dynamic = "force-dynamic";
+export const maxDuration = 300;
+
 // GET /api/v1/games/rooms/[id]/stream — SSE 实时事件流
 export async function GET(
   req: NextRequest,
