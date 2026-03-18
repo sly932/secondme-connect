@@ -61,6 +61,33 @@ function parseAIResponse(text: string): Record<string, unknown> | null {
   }
 }
 
+/** 从 SSE 流中提取实际文本内容 */
+function extractTextFromSSE(raw: string): string {
+  let text = "";
+  const lines = raw.split("\n");
+
+  for (const line of lines) {
+    if (!line.startsWith("data: ")) continue;
+    const dataStr = line.slice(6).trim();
+    if (!dataStr || dataStr === "[DONE]") continue;
+
+    try {
+      const data = JSON.parse(dataStr);
+      // OpenAI-compatible SSE format
+      const content =
+        data.choices?.[0]?.delta?.content ||
+        data.choices?.[0]?.message?.content ||
+        data.content ||
+        "";
+      if (content) text += content;
+    } catch {
+      // 不是 JSON 的 data 行，跳过
+    }
+  }
+
+  return text;
+}
+
 /** 调用 SecondMe Chat 获取 AI 决策 */
 async function getAIDecision(
   accessToken: string,
@@ -71,16 +98,24 @@ async function getAIDecision(
     const stream = await chatStream(accessToken, targetUserId, prompt);
     const reader = stream.getReader();
     const decoder = new TextDecoder();
-    let result = "";
+    let rawResult = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      result += decoder.decode(value, { stream: true });
+      rawResult += decoder.decode(value, { stream: true });
     }
 
-    logger.debug("AI decision raw response", { targetUserId, response: result.substring(0, 200) });
-    return result;
+    // 从 SSE 流中提取实际文本
+    const text = extractTextFromSSE(rawResult);
+
+    logger.debug("AI decision parsed", {
+      targetUserId,
+      rawLength: rawResult.length,
+      extractedText: text.substring(0, 200),
+    });
+
+    return text || rawResult; // fallback to raw if extraction yields nothing
   } catch (error) {
     logger.error("AI decision call failed", { targetUserId, error: String(error) });
     return "";
