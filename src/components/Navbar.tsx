@@ -10,6 +10,8 @@ export function Navbar() {
   const { setUser, clearUser, isLoggedIn, credits } = useUserStore();
   const { theme, toggleTheme } = useThemeStore();
 
+  const { updateCredits } = useUserStore();
+
   useEffect(() => {
     if (session?.user) {
       setUser({
@@ -22,6 +24,28 @@ export function Navbar() {
       clearUser();
     }
   }, [session, setUser, clearUser]);
+
+  // 定时刷新 credits
+  useEffect(() => {
+    if (!session?.user) return;
+    let active = true;
+
+    const refreshCredits = async () => {
+      try {
+        const res = await fetch("/api/v1/profile");
+        if (res.ok) {
+          const data = await res.json();
+          if (active && typeof data.credits === "number") {
+            updateCredits(data.credits);
+          }
+        }
+      } catch { /* ignore */ }
+    };
+
+    refreshCredits();
+    const timer = setInterval(refreshCredits, 30000);
+    return () => { active = false; clearInterval(timer); };
+  }, [session?.user, updateCredits]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800">
