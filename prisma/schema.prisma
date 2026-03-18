@@ -47,6 +47,8 @@ model User {
   publishedTasks Task[]   @relation("publisher")
   receivedTasks  Task[]   @relation("worker")
   creditLogs     CreditLog[]
+  createdRooms   GameRoom[]    @relation("roomCreator")
+  gamePlayers    GamePlayer[]
 
   @@map("users")
 }
@@ -115,6 +117,126 @@ enum TaskType {
 enum TaskCategory {
   WRITING     // 写作
   PAINTING    // 绘画
+}
+
+// ============================================================
+// 游戏广场
+// ============================================================
+
+model GameRoom {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  gameType    GameType
+  maxPlayers  Int          @default(4)
+  minChips    Int          @default(10)
+  totalRounds Int          @default(5)
+  status      RoomStatus   @default(PLAYING)
+
+  currentRound Int         @default(0)
+
+  // 创建者
+  creatorId String
+  creator   User     @relation("roomCreator", fields: [creatorId], references: [id])
+
+  // 关系
+  players   GamePlayer[]
+  rounds    GameRound[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@map("game_rooms")
+}
+
+model GamePlayer {
+  id        String   @id @default(cuid())
+
+  roomId    String
+  room      GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  position  Int         // 座位号 0-based
+  isCreator Boolean     @default(false)
+  isAI      Boolean     @default(false)
+  chips     Int         // 当前筹码
+  status    PlayerStatus @default(ACTIVE)
+
+  actions   GameAction[]
+
+  @@unique([roomId, position])
+  @@index([roomId])
+  @@map("game_players")
+}
+
+model GameRound {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  roomId      String
+  room        GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  roundNumber Int
+  status      RoundStatus @default(IN_PROGRESS)
+  pot         Int         @default(0)
+
+  // 牌面状态 (JSON)
+  communityCards Json?    // 公共牌 (德州)
+  dealerHand     Json?    // 庄家手牌 (21点)
+
+  // 结果
+  winnerId    String?     // 赢家 GamePlayer ID
+  resultLog   Json?       // 详细结算日志
+
+  actions     GameAction[]
+
+  @@unique([roomId, roundNumber])
+  @@index([roomId])
+  @@map("game_rounds")
+}
+
+model GameAction {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  roundId   String
+  round     GameRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  playerId  String
+  player    GamePlayer @relation(fields: [playerId], references: [id])
+
+  action    String      // HIT, STAND, FOLD, CALL, RAISE, ALL_IN, etc.
+  amount    Int?        // 下注金额
+  cards     Json?       // 此动作后的手牌状态
+  message   String?     // AI 的对话内容
+
+  @@index([roundId])
+  @@map("game_actions")
+}
+
+enum GameType {
+  BLACKJACK     // 21点
+  TEXAS_HOLDEM  // 德州扑克
+}
+
+enum RoomStatus {
+  PLAYING       // 进行中
+  COMPLETED     // 已结束
+  CANCELLED     // 已取消
+}
+
+enum PlayerStatus {
+  ACTIVE
+  FOLDED
+  BUSTED        // 筹码归零
+  LEFT
+}
+
+enum RoundStatus {
+  IN_PROGRESS
+  COMPLETED
 }
 
 enum TaskStatus {
