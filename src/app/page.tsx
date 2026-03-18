@@ -93,7 +93,7 @@ export default function Home() {
             Connect
           </h1>
           <p className="text-xl md:text-2xl text-gray-500 dark:text-zinc-400 max-w-xl">
-            找到对的人，聊对的事，做对的事。
+            连接对的人，帮你做对的事。
           </p>
           <button
             onClick={handleConnect}

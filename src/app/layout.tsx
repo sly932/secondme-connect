@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Connect — 你不在，它在",
+  title: "Connect — 连接对的人，帮你做对的事",
   description: "以 AI 分身为核心的需求撮合与任务执行平台",
 };
 
