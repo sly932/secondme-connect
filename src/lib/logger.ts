@@ -2,13 +2,13 @@ import winston from "winston";
 import path from "path";
 import fs from "fs";
 
-const isVercel = !!process.env.VERCEL;
+const enableFileLogging = process.env.ENABLE_FILE_LOGGING === "true";
 const logDir = path.join(process.cwd(), "logs");
 
 const transports: winston.transport[] = [];
 
-if (!isVercel) {
-  // 本地开发/自托管：写文件
+if (enableFileLogging) {
+  // 仅当 ENABLE_FILE_LOGGING=true 时写文件（本地开发/自托管）
   if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
   }
@@ -27,20 +27,18 @@ if (!isVercel) {
   );
 }
 
-// Vercel 或开发环境：输出到 console
-if (isVercel || process.env.NODE_ENV !== "production") {
-  transports.push(
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.printf(({ timestamp, level, message, service, ...rest }) => {
-          const extra = Object.keys(rest).length ? ` ${JSON.stringify(rest)}` : "";
-          return `${timestamp} [${service}] ${level}: ${message}${extra}`;
-        })
-      ),
-    })
-  );
-}
+// 始终输出到 console（Vercel 通过 console 收集日志）
+transports.push(
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.printf(({ timestamp, level, message, service, ...rest }) => {
+        const extra = Object.keys(rest).length ? ` ${JSON.stringify(rest)}` : "";
+        return `${timestamp} [${service}] ${level}: ${message}${extra}`;
+      })
+    ),
+  })
+);
 
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === "production" ? "info" : "debug",

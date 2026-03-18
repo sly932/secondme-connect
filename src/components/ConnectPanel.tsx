@@ -59,40 +59,31 @@ export function ConnectPanel() {
     if (!session) return handleLogin();
     if (!description.trim()) return;
 
-    if (!hasCredits) {
-      // 发到广场
-      setLoading(true);
-      try {
-        const res = await fetch("/api/v1/plaza", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: description }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          setDescription("");
-          router.push("/plaza");
-        } else {
-          setResult({ error: data.message || "发布失败" });
-        }
-      } catch {
-        setResult({ error: "网络错误" });
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    // 有 credit，走匹配
     setLoading(true);
     setResult(null);
+
     try {
-      const res = await fetch("/api/v1/consult", {
+      // 单次请求：发布到广场 + 自动匹配 + 根据 orderMode 自动/手动咨询
+      const res = await fetch("/api/v1/plaza", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description }),
+        body: JSON.stringify({ content: description }),
       });
-      setResult(await res.json());
+      const data = await res.json();
+
+      if (data.success) {
+        setResult({
+          ...data,
+          message: data.tasks?.length
+            ? `已发布到广场，已向 ${data.tasks.length} 个分身发起咨询`
+            : data.matchCount > 0
+              ? `已发布到广场，找到 ${data.matchCount} 个匹配的分身，去广场查看详情`
+              : "已发布到广场",
+        });
+        setDescription("");
+      } else {
+        setResult({ error: data.message || "发布失败" });
+      }
     } catch {
       setResult({ error: "请求失败" });
     } finally {
@@ -195,13 +186,13 @@ export function ConnectPanel() {
 
               {session && !hasCredits && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-700 dark:text-amber-300">
-                  credit 不足，将以公开帖子发布到广场，其他人可以免费回复你的问题
+                  credit 不足，需求将发布到广场并匹配分身，但不会自动发起咨询。其他人仍可评论你的需求。
                 </div>
               )}
 
               {session && hasCredits && (
                 <div className="text-sm text-gray-500 dark:text-zinc-400">
-                  消耗: <span className="text-gray-900 dark:text-white font-semibold">10 credit</span>
+                  发布到广场 + 自动匹配分身，咨询消耗: <span className="text-gray-900 dark:text-white font-semibold">1 credit/人</span>
                   <span className="ml-2">余额: {credits}</span>
                 </div>
               )}
@@ -211,7 +202,7 @@ export function ConnectPanel() {
                 disabled={loading || !description.trim()}
                 className="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                {loading ? "处理中..." : !session ? "登录后使用" : hasCredits ? "发起匹配" : "发布到广场"}
+                {loading ? "处理中..." : !session ? "登录后使用" : "发布需求"}
               </button>
             </>
           )}
@@ -339,8 +330,22 @@ export function ConnectPanel() {
 
           {/* 结果展示 */}
           {result && (
-            <div className="bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 text-sm text-gray-700 dark:text-zinc-300 max-h-48 overflow-auto">
-              <pre className="whitespace-pre-wrap">{JSON.stringify(result, null, 2)}</pre>
+            <div className="space-y-3">
+              {result.error ? (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
+                  {String(result.error)}
+                </div>
+              ) : (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 text-sm text-green-700 dark:text-green-300 space-y-2">
+                  <p className="font-medium">{String(result.message || "已发布")}</p>
+                  <button
+                    onClick={() => { router.push("/plaza"); setResult(null); }}
+                    className="text-xs text-green-600 dark:text-green-400 hover:underline"
+                  >
+                    去广场查看详情 &rarr;
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getAuthUser, unauthorized, badRequest } from "@/lib/api-auth";
+import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { generateEmbedding } from "@/lib/embedding";
+import { searchSimilarUsers } from "@/lib/vectors";
+import { executeConsultTask } from "@/lib/task-executor";
+import logger from "@/lib/logger";
+import { TaskType, TaskStatus } from "@prisma/client";
+
+const CREDIT_PER_CONSULT = 1;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -18,7 +25,7 @@ export async function GET(req: NextRequest) {
       take: limit,
       include: {
         author: { select: { id: true, name: true, avatar: true, isNpc: true } },
-        _count: { select: { comments: true } },
+        _count: { select: { comments: true, tasks: true } },
       },
     }),
     prisma.post.count({ where }),
@@ -26,31 +33,148 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    posts: posts.map((p) => ({
-      id: p.id,
-      content: p.content,
-      author: p.author,
-      commentCount: p._count.comments,
-      createdAt: p.createdAt,
-    })),
+    posts: posts.map((p) => {
+      const matchCandidates = p.matchCandidates as unknown[] | null;
+      return {
+        id: p.id,
+        content: p.content,
+        author: p.author,
+        commentCount: p._count.comments,
+        matchCount: matchCandidates ? matchCandidates.length : 0,
+        createdAt: p.createdAt,
+      };
+    }),
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser(req);
-  if (!user) return unauthorized();
+  try {
+    const user = await getAuthUser(req);
+    if (!user) return unauthorized();
 
-  const body = await req.json();
-  const content = body.content?.trim();
-  if (!content) return badRequest("content 不能为空");
+    const body = await req.json();
+    const content = body.content?.trim();
+    if (!content) return badRequest("content 不能为空");
 
-  const post = await prisma.post.create({
-    data: { content, authorId: user.id },
-    include: {
-      author: { select: { id: true, name: true, avatar: true, isNpc: true } },
-    },
-  });
+    // 获取用户完整信息
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, credits: true, orderMode: true, autoTopN: true },
+    });
+    if (!fullUser) return unauthorized();
 
-  return NextResponse.json({ success: true, post }, { status: 201 });
+    // 尝试 embedding 匹配
+    let matchCandidates: { userId: string; name: string; avatar: string | null; bio: string | null; similarity: number }[] = [];
+    try {
+      const queryEmbedding = await generateEmbedding(content);
+      const candidates = await searchSimilarUsers(queryEmbedding, user.id, 10);
+      matchCandidates = candidates.map((c) => ({
+        userId: c.id,
+        name: c.name,
+        avatar: c.avatar,
+        bio: c.bio,
+        similarity: Math.round(c.similarity * 100) / 100,
+      }));
+    } catch (err) {
+      logger.warn("Embedding matching failed, creating post without matches", { error: (err as Error).message });
+    }
+
+    // 创建帖子（含匹配结果快照）
+    const post = await prisma.post.create({
+      data: {
+        content,
+        authorId: user.id,
+        matchCandidates: matchCandidates.length > 0 ? matchCandidates : undefined,
+        matchedAt: matchCandidates.length > 0 ? new Date() : undefined,
+      },
+      include: {
+        author: { select: { id: true, name: true, avatar: true, isNpc: true } },
+      },
+    });
+
+    logger.info("Post created with matching", { postId: post.id, matchCount: matchCandidates.length });
+
+    // 决定是否自动发起咨询
+    const effectiveMode = fullUser.orderMode;
+    let tasks: { taskId: string; worker: { id: string; name: string; avatar: string | null; similarity: number } }[] = [];
+
+    if (effectiveMode === "AUTO" && matchCandidates.length > 0) {
+      const selected = matchCandidates.slice(0, Math.min(fullUser.autoTopN, matchCandidates.length));
+      const totalCost = selected.length * CREDIT_PER_CONSULT;
+
+      // 余额不足时降级：取能负担的数量
+      const affordable = Math.min(selected.length, Math.floor(fullUser.credits / CREDIT_PER_CONSULT));
+
+      if (affordable > 0) {
+        const toConsult = selected.slice(0, affordable);
+
+        tasks = await Promise.all(
+          toConsult.map(async (candidate) => {
+            // 查找候选用户的 secondmeId
+            const workerUser = await prisma.user.findUnique({
+              where: { id: candidate.userId },
+              select: { secondmeId: true },
+            });
+
+            const task = await prisma.task.create({
+              data: {
+                type: TaskType.CONSULT,
+                status: TaskStatus.MATCHING,
+                description: content,
+                creditCost: CREDIT_PER_CONSULT,
+                publisherId: user.id,
+                workerId: candidate.userId,
+                postId: post.id,
+                timeoutMs: 2 * 60 * 1000,
+              },
+            });
+
+            // 异步执行
+            if (workerUser?.secondmeId) {
+              executeConsultTask(
+                task.id,
+                user.id,
+                candidate.userId,
+                workerUser.secondmeId,
+                content,
+                CREDIT_PER_CONSULT
+              ).catch((err) =>
+                logger.error("Auto consult task error", { taskId: task.id, error: err.message })
+              );
+            }
+
+            return {
+              taskId: task.id,
+              worker: {
+                id: candidate.userId,
+                name: candidate.name,
+                avatar: candidate.avatar,
+                similarity: candidate.similarity,
+              },
+            };
+          })
+        );
+
+        logger.info("Auto consult tasks created", { postId: post.id, taskCount: tasks.length });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      post: {
+        id: post.id,
+        content: post.content,
+        author: post.author,
+        createdAt: post.createdAt,
+      },
+      mode: effectiveMode,
+      matchCount: matchCandidates.length,
+      candidates: matchCandidates,
+      tasks: tasks.length > 0 ? tasks : undefined,
+    }, { status: 201 });
+  } catch (err) {
+    logger.error("Plaza POST error", { error: (err as Error).message });
+    return serverError("发布失败");
+  }
 }

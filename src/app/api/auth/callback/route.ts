@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
           bio: userInfo.aboutMe || userInfo.bio || null,
           shades: shades || null,
           softmemory: softmemory || null,
-          credits: 100,
+          credits: 1000,
           apiKeyHash: apiKeyRecord.apiKeyHash,
           apiKeyPreview: apiKeyRecord.apiKeyPreview,
         },
@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
           .catch((err) => logger.error("Failed to create embedding", { userId: dbUser!.id, error: err.message }));
       }
 
-      logger.info("New user created", { userId: dbUser.id, credits: 100 });
+      logger.info("New user created", { userId: dbUser.id, credits: 1000 });
     }
 
     await claimDailyCredit(dbUser.id);

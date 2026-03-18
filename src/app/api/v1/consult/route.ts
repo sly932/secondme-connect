@@ -7,7 +7,7 @@ import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
 import { TaskType, TaskStatus } from "@prisma/client";
 
-const CREDIT_PER_CONSULT = 10;
+const CREDIT_PER_CONSULT = 1;
 
 export async function POST(req: NextRequest) {
   try {

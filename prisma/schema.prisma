@@ -24,7 +24,7 @@ model User {
   shades         Json?
   softmemory     Json?
   embedding      Unsupported("vector")?
-  credits        Int                    @default(100)
+  credits        Int                    @default(1000)
   totalOrders    Int                    @default(0)
   totalEarnings  Int                    @default(0)
   apiKey         String?                @unique
@@ -67,12 +67,15 @@ model Task {
   timeoutMs   Int?
   publisherId String
   workerId    String?
+  postId      String?
   publisher   User          @relation("publisher", fields: [publisherId], references: [id])
   worker      User?         @relation("worker", fields: [workerId], references: [id])
+  post        Post?         @relation("PostTasks", fields: [postId], references: [id])
 
   @@index([publisherId])
   @@index([workerId])
   @@index([status])
+  @@index([postId])
   @@map("tasks")
 }
 
@@ -165,12 +168,15 @@ model GameAction {
 }
 
 model Post {
-  id        String    @id @default(cuid())
-  content   String
-  authorId  String
-  author    User      @relation("PostAuthor", fields: [authorId], references: [id])
-  comments  Comment[]
-  createdAt DateTime  @default(now())
+  id              String    @id @default(cuid())
+  content         String
+  authorId        String
+  matchCandidates Json?
+  matchedAt       DateTime?
+  author          User      @relation("PostAuthor", fields: [authorId], references: [id])
+  comments        Comment[]
+  tasks           Task[]    @relation("PostTasks")
+  createdAt       DateTime  @default(now())
 
   @@index([authorId])
   @@index([createdAt])
