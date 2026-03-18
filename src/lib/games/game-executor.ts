@@ -89,33 +89,44 @@ function extractTextFromSSE(raw: string): string {
 }
 
 /** 调用 SecondMe Chat 获取 AI 决策 */
+const AI_DECISION_TIMEOUT = 15000; // 15 秒超时
+
 async function getAIDecision(
   accessToken: string,
   targetUserId: string,
   prompt: string
 ): Promise<string> {
   try {
-    const stream = await chatStream(accessToken, targetUserId, prompt);
-    const reader = stream.getReader();
-    const decoder = new TextDecoder();
-    let rawResult = "";
+    const result = await Promise.race([
+      (async () => {
+        const stream = await chatStream(accessToken, targetUserId, prompt);
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+        let rawResult = "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      rawResult += decoder.decode(value, { stream: true });
-    }
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          rawResult += decoder.decode(value, { stream: true });
+        }
+
+        return rawResult;
+      })(),
+      new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error("AI decision timeout")), AI_DECISION_TIMEOUT)
+      ),
+    ]);
 
     // 从 SSE 流中提取实际文本
-    const text = extractTextFromSSE(rawResult);
+    const text = extractTextFromSSE(result);
 
     logger.debug("AI decision parsed", {
       targetUserId,
-      rawLength: rawResult.length,
+      rawLength: result.length,
       extractedText: text.substring(0, 200),
     });
 
-    return text || rawResult; // fallback to raw if extraction yields nothing
+    return text || result; // fallback to raw if extraction yields nothing
   } catch (error) {
     logger.error("AI decision call failed", { targetUserId, error: String(error) });
     return "";
@@ -136,13 +147,19 @@ async function getUserToken(userId: string): Promise<string | null> {
     try {
       const { refreshAccessToken } = await import("../secondme");
       const data = await refreshAccessToken(user.refreshToken);
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
+      const tokenData = {
           accessToken: data.access_token,
           refreshToken: data.refresh_token || user.refreshToken,
           tokenExpiry: new Date(Date.now() + (data.expires_in || 7200) * 1000),
-        },
+        };
+      await prisma.user.update({
+        where: { id: userId },
+        data: tokenData,
+      });
+      // 同步更新绑定的 NPC
+      await prisma.user.updateMany({
+        where: { boundUserId: userId, isNpc: true },
+        data: tokenData,
       });
       return data.access_token;
     } catch {
@@ -296,7 +313,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
         round: roundNum,
         type: "action",
         message: event,
-        data: { playerId: currentPlayer.id, action },
+        data: { playerId: currentPlayer.id, action, hand: currentPlayer.hand },
       });
 
       // 短暂延迟以便观战体验
@@ -311,7 +328,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
         round: roundNum,
         type: "action",
         message: e,
-        data: { dealer: true },
+        data: { dealer: true, dealerHand: state.dealer.hand },
       });
       await new Promise((r) => setTimeout(r, 300));
     }
@@ -351,10 +368,34 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
         timestamp: Date.now(),
         round: roundNum,
         type: "result",
-        message: `${r.playerName}: ${r.outcome === "win" ? "赢" : r.outcome === "lose" ? "输" : r.outcome === "blackjack" ? "Blackjack!" : "平局"} ${r.payout > 0 ? "+" : ""}${r.payout} 筹码`,
+        message: `${r.playerName} [${r.handValue}点${r.outcome === "blackjack" ? " Blackjack" : ""}]: ${r.outcome === "win" ? "赢" : r.outcome === "lose" ? "输" : r.outcome === "blackjack" ? "Blackjack!" : "平局"} ${r.payout > 0 ? "+" : ""}${r.payout} 筹码`,
         data: { ...r },
       });
     }
+
+    // 构建结构化快照
+    const roundSnapshot = {
+      round: roundNum,
+      gameType: "BLACKJACK",
+      pot: room.minChips * playersForRound.length,
+      dealer: { hand: state.dealer.hand },
+      players: state.players.map((p) => {
+        const result = results.find((r) => r.playerId === p.id);
+        return {
+          id: p.id,
+          name: p.name,
+          initialHand: p.hand.slice(0, 2),
+          finalHand: p.hand,
+          outcome: result?.outcome || "unknown",
+          payout: result?.payout || 0,
+          handRank: result ? `${result.handValue}点${result.outcome === "blackjack" ? " Blackjack" : result.outcome === "lose" && p.status === "busted" ? " 爆牌" : ""}` : "",
+          chipsAfter: (room.players.find((rp) => rp.id === p.id)?.chips || 0) + (result?.payout || 0) + room.minChips,
+        };
+      }),
+      actions: getRoomEvents(roomId)
+        .filter((e) => e.round === roundNum && (e.type === "action" || e.type === "deal"))
+        .map((e, seq) => ({ seq, type: e.type, message: e.message, data: e.data })),
+    };
 
     // 更新 round 记录
     await prisma.gameRound.update({
@@ -364,6 +405,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
         pot: room.minChips * playersForRound.length,
         dealerHand: state.dealer.hand as unknown as Record<string, unknown>[],
         resultLog: results as unknown as Record<string, unknown>[],
+        roundSnapshot: roundSnapshot as unknown as Record<string, unknown>,
         winnerId: results.find((r) => r.outcome === "win" || r.outcome === "blackjack")?.playerId,
       },
     });
@@ -492,10 +534,17 @@ export async function executeTexasGame(roomId: string): Promise<void> {
     }
 
     // 主循环
+    let loopGuard = 0;
     while (state.phase !== "showdown") {
+      // 安全阀：防止无限循环
+      if (++loopGuard > state.players.length * 50) {
+        logger.error("Texas main loop exceeded safety limit", { roomId, round: roundNum });
+        state.phase = "showdown" as TexasState["phase"];
+        break;
+      }
+
       const currentPlayer = state.players[state.currentPlayerIndex];
       if (currentPlayer.status !== "active") {
-        // 跳过
         state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
         continue;
       }
@@ -541,7 +590,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
         round: roundNum,
         type: "action",
         message: event,
-        data: { playerId: currentPlayer.id, action: action.type },
+        data: { playerId: currentPlayer.id, action: action.type, hand: currentPlayer.hand },
       });
 
       // 阶段变化通知
@@ -601,6 +650,32 @@ export async function executeTexasGame(roomId: string): Promise<void> {
       });
     }
 
+    // 构建结构化快照
+    const roundSnapshot = {
+      round: roundNum,
+      gameType: "TEXAS_HOLDEM",
+      pot: state.pot,
+      communityCards: state.communityCards,
+      players: state.players.map((p) => {
+        const result = results.find((r) => r.playerId === p.id);
+        const gp = room.players.find((rp) => rp.id === p.id);
+        return {
+          id: p.id,
+          name: p.name,
+          hand: p.hand,
+          status: p.status,
+          totalBet: p.totalBet,
+          outcome: result?.outcome || "unknown",
+          payout: result?.payout || 0,
+          handRank: result?.handRank || "",
+          chipsAfter: gp?.chips || 0,
+        };
+      }),
+      actions: getRoomEvents(roomId)
+        .filter((e) => e.round === roundNum && (e.type === "action" || e.type === "deal" || e.type === "phase"))
+        .map((e, seq) => ({ seq, type: e.type, message: e.message, data: e.data })),
+    };
+
     await prisma.gameRound.update({
       where: { id: gameRound.id },
       data: {
@@ -608,6 +683,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
         pot: state.pot,
         communityCards: state.communityCards as unknown as Record<string, unknown>[],
         resultLog: results as unknown as Record<string, unknown>[],
+        roundSnapshot: roundSnapshot as unknown as Record<string, unknown>,
         winnerId: results.find((r) => r.outcome === "win")?.playerId,
       },
     });

@@ -37,8 +37,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black pt-24 flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-2 border-white border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-50 dark:bg-black pt-24 flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-gray-900 dark:border-white border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -46,12 +46,12 @@ export default function ProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-black pt-24 px-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-black pt-24 px-6">
       <div className="max-w-2xl mx-auto space-y-8">
         {/* 分身档案卡 */}
-        <div className="p-8 rounded-2xl bg-zinc-900 border border-zinc-800">
+        <div className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-2xl font-bold">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-2xl font-bold text-white">
               {profile.avatar ? (
                 <img src={profile.avatar} alt="" className="w-full h-full rounded-full object-cover" />
               ) : (
@@ -59,8 +59,8 @@ export default function ProfilePage() {
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">{profile.name}</h1>
-              <p className="text-zinc-400 mt-1">{profile.bio || "这个人很懒，什么都没留下"}</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{profile.name}</h1>
+              <p className="text-gray-500 dark:text-zinc-400 mt-1">{profile.bio || "这个人很懒，什么都没留下"}</p>
             </div>
           </div>
 
@@ -69,7 +69,7 @@ export default function ProfilePage() {
               {profile.shades.map((shade, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 bg-zinc-800 text-zinc-300 text-sm rounded-full border border-zinc-700"
+                  className="px-3 py-1 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 text-sm rounded-full border border-gray-200 dark:border-zinc-700"
                 >
                   {shade.name || String(shade)}
                 </span>
@@ -80,21 +80,21 @@ export default function ProfilePage() {
 
         {/* 运营数据 */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 text-center">
-            <div className="text-3xl font-bold text-white">{profile.credits}</div>
-            <div className="text-sm text-zinc-500 mt-1">Credit 余额</div>
+          <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-center">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">{profile.credits}</div>
+            <div className="text-sm text-gray-400 dark:text-zinc-500 mt-1">Credit 余额</div>
           </div>
-          <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 text-center">
-            <div className="text-3xl font-bold text-white">{profile.totalOrders}</div>
-            <div className="text-sm text-zinc-500 mt-1">接单总数</div>
+          <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-center">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">{profile.totalOrders}</div>
+            <div className="text-sm text-gray-400 dark:text-zinc-500 mt-1">接单总数</div>
           </div>
-          <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 text-center">
-            <div className="text-3xl font-bold text-white">{profile.totalEarnings}</div>
-            <div className="text-sm text-zinc-500 mt-1">总收入</div>
+          <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-center">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">{profile.totalEarnings}</div>
+            <div className="text-sm text-gray-400 dark:text-zinc-500 mt-1">总收入</div>
           </div>
         </div>
 
-        <div className="text-sm text-zinc-600 text-center">
+        <div className="text-sm text-gray-400 dark:text-zinc-600 text-center">
           注册时间: {new Date(profile.createdAt).toLocaleDateString("zh-CN")}
         </div>
       </div>

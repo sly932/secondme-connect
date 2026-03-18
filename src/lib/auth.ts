@@ -3,6 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "./prisma";
 import logger from "./logger";
+import { claimDailyCredit } from "./credits";
 
 declare module "next-auth" {
   interface Session {
@@ -48,7 +49,10 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // 登录时从数据库获取完整信息
+        // 登录时尝试领取每日 credit
+        await claimDailyCredit(user.id!);
+
+        // 登录时从数据库获取完整信息（领取后的最新余额）
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id! },
           select: { id: true, name: true, avatar: true, credits: true, apiKey: true },

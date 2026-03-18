@@ -32,19 +32,16 @@ export async function POST(req: NextRequest) {
       return badRequest(`Credit 不足。需要 ${totalCost} credit (${chips} × ${rounds} 局)，当前余额 ${user.credits}`);
     }
 
-    // 从用户库随机选 AI 玩家 (排除创建者)
+    // 从已开启自动参与游戏的用户中随机选玩家（排除创建者）
     const aiUserCount = players - 1;
     const aiUsers = await prisma.$queryRawUnsafe<{ id: string; name: string }[]>(
-      `SELECT id, name FROM users WHERE id != $1 ORDER BY RANDOM() LIMIT $2`,
+      `SELECT id, name FROM users WHERE "autoJoinGame" = true AND id != $1 ORDER BY RANDOM() LIMIT $2`,
       user.id,
       aiUserCount
     );
 
-    // 如果用户库不够, 创建虚拟 AI 用户
-    const aiNames = ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace"];
-    while (aiUsers.length < aiUserCount) {
-      const idx = aiUsers.length;
-      aiUsers.push({ id: user.id, name: aiNames[idx % aiNames.length] + " (AI)" });
+    if (aiUsers.length < aiUserCount) {
+      return badRequest(`可用的 AI 玩家不足，需要 ${aiUserCount} 人，当前仅 ${aiUsers.length} 人可用`);
     }
 
     // 预扣 credit

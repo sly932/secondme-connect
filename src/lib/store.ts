@@ -40,18 +40,46 @@ export const useUserStore = create<UserState>((set) => ({
   updateCredits: (credits) => set({ credits }),
 }));
 
-interface DialogState {
-  isOpen: boolean;
-  activeTab: "consult" | "marketplace";
-  open: (tab?: "consult" | "marketplace") => void;
-  close: () => void;
-  setTab: (tab: "consult" | "marketplace") => void;
+export type PanelTab = "chat" | "tasks" | "games";
+export type TaskSubType = "WRITING" | "PAINTING";
+
+interface PanelState {
+  activeTab: PanelTab;
+  taskSubType: TaskSubType;
+  setTab: (tab: PanelTab) => void;
+  setTaskSubType: (sub: TaskSubType) => void;
+  scrollToPanel: () => void;
 }
 
-export const useDialogStore = create<DialogState>((set) => ({
-  isOpen: false,
-  activeTab: "consult",
-  open: (tab = "consult") => set({ isOpen: true, activeTab: tab }),
-  close: () => set({ isOpen: false }),
+export const usePanelStore = create<PanelState>((set) => ({
+  activeTab: "chat",
+  taskSubType: "WRITING",
   setTab: (tab) => set({ activeTab: tab }),
+  setTaskSubType: (sub) => set({ taskSubType: sub }),
+  scrollToPanel: () => {
+    const el = document.getElementById("connect-panel");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  },
+}));
+
+type Theme = "light" | "dark";
+
+interface ThemeState {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+}
+
+export const useThemeStore = create<ThemeState>((set) => ({
+  theme: (typeof window !== "undefined" && localStorage.getItem("theme") as Theme) || "light",
+  setTheme: (theme) => {
+    localStorage.setItem("theme", theme);
+    set({ theme });
+  },
+  toggleTheme: () =>
+    set((state) => {
+      const next = state.theme === "light" ? "dark" : "light";
+      localStorage.setItem("theme", next);
+      return { theme: next };
+    }),
 }));

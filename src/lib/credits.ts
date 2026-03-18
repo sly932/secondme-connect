@@ -78,6 +78,48 @@ export async function addCredits(
   });
 }
 
+const DAILY_BONUS = 100;
+const CREDIT_CAP = 500;
+
+/**
+ * 每日 credit 补给 — 首次登录时调用
+ * 如果今天还没领过且余额 < 上限，发放 100 credit
+ */
+export async function claimDailyCredit(userId: string): Promise<boolean> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { credits: true, lastDailyCredit: true },
+    });
+    if (!user) return false;
+
+    const lastClaim = user.lastDailyCredit;
+    if (lastClaim && lastClaim >= today) return false;
+    if (user.credits >= CREDIT_CAP) {
+      await tx.user.update({ where: { id: userId }, data: { lastDailyCredit: new Date() } });
+      return false;
+    }
+
+    const newBalance = Math.min(user.credits + DAILY_BONUS, CREDIT_CAP);
+    const added = newBalance - user.credits;
+
+    await tx.user.update({
+      where: { id: userId },
+      data: { credits: newBalance, lastDailyCredit: new Date() },
+    });
+
+    await tx.creditLog.create({
+      data: { userId, amount: added, balance: newBalance, reason: "DAILY_BONUS" },
+    });
+
+    logger.info("Daily credit claimed", { userId, added, newBalance });
+    return true;
+  });
+}
+
 /**
  * 退还 credit（任务失败/超时）
  */

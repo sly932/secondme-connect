@@ -69,13 +69,19 @@ export async function GET(req: NextRequest) {
 
     if (dbUser) {
       // 老用户: 更新 token
-      dbUser = await prisma.user.update({
-        where: { secondmeId },
-        data: {
+      const tokenData = {
           accessToken,
           refreshToken: refreshToken || dbUser.refreshToken,
           tokenExpiry: new Date(Date.now() + (expiresIn || 7200) * 1000),
-        },
+        };
+      dbUser = await prisma.user.update({
+        where: { secondmeId },
+        data: tokenData,
+      });
+      // 同步更新绑定的 NPC
+      await prisma.user.updateMany({
+        where: { boundUserId: dbUser.id, isNpc: true },
+        data: tokenData,
       });
       logger.info("Existing user token updated", { userId: dbUser.id });
     } else {

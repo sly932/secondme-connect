@@ -54,8 +54,8 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black pt-24 flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-2 border-white border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-50 dark:bg-black pt-24 flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-gray-900 dark:border-white border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -63,43 +63,43 @@ export default function SettingsPage() {
   if (!settings) return null;
 
   return (
-    <div className="min-h-screen bg-black pt-24 px-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-black pt-24 px-6">
       <div className="max-w-2xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-white">设置</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">设置</h1>
 
         {/* 下单模式 */}
-        <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-4">
-          <h2 className="text-lg font-semibold text-white">下单模式</h2>
+        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">下单模式</h2>
           <div className="flex gap-3">
             <button
               onClick={() => updateSettings({ orderMode: "AUTO" })}
               disabled={saving}
               className={`flex-1 p-4 rounded-xl border text-left transition-all ${
                 settings.orderMode === "AUTO"
-                  ? "border-white bg-white/10"
-                  : "border-zinc-700 hover:border-zinc-500"
+                  ? "border-black dark:border-white bg-black/5 dark:bg-white/10"
+                  : "border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500"
               }`}
             >
-              <div className="font-medium text-white">自动模式</div>
-              <div className="text-sm text-zinc-400 mt-1">匹配后自动执行，无需确认</div>
+              <div className="font-medium text-gray-900 dark:text-white">自动模式</div>
+              <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">匹配后自动执行，无需确认</div>
             </button>
             <button
               onClick={() => updateSettings({ orderMode: "MANUAL" })}
               disabled={saving}
               className={`flex-1 p-4 rounded-xl border text-left transition-all ${
                 settings.orderMode === "MANUAL"
-                  ? "border-white bg-white/10"
-                  : "border-zinc-700 hover:border-zinc-500"
+                  ? "border-black dark:border-white bg-black/5 dark:bg-white/10"
+                  : "border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500"
               }`}
             >
-              <div className="font-medium text-white">手动模式</div>
-              <div className="text-sm text-zinc-400 mt-1">展示候选列表，手动选择</div>
+              <div className="font-medium text-gray-900 dark:text-white">手动模式</div>
+              <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">展示候选列表，手动选择</div>
             </button>
           </div>
 
           {settings.orderMode === "AUTO" && (
             <div>
-              <label className="text-sm text-zinc-400">自动匹配数量 (Top N)</label>
+              <label className="text-sm text-gray-500 dark:text-zinc-400">自动匹配数量 (Top N)</label>
               <div className="flex gap-2 mt-2">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
@@ -108,8 +108,8 @@ export default function SettingsPage() {
                     disabled={saving}
                     className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
                       settings.autoTopN === n
-                        ? "bg-white text-black"
-                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                        ? "bg-black dark:bg-white text-white dark:text-black"
+                        : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700"
                     }`}
                   >
                     {n}
@@ -121,25 +121,25 @@ export default function SettingsPage() {
         </div>
 
         {/* API Key */}
-        <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-4">
-          <h2 className="text-lg font-semibold text-white">API Key</h2>
-          <p className="text-sm text-zinc-400">
+        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">API Key</h2>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
             用于调用 Connect 开放 API。请妥善保管，不要泄露给他人。
           </p>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 px-4 py-3 bg-zinc-800 rounded-lg font-mono text-sm text-zinc-300 overflow-hidden">
+            <div className="flex-1 px-4 py-3 bg-gray-50 dark:bg-zinc-800 rounded-lg font-mono text-sm text-gray-700 dark:text-zinc-300 overflow-hidden">
               {showKey ? settings.apiKey : settings.apiKey?.replace(/(?<=.{8}).*/g, "••••••••••••••••")}
             </div>
             <button
               onClick={() => setShowKey(!showKey)}
-              className="px-3 py-3 bg-zinc-800 rounded-lg text-sm text-zinc-400 hover:text-white transition-colors"
+              className="px-3 py-3 bg-gray-100 dark:bg-zinc-800 rounded-lg text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               {showKey ? "隐藏" : "显示"}
             </button>
             <button
               onClick={copyApiKey}
-              className="px-3 py-3 bg-zinc-800 rounded-lg text-sm text-zinc-400 hover:text-white transition-colors"
+              className="px-3 py-3 bg-gray-100 dark:bg-zinc-800 rounded-lg text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               {copied ? "已复制" : "复制"}
             </button>
@@ -152,7 +152,7 @@ export default function SettingsPage() {
               }
             }}
             disabled={saving}
-            className="px-4 py-2 bg-red-900/50 text-red-300 text-sm rounded-lg hover:bg-red-900/70 transition-colors border border-red-800/50"
+            className="px-4 py-2 bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-300 text-sm rounded-lg hover:bg-red-100 dark:hover:bg-red-900/70 transition-colors border border-red-200 dark:border-red-800/50"
           >
             重新生成 API Key
           </button>

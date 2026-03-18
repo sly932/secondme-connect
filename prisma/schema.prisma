@@ -7,80 +7,65 @@ datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   directUrl  = env("DIRECT_URL")
-  extensions = [vector]
+  extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector]
 }
 
 model User {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // SecondMe OAuth
-  secondmeId    String  @unique
-  accessToken   String
-  refreshToken  String
-  tokenExpiry   DateTime
-
-  // 分身档案
-  name          String
-  avatar        String?
-  bio           String?
-  shades        Json?      // 兴趣标签数组
-  softmemory    Json?      // 软记忆内容
-
-  // 向量 (1536 维, text-embedding-3-small)
-  embedding     Unsupported("vector(1536)")?
-
-  // 运营数据
-  credits       Int      @default(100)
-  totalOrders   Int      @default(0)
-  totalEarnings Int      @default(0)
-
-  // App Token (API Key)
-  apiKey        String?  @unique
-
-  // 设置
-  orderMode     OrderMode @default(MANUAL)
-  autoTopN      Int       @default(1)
-
-  // 关系
-  publishedTasks Task[]   @relation("publisher")
-  receivedTasks  Task[]   @relation("worker")
+  id             String                 @id @default(cuid())
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  secondmeId     String                 @unique
+  accessToken    String
+  refreshToken   String
+  tokenExpiry    DateTime
+  name           String
+  avatar         String?
+  bio            String?
+  shades         Json?
+  softmemory     Json?
+  embedding      Unsupported("vector")?
+  credits        Int                    @default(100)
+  totalOrders    Int                    @default(0)
+  totalEarnings  Int                    @default(0)
+  apiKey         String?                @unique
+  orderMode      OrderMode              @default(MANUAL)
+  autoTopN       Int                    @default(1)
+  isNpc          Boolean                @default(false)
+  autoJoinGame   Boolean                @default(false)
+  boundUserId    String?
+  boundUser      User?                  @relation("npcBinding", fields: [boundUserId], references: [id])
+  boundNpcs      User[]                 @relation("npcBinding")
+  lastDailyCredit DateTime?
   creditLogs     CreditLog[]
-  createdRooms   GameRoom[]    @relation("roomCreator")
   gamePlayers    GamePlayer[]
+  createdRooms   GameRoom[]             @relation("roomCreator")
+  publishedTasks Task[]                 @relation("publisher")
+  receivedTasks  Task[]                 @relation("worker")
+  posts          Post[]                 @relation("PostAuthor")
+  comments       Comment[]              @relation("CommentAuthor")
 
+  @@index([boundUserId])
   @@map("users")
 }
 
 model Task {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  type      TaskType
-  category  TaskCategory?  // 仅任务市场需要: WRITING / PAINTING
-  status    TaskStatus     @default(MATCHING)
-
-  // 需求描述
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  type        TaskType
+  category    TaskCategory?
+  status      TaskStatus    @default(MATCHING)
   description String
-  // 执行结果
   result      String?
-  resultUrl   String?       // 绘画任务的图片URL
-
-  // credit 消耗
+  resultUrl   String?
   creditCost  Int
-
-  // 超时管理
   startedAt   DateTime?
   completedAt DateTime?
   timeoutMs   Int?
-
-  // 关系
   publisherId String
-  publisher   User     @relation("publisher", fields: [publisherId], references: [id])
   workerId    String?
-  worker      User?    @relation("worker", fields: [workerId], references: [id])
+  publisher   User          @relation("publisher", fields: [publisherId], references: [id])
+  worker      User?         @relation("worker", fields: [workerId], references: [id])
 
   @@index([publisherId])
   @@index([workerId])
@@ -91,17 +76,116 @@ model Task {
 model CreditLog {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-
   userId    String
+  amount    Int
+  balance   Int
+  reason    String
+  taskId    String?
   user      User     @relation(fields: [userId], references: [id])
-
-  amount    Int       // 正数=收入, 负数=支出
-  balance   Int       // 变动后余额
-  reason    String    // 描述
-  taskId    String?   // 关联任务ID
 
   @@index([userId])
   @@map("credit_logs")
+}
+
+model GameRoom {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  gameType     GameType
+  maxPlayers   Int          @default(4)
+  minChips     Int          @default(10)
+  totalRounds  Int          @default(5)
+  status       RoomStatus   @default(PLAYING)
+  currentRound Int          @default(0)
+  creatorId    String
+  players      GamePlayer[]
+  creator      User         @relation("roomCreator", fields: [creatorId], references: [id])
+  rounds       GameRound[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@map("game_rooms")
+}
+
+model GamePlayer {
+  id        String       @id @default(cuid())
+  roomId    String
+  userId    String
+  position  Int
+  isCreator Boolean      @default(false)
+  isAI      Boolean      @default(false)
+  chips     Int
+  status    PlayerStatus @default(ACTIVE)
+  actions   GameAction[]
+  room      GameRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, position])
+  @@index([roomId])
+  @@map("game_players")
+}
+
+model GameRound {
+  id             String       @id @default(cuid())
+  createdAt      DateTime     @default(now())
+  roomId         String
+  roundNumber    Int
+  status         RoundStatus  @default(IN_PROGRESS)
+  pot            Int          @default(0)
+  communityCards Json?
+  dealerHand     Json?
+  winnerId       String?
+  resultLog      Json?
+  roundSnapshot  Json?
+  actions        GameAction[]
+  room           GameRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, roundNumber])
+  @@index([roomId])
+  @@map("game_rounds")
+}
+
+model GameAction {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  roundId   String
+  playerId  String
+  action    String
+  amount    Int?
+  cards     Json?
+  message   String?
+  player    GamePlayer @relation(fields: [playerId], references: [id])
+  round     GameRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@index([roundId])
+  @@map("game_actions")
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  content   String
+  authorId  String
+  author    User      @relation("PostAuthor", fields: [authorId], references: [id])
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  postId    String
+  authorId  String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([postId, authorId])
+  @@index([postId])
+  @@map("comments")
 }
 
 enum OrderMode {
@@ -110,127 +194,30 @@ enum OrderMode {
 }
 
 enum TaskType {
-  CONSULT     // 咨询任务
-  MARKETPLACE // 任务市场
+  CONSULT
+  MARKETPLACE
 }
 
 enum TaskCategory {
-  WRITING     // 写作
-  PAINTING    // 绘画
-}
-
-// ============================================================
-// 游戏广场
-// ============================================================
-
-model GameRoom {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  gameType    GameType
-  maxPlayers  Int          @default(4)
-  minChips    Int          @default(10)
-  totalRounds Int          @default(5)
-  status      RoomStatus   @default(PLAYING)
-
-  currentRound Int         @default(0)
-
-  // 创建者
-  creatorId String
-  creator   User     @relation("roomCreator", fields: [creatorId], references: [id])
-
-  // 关系
-  players   GamePlayer[]
-  rounds    GameRound[]
-
-  @@index([creatorId])
-  @@index([status])
-  @@map("game_rooms")
-}
-
-model GamePlayer {
-  id        String   @id @default(cuid())
-
-  roomId    String
-  room      GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-
-  position  Int         // 座位号 0-based
-  isCreator Boolean     @default(false)
-  isAI      Boolean     @default(false)
-  chips     Int         // 当前筹码
-  status    PlayerStatus @default(ACTIVE)
-
-  actions   GameAction[]
-
-  @@unique([roomId, position])
-  @@index([roomId])
-  @@map("game_players")
-}
-
-model GameRound {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  roomId      String
-  room        GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  roundNumber Int
-  status      RoundStatus @default(IN_PROGRESS)
-  pot         Int         @default(0)
-
-  // 牌面状态 (JSON)
-  communityCards Json?    // 公共牌 (德州)
-  dealerHand     Json?    // 庄家手牌 (21点)
-
-  // 结果
-  winnerId    String?     // 赢家 GamePlayer ID
-  resultLog   Json?       // 详细结算日志
-
-  actions     GameAction[]
-
-  @@unique([roomId, roundNumber])
-  @@index([roomId])
-  @@map("game_rounds")
-}
-
-model GameAction {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  roundId   String
-  round     GameRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
-
-  playerId  String
-  player    GamePlayer @relation(fields: [playerId], references: [id])
-
-  action    String      // HIT, STAND, FOLD, CALL, RAISE, ALL_IN, etc.
-  amount    Int?        // 下注金额
-  cards     Json?       // 此动作后的手牌状态
-  message   String?     // AI 的对话内容
-
-  @@index([roundId])
-  @@map("game_actions")
+  WRITING
+  PAINTING
 }
 
 enum GameType {
-  BLACKJACK     // 21点
-  TEXAS_HOLDEM  // 德州扑克
+  BLACKJACK
+  TEXAS_HOLDEM
 }
 
 enum RoomStatus {
-  PLAYING       // 进行中
-  COMPLETED     // 已结束
-  CANCELLED     // 已取消
+  PLAYING
+  COMPLETED
+  CANCELLED
 }
 
 enum PlayerStatus {
   ACTIVE
   FOLDED
-  BUSTED        // 筹码归零
+  BUSTED
   LEFT
 }
 
@@ -240,12 +227,12 @@ enum RoundStatus {
 }
 
 enum TaskStatus {
-  MATCHING    // 向量匹配中
-  PENDING     // 待接单(手动模式, 等用户确认)
-  EVALUATING  // 分身评估中
-  ACCEPTED    // 已接单(此时扣credit)
-  EXECUTING   // 执行中
-  COMPLETED   // 已完成
-  FAILED      // 失败/超时
-  CANCELLED   // 已取消
+  MATCHING
+  PENDING
+  EVALUATING
+  ACCEPTED
+  EXECUTING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
