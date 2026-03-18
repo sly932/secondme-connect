@@ -1,0 +1,129 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // SecondMe OAuth
+  secondmeId    String  @unique
+  accessToken   String
+  refreshToken  String
+  tokenExpiry   DateTime
+
+  // 分身档案
+  name          String
+  avatar        String?
+  bio           String?
+  shades        Json?      // 兴趣标签数组
+  softmemory    Json?      // 软记忆内容
+
+  // 向量 (1536 维, text-embedding-3-small)
+  embedding     Unsupported("vector(1536)")?
+
+  // 运营数据
+  credits       Int      @default(100)
+  totalOrders   Int      @default(0)
+  totalEarnings Int      @default(0)
+
+  // App Token (API Key)
+  apiKey        String?  @unique
+
+  // 设置
+  orderMode     OrderMode @default(MANUAL)
+  autoTopN      Int       @default(1)
+
+  // 关系
+  publishedTasks Task[]   @relation("publisher")
+  receivedTasks  Task[]   @relation("worker")
+  creditLogs     CreditLog[]
+
+  @@map("users")
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  type      TaskType
+  category  TaskCategory?  // 仅任务市场需要: WRITING / PAINTING
+  status    TaskStatus     @default(MATCHING)
+
+  // 需求描述
+  description String
+  // 执行结果
+  result      String?
+  resultUrl   String?       // 绘画任务的图片URL
+
+  // credit 消耗
+  creditCost  Int
+
+  // 超时管理
+  startedAt   DateTime?
+  completedAt DateTime?
+  timeoutMs   Int?
+
+  // 关系
+  publisherId String
+  publisher   User     @relation("publisher", fields: [publisherId], references: [id])
+  workerId    String?
+  worker      User?    @relation("worker", fields: [workerId], references: [id])
+
+  @@index([publisherId])
+  @@index([workerId])
+  @@index([status])
+  @@map("tasks")
+}
+
+model CreditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  amount    Int       // 正数=收入, 负数=支出
+  balance   Int       // 变动后余额
+  reason    String    // 描述
+  taskId    String?   // 关联任务ID
+
+  @@index([userId])
+  @@map("credit_logs")
+}
+
+enum OrderMode {
+  AUTO
+  MANUAL
+}
+
+enum TaskType {
+  CONSULT     // 咨询任务
+  MARKETPLACE // 任务市场
+}
+
+enum TaskCategory {
+  WRITING     // 写作
+  PAINTING    // 绘画
+}
+
+enum TaskStatus {
+  MATCHING    // 向量匹配中
+  PENDING     // 待接单(手动模式, 等用户确认)
+  EVALUATING  // 分身评估中
+  ACCEPTED    // 已接单(此时扣credit)
+  EXECUTING   // 执行中
+  COMPLETED   // 已完成
+  FAILED      // 失败/超时
+  CANCELLED   // 已取消
+}
