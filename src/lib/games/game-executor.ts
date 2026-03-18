@@ -544,7 +544,28 @@ export async function executeTexasGame(roomId: string): Promise<void> {
 
     if (playersForRound.length < 2) break;
 
-    const state = initTexasRound(playersForRound, room.minChips, dealerIndex % playersForRound.length);
+    const actualDealerIndex = dealerIndex % playersForRound.length;
+    const state = initTexasRound(playersForRound, room.minChips, actualDealerIndex);
+
+    // 推送盲注信息事件
+    const sbIdx = (actualDealerIndex + 1) % playersForRound.length;
+    const bbIdx = (actualDealerIndex + 2) % playersForRound.length;
+    pushEvent(roomId, {
+      timestamp: Date.now(),
+      round: roundNum,
+      type: "phase",
+      message: `庄家: ${playersForRound[actualDealerIndex].name} · 小盲 ${state.smallBlind}: ${playersForRound[sbIdx].name} · 大盲 ${state.bigBlind}: ${playersForRound[bbIdx].name}`,
+      data: {
+        dealerIndex: actualDealerIndex,
+        sbIndex: sbIdx,
+        bbIndex: bbIdx,
+        smallBlind: state.smallBlind,
+        bigBlind: state.bigBlind,
+        dealerPlayerId: playersForRound[actualDealerIndex].id,
+        sbPlayerId: playersForRound[sbIdx].id,
+        bbPlayerId: playersForRound[bbIdx].id,
+      },
+    });
 
     const gameRound = await prisma.gameRound.create({
       data: {
@@ -681,6 +702,9 @@ export async function executeTexasGame(roomId: string): Promise<void> {
       gameType: "TEXAS_HOLDEM",
       pot: state.pot,
       communityCards: state.communityCards,
+      dealerIndex: actualDealerIndex,
+      smallBlind: state.smallBlind,
+      bigBlind: state.bigBlind,
       players: state.players.map((p) => {
         const result = results.find((r) => r.playerId === p.id);
         const gp = room.players.find((rp) => rp.id === p.id);

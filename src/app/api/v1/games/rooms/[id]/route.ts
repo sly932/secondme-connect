@@ -20,7 +20,7 @@ export async function GET(
       include: {
         creator: { select: { id: true, name: true, avatar: true } },
         players: {
-          include: { user: { select: { id: true, name: true, avatar: true } } },
+          include: { user: { select: { id: true, name: true, avatar: true, bio: true } } },
           orderBy: { position: "asc" },
         },
         rounds: {
@@ -67,6 +67,7 @@ export async function GET(
           id: p.id,
           name: p.user.name,
           avatar: p.user.avatar,
+          bio: p.user.bio,
           position: p.position,
           isCreator: p.isCreator,
           isAI: p.isAI,

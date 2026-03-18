@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
-import { generateEmbedding } from "@/lib/embedding";
-import { searchSimilarUsers } from "@/lib/vectors";
+import { findMatchingUsers } from "@/lib/vectors";
 import { executeWritingTask, executePaintingTask } from "@/lib/task-executor";
 import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
@@ -36,9 +35,8 @@ export async function POST(req: NextRequest) {
     const effectiveMode = mode || fullUser.orderMode;
     const effectiveTopN = topN || fullUser.autoTopN;
 
-    // 向量匹配
-    const queryEmbedding = await generateEmbedding(description);
-    const candidates = await searchSimilarUsers(queryEmbedding, user.id, 10);
+    // 匹配分身（向量优先，fallback BM25）
+    const candidates = await findMatchingUsers(description, user.id, 10);
 
     if (candidates.length === 0) {
       return NextResponse.json({ message: "未找到匹配的分身", candidates: [] });
@@ -69,6 +67,24 @@ export async function POST(req: NextRequest) {
 
     const timeoutMs = category === "WRITING" ? 2 * 60 * 1000 : 3 * 60 * 1000;
 
+    // 创建广场帖子（与咨询任务统一展示）
+    const matchCandidates = selected.map((c) => ({
+      userId: c.id,
+      name: c.name,
+      avatar: c.avatar,
+      bio: c.bio,
+      similarity: Math.round(c.similarity * 100) / 100,
+    }));
+
+    const post = await prisma.post.create({
+      data: {
+        content: description,
+        authorId: user.id,
+        matchCandidates: matchCandidates,
+        matchedAt: new Date(),
+      },
+    });
+
     const tasks = await Promise.all(
       selected.map(async (candidate) => {
         const task = await prisma.task.create({
@@ -80,6 +96,7 @@ export async function POST(req: NextRequest) {
             creditCost,
             publisherId: user.id,
             workerId: candidate.id,
+            postId: post.id,
             timeoutMs,
           },
         });
@@ -91,7 +108,7 @@ export async function POST(req: NextRequest) {
           task.id,
           user.id,
           candidate.id,
-          candidate.secondme_id,
+          candidate.secondmeId,
           description,
           creditCost
         ).catch((err) =>
@@ -114,6 +131,7 @@ export async function POST(req: NextRequest) {
       mode: "AUTO",
       totalCost,
       tasks,
+      postId: post.id,
     });
   } catch (err) {
     logger.error("Task API error", { error: (err as Error).message });

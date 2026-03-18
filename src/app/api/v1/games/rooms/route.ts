@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
           players: { include: { user: { select: { id: true, name: true, avatar: true } } } },
         },
       });
-    });
+    }, { timeout: 15000 });
 
     logger.info("Game room created", { roomId: room.id, gameType, players, rounds });
 

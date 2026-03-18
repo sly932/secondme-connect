@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
-import { generateEmbedding } from "@/lib/embedding";
-import { searchSimilarUsers } from "@/lib/vectors";
+import { findMatchingUsers } from "@/lib/vectors";
 import { executeConsultTask } from "@/lib/task-executor";
 import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
@@ -26,18 +25,15 @@ export async function POST(req: NextRequest) {
     // 获取用户完整信息
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, credits: true, orderMode: true, autoTopN: true },
+      select: { id: true, credits: true, orderMode: true, autoTopN: true, secondmeId: true },
     });
     if (!fullUser) return unauthorized();
 
     const effectiveMode = mode || fullUser.orderMode;
     const effectiveTopN = topN || fullUser.autoTopN;
 
-    // 生成需求向量
-    const queryEmbedding = await generateEmbedding(description);
-
-    // 向量匹配
-    const candidates = await searchSimilarUsers(queryEmbedding, user.id, 10);
+    // 匹配分身（向量优先，fallback BM25）
+    const candidates = await findMatchingUsers(description, user.id, 10);
 
     if (candidates.length === 0) {
       return NextResponse.json({ message: "未找到匹配的分身", candidates: [] });
@@ -84,8 +80,9 @@ export async function POST(req: NextRequest) {
         executeConsultTask(
           task.id,
           user.id,
+          fullUser.secondmeId,
           candidate.id,
-          candidate.secondme_id,
+          candidate.secondmeId,
           description,
           CREDIT_PER_CONSULT
         ).catch((err) => logger.error("Consult task execution error", { taskId: task.id, error: err.message }));

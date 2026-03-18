@@ -6,10 +6,11 @@ import { useSession } from "next-auth/react";
 import { usePanelStore, useUserStore } from "@/lib/store";
 import type { PanelTab } from "@/lib/store";
 import { GameCreatingOverlay } from "@/components/GameCreatingOverlay";
+import { TaskCreatingOverlay } from "@/components/TaskCreatingOverlay";
 
 const GAME_PRESETS = {
-  BLACKJACK: { label: "21 点", icon: "🃏", players: 3, chips: 10, rounds: 5, cost: 50 },
-  TEXAS_HOLDEM: { label: "德州扑克", icon: "♠️", players: 4, chips: 10, rounds: 5, cost: 50 },
+  BLACKJACK: { label: "21 点", icon: "🃏", players: 4, chips: 10, rounds: 5, cost: 50 },
+  TEXAS_HOLDEM: { label: "德州扑克", icon: "♠️", players: 6, chips: 10, rounds: 5, cost: 50 },
 } as const;
 
 const CHAT_CHIPS = [
@@ -52,6 +53,12 @@ export function ConnectPanel() {
   const [gameCreateError, setGameCreateError] = useState<string | null>(null);
   const pendingRoomId = useRef<string | null>(null);
 
+  // 任务/需求发布 overlay 状态
+  const [submittingType, setSubmittingType] = useState<"chat" | "writing" | "painting" | null>(null);
+  const [submitApiDone, setSubmitApiDone] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSummary, setSubmitSummary] = useState<string | null>(null);
+
   const hasCredits = credits > 0;
 
   const handleLogin = () => {
@@ -62,11 +69,13 @@ export function ConnectPanel() {
     if (!session) return handleLogin();
     if (!description.trim()) return;
 
-    setLoading(true);
+    setSubmittingType("chat");
+    setSubmitApiDone(false);
+    setSubmitError(null);
+    setSubmitSummary(null);
     setResult(null);
 
     try {
-      // 单次请求：发布到广场 + 自动匹配 + 根据 orderMode 自动/手动咨询
       const res = await fetch("/api/v1/plaza", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,41 +84,70 @@ export function ConnectPanel() {
       const data = await res.json();
 
       if (data.success) {
-        setResult({
-          ...data,
-          message: data.tasks?.length
-            ? `已发布到广场，已向 ${data.tasks.length} 个分身发起咨询`
-            : data.matchCount > 0
-              ? `已发布到广场，找到 ${data.matchCount} 个匹配的分身，去广场查看详情`
-              : "已发布到广场",
-        });
+        const msg = data.tasks?.length
+          ? `已向 ${data.tasks.length} 个分身发起咨询`
+          : data.matchCount > 0
+            ? `找到 ${data.matchCount} 个匹配的分身`
+            : "已发布到广场";
+        setSubmitSummary(msg);
+        setSubmitApiDone(true);
         setDescription("");
+        setTimeout(() => {
+          router.push("/plaza");
+          setSubmittingType(null);
+        }, 1200);
       } else {
-        setResult({ error: data.message || "发布失败" });
+        setSubmitError(data.message || "发布失败");
+        setTimeout(() => setSubmittingType(null), 2500);
       }
     } catch {
-      setResult({ error: "请求失败" });
-    } finally {
-      setLoading(false);
+      setSubmitError("网络错误，请重试");
+      setTimeout(() => setSubmittingType(null), 2500);
     }
   };
 
   const handleTaskSubmit = async () => {
     if (!session) return handleLogin();
     if (!description.trim()) return;
-    setLoading(true);
+
+    const type = taskSubType === "WRITING" ? "writing" as const : "painting" as const;
+    setSubmittingType(type);
+    setSubmitApiDone(false);
+    setSubmitError(null);
+    setSubmitSummary(null);
     setResult(null);
+
     try {
       const res = await fetch("/api/v1/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description, category: taskSubType }),
       });
-      setResult(await res.json());
+      const data = await res.json();
+
+      if (data.tasks?.length) {
+        setSubmitSummary(`已分配给 ${data.tasks.length} 个分身`);
+        setSubmitApiDone(true);
+        setDescription("");
+        setTimeout(() => {
+          router.push("/plaza");
+          setSubmittingType(null);
+        }, 1200);
+      } else if (data.error || data.message?.includes("不足")) {
+        setSubmitError(data.error || data.message || "创建失败");
+        setTimeout(() => setSubmittingType(null), 2500);
+      } else {
+        setSubmitSummary("任务已创建");
+        setSubmitApiDone(true);
+        setDescription("");
+        setTimeout(() => {
+          setSubmittingType(null);
+          setResult(data);
+        }, 1500);
+      }
     } catch {
-      setResult({ error: "请求失败" });
-    } finally {
-      setLoading(false);
+      setSubmitError("网络错误，请重试");
+      setTimeout(() => setSubmittingType(null), 2500);
     }
   };
 
@@ -177,6 +215,15 @@ export function ConnectPanel() {
           {/* ========== 找人聊聊 ========== */}
           {activeTab === "chat" && (
             <>
+              {submittingType === "chat" ? (
+                <TaskCreatingOverlay
+                  type="chat"
+                  apiDone={submitApiDone}
+                  error={submitError}
+                  summary={submitSummary ?? undefined}
+                />
+              ) : (
+              <>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -214,14 +261,25 @@ export function ConnectPanel() {
                 disabled={loading || !description.trim()}
                 className="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                {loading ? "处理中..." : !session ? "登录后使用" : "发布需求"}
+                {!session ? "登录后使用" : "发布需求"}
               </button>
+              </>
+              )}
             </>
           )}
 
           {/* ========== 发布任务 ========== */}
           {activeTab === "tasks" && (
             <>
+              {submittingType === "writing" || submittingType === "painting" ? (
+                <TaskCreatingOverlay
+                  type={submittingType}
+                  apiDone={submitApiDone}
+                  error={submitError}
+                  summary={submitSummary ?? undefined}
+                />
+              ) : (
+              <>
               <div className="flex gap-3">
                 <button
                   onClick={() => { setTaskSubType("WRITING"); setDescription(""); }}
@@ -288,54 +346,65 @@ export function ConnectPanel() {
                       ? "credit 不足，去游戏市场赚取"
                       : `发布${taskSubType === "WRITING" ? "写作" : "绘画"}任务`}
               </button>
+              </>
+              )}
             </>
           )}
 
           {/* ========== 游戏市场 ========== */}
           {activeTab === "games" && (
             <>
-              <p className="text-sm text-gray-500 dark:text-zinc-400">
-                选择游戏，和 AI 分身一决高下
-              </p>
+              {creatingGame ? (
+                <GameCreatingOverlay
+                  gameLabel={GAME_PRESETS[creatingGame as keyof typeof GAME_PRESETS].label}
+                  playerCount={GAME_PRESETS[creatingGame as keyof typeof GAME_PRESETS].players}
+                  apiDone={gameApiDone}
+                  error={gameCreateError}
+                />
+              ) : (
+                <>
+                  <p className="text-sm text-gray-500 dark:text-zinc-400">
+                    选择游戏，和 AI 分身一决高下
+                  </p>
 
-              <div className="grid grid-cols-2 gap-4">
-                {(Object.entries(GAME_PRESETS) as [keyof typeof GAME_PRESETS, typeof GAME_PRESETS[keyof typeof GAME_PRESETS]][]).map(
-                  ([type, preset]) => (
-                    <div
-                      key={type}
-                      className="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-3"
-                    >
-                      <div className="text-2xl">{preset.icon}</div>
-                      <div className="text-lg font-semibold text-gray-900 dark:text-white">{preset.label}</div>
-                      <div className="text-xs text-gray-500 dark:text-zinc-400 space-y-0.5">
-                        <div>{preset.players}人局 / {preset.rounds}轮</div>
-                        <div>每局 {preset.chips} 筹码</div>
-                      </div>
-                      <div className="text-sm text-gray-900 dark:text-white font-medium">
-                        消耗: {preset.cost} credit
-                      </div>
-                      <button
-                        onClick={() => handleCreateGame(type)}
-                        disabled={creatingGame !== null || (!!session && credits < preset.cost)}
-                        className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                      >
-                        {creatingGame === type
-                          ? "创建中..."
-                          : !session
-                            ? "登录后使用"
-                            : credits < preset.cost
-                              ? "credit 不足"
-                              : "开始游戏"}
-                      </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    {(Object.entries(GAME_PRESETS) as [keyof typeof GAME_PRESETS, typeof GAME_PRESETS[keyof typeof GAME_PRESETS]][]).map(
+                      ([type, preset]) => (
+                        <div
+                          key={type}
+                          className="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-3"
+                        >
+                          <div className="text-2xl">{preset.icon}</div>
+                          <div className="text-lg font-semibold text-gray-900 dark:text-white">{preset.label}</div>
+                          <div className="text-xs text-gray-500 dark:text-zinc-400 space-y-0.5">
+                            <div>{preset.players}人局 / {preset.rounds}轮</div>
+                            <div>每局 {preset.chips} 筹码</div>
+                          </div>
+                          <div className="text-sm text-gray-900 dark:text-white font-medium">
+                            消耗: {preset.cost} credit
+                          </div>
+                          <button
+                            onClick={() => handleCreateGame(type)}
+                            disabled={!!session && credits < preset.cost}
+                            className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                          >
+                            {!session
+                              ? "登录后使用"
+                              : credits < preset.cost
+                                ? "credit 不足"
+                                : "开始游戏"}
+                          </button>
+                        </div>
+                      )
+                    )}
+                  </div>
+
+                  {session && !hasCredits && (
+                    <div className="text-center text-sm text-gray-400 dark:text-zinc-500">
+                      credit 不足，每天登录可领取 100 credit
                     </div>
-                  )
-                )}
-              </div>
-
-              {session && !hasCredits && (
-                <div className="text-center text-sm text-gray-400 dark:text-zinc-500">
-                  credit 不足，每天登录可领取 100 credit
-                </div>
+                  )}
+                </>
               )}
             </>
           )}

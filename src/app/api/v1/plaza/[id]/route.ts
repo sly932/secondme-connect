@@ -28,12 +28,14 @@ export async function GET(
         },
       },
       tasks: {
-        where: { type: "CONSULT" },
         orderBy: { createdAt: "asc" },
         select: {
           id: true,
+          type: true,
+          category: true,
           status: true,
           result: true,
+          resultUrl: true,
           workerId: true,
           worker: { select: { id: true, name: true, avatar: true, bio: true } },
         },
@@ -59,10 +61,22 @@ export async function GET(
       bio: c.bio,
       similarity: c.similarity,
       task: task
-        ? { taskId: task.id, status: task.status, result: task.result }
+        ? {
+            taskId: task.id,
+            type: task.type,
+            category: task.category,
+            status: task.status,
+            result: task.result,
+            resultUrl: task.resultUrl,
+          }
         : null,
     };
   });
+
+  // 判断帖子的任务类型（咨询 / 写作 / 绘画）
+  const firstTask = post.tasks[0];
+  const taskCategory = firstTask?.category || null; // WRITING | PAINTING | null(=咨询)
+  const taskType = firstTask?.type || "CONSULT"; // CONSULT | MARKETPLACE
 
   return NextResponse.json({
     success: true,
@@ -72,6 +86,8 @@ export async function GET(
       author: post.author,
       matchedAt: post.matchedAt,
       createdAt: post.createdAt,
+      taskCategory,
+      taskType,
     },
     comments: post.comments,
     hasMoreComments: post._count.comments > post.comments.length,

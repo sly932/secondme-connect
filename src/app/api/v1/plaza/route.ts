@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
-import { generateEmbedding } from "@/lib/embedding";
-import { searchSimilarUsers } from "@/lib/vectors";
+import { findMatchingUsers } from "@/lib/vectors";
 import { executeConsultTask } from "@/lib/task-executor";
 import logger from "@/lib/logger";
 import { TaskType, TaskStatus } from "@prisma/client";
@@ -25,6 +24,11 @@ export async function GET(req: NextRequest) {
       take: limit,
       include: {
         author: { select: { id: true, name: true, avatar: true, isNpc: true } },
+        tasks: {
+          take: 1,
+          orderBy: { createdAt: "asc" },
+          select: { type: true, category: true },
+        },
         _count: { select: { comments: true, tasks: true } },
       },
     }),
@@ -35,12 +39,15 @@ export async function GET(req: NextRequest) {
     success: true,
     posts: posts.map((p) => {
       const matchCandidates = p.matchCandidates as unknown[] | null;
+      const firstTask = p.tasks[0];
       return {
         id: p.id,
         content: p.content,
         author: p.author,
         commentCount: p._count.comments,
         matchCount: matchCandidates ? matchCandidates.length : 0,
+        taskCategory: firstTask?.category || null,
+        taskType: firstTask?.type || "CONSULT",
         createdAt: p.createdAt,
       };
     }),
@@ -60,25 +67,19 @@ export async function POST(req: NextRequest) {
     // 获取用户完整信息
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, credits: true, orderMode: true, autoTopN: true },
+      select: { id: true, credits: true, orderMode: true, autoTopN: true, secondmeId: true },
     });
     if (!fullUser) return unauthorized();
 
-    // 尝试 embedding 匹配
-    let matchCandidates: { userId: string; name: string; avatar: string | null; bio: string | null; similarity: number }[] = [];
-    try {
-      const queryEmbedding = await generateEmbedding(content);
-      const candidates = await searchSimilarUsers(queryEmbedding, user.id, 10);
-      matchCandidates = candidates.map((c) => ({
-        userId: c.id,
-        name: c.name,
-        avatar: c.avatar,
-        bio: c.bio,
-        similarity: Math.round(c.similarity * 100) / 100,
-      }));
-    } catch (err) {
-      logger.warn("Embedding matching failed, creating post without matches", { error: (err as Error).message });
-    }
+    // 匹配分身（向量优先，fallback BM25）
+    const candidates = await findMatchingUsers(content, user.id, 10);
+    const matchCandidates = candidates.map((c) => ({
+      userId: c.id,
+      name: c.name,
+      avatar: c.avatar,
+      bio: c.bio,
+      similarity: Math.round(c.similarity * 100) / 100,
+    }));
 
     // 创建帖子（含匹配结果快照）
     const post = await prisma.post.create({
@@ -131,10 +132,11 @@ export async function POST(req: NextRequest) {
             });
 
             // 异步执行
-            if (workerUser?.secondmeId) {
+            if (workerUser?.secondmeId && fullUser.secondmeId) {
               executeConsultTask(
                 task.id,
                 user.id,
+                fullUser.secondmeId,
                 candidate.userId,
                 workerUser.secondmeId,
                 content,

@@ -49,11 +49,16 @@ export async function POST(
       where: { postId, workerId, type: TaskType.CONSULT },
     });
     if (existing) {
-      return NextResponse.json({
-        success: true,
-        message: "已存在咨询任务",
-        task: { taskId: existing.id, status: existing.status, result: existing.result },
-      });
+      if (existing.status === TaskStatus.FAILED) {
+        // 失败的任务允许重试 — 删除旧任务
+        await prisma.task.delete({ where: { id: existing.id } });
+      } else {
+        return NextResponse.json({
+          success: true,
+          message: "已存在咨询任务",
+          task: { taskId: existing.id, status: existing.status, result: existing.result },
+        });
+      }
     }
 
     // 检查余额
@@ -65,11 +70,11 @@ export async function POST(
       return badRequest("credit 不足");
     }
 
-    // 查找 worker 的 secondmeId
-    const worker = await prisma.user.findUnique({
-      where: { id: workerId },
-      select: { secondmeId: true },
-    });
+    // 查找双方的 secondmeId
+    const [publisherUser, worker] = await Promise.all([
+      prisma.user.findUnique({ where: { id: user.id }, select: { secondmeId: true } }),
+      prisma.user.findUnique({ where: { id: workerId }, select: { secondmeId: true } }),
+    ]);
 
     // 创建任务
     const task = await prisma.task.create({
@@ -86,10 +91,11 @@ export async function POST(
     });
 
     // 异步执行
-    if (worker?.secondmeId) {
+    if (worker?.secondmeId && publisherUser?.secondmeId) {
       executeConsultTask(
         task.id,
         user.id,
+        publisherUser.secondmeId,
         workerId,
         worker.secondmeId,
         post.content,
