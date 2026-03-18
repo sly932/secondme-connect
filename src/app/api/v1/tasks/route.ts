@@ -7,8 +7,8 @@ import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
 import { TaskType, TaskCategory, TaskStatus } from "@prisma/client";
 
-const CREDIT_WRITING = 20;
-const CREDIT_PAINTING = 30;
+const CREDIT_WRITING = 1;
+const CREDIT_PAINTING = 1;
 
 export async function POST(req: NextRequest) {
   try {

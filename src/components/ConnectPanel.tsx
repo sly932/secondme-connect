@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { usePanelStore, useUserStore } from "@/lib/store";
 import type { PanelTab } from "@/lib/store";
+import { GameCreatingOverlay } from "@/components/GameCreatingOverlay";
 
 const GAME_PRESETS = {
   BLACKJACK: { label: "21 点", icon: "🃏", players: 3, chips: 10, rounds: 5, cost: 50 },
@@ -47,6 +48,8 @@ export function ConnectPanel() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [creatingGame, setCreatingGame] = useState<string | null>(null);
+  const [gameApiDone, setGameApiDone] = useState(false);
+  const [gameCreateError, setGameCreateError] = useState<string | null>(null);
   const pendingRoomId = useRef<string | null>(null);
 
   const hasCredits = credits > 0;
@@ -114,6 +117,8 @@ export function ConnectPanel() {
     if (!session) return handleLogin();
     const preset = GAME_PRESETS[type];
     setCreatingGame(type);
+    setGameApiDone(false);
+    setGameCreateError(null);
     try {
       const res = await fetch("/api/v1/games/rooms", {
         method: "POST",
@@ -128,18 +133,25 @@ export function ConnectPanel() {
       const data = await res.json();
       if (data.success) {
         pendingRoomId.current = data.room.id;
-        setTimeout(() => router.push(`/games/${data.room.id}`), 600);
+        setGameApiDone(true);
+        setTimeout(() => router.push(`/games/${data.room.id}`), 800);
       } else {
-        setResult({ error: data.message || "创建失败" });
-        setCreatingGame(null);
+        setGameCreateError(data.message || "创建失败");
+        setTimeout(() => {
+          setCreatingGame(null);
+          setGameCreateError(null);
+        }, 2000);
       }
     } catch {
-      setResult({ error: "网络错误" });
-      setCreatingGame(null);
+      setGameCreateError("网络错误，请重试");
+      setTimeout(() => {
+        setCreatingGame(null);
+        setGameCreateError(null);
+      }, 2000);
     }
   };
 
-  const taskCost = taskSubType === "WRITING" ? 20 : 30;
+  const taskCost = 1;
 
   return (
     <section id="connect-panel" className="w-full max-w-2xl mx-auto scroll-mt-20">
@@ -219,7 +231,7 @@ export function ConnectPanel() {
                       : "border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:border-gray-400 dark:hover:border-zinc-500"
                   }`}
                 >
-                  写作 · 20 credit
+                  写作 · 1 credit
                 </button>
                 <button
                   onClick={() => { setTaskSubType("PAINTING"); setDescription(""); }}
@@ -229,7 +241,7 @@ export function ConnectPanel() {
                       : "border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:border-gray-400 dark:hover:border-zinc-500"
                   }`}
                 >
-                  绘画 · 30 credit
+                  绘画 · 1 credit
                 </button>
               </div>
 
