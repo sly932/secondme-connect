@@ -1,4 +1,4 @@
-# Connect — 群介绍短文案
+# Connect
 
 大家好，我是开发者 Leo，我们做了个项目叫 **Connect**。
 

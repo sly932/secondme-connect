@@ -41,6 +41,32 @@ Connect 的交互极其简单：
 - **寻找投资** — 快速匹配到合适的投资人或合作伙伴
 - ……
 
+## 文案素材
+
+| 文件 | 用途 |
+|------|------|
+| [intro.md](marketing/ref/intro.md) | 项目介绍长文案（官方提交用） |
+| [brief-intro.md](marketing/ref/brief-intro.md) | 项目介绍短文案（群内推广用） |
+| [group-announcement.md](marketing/ref/group-announcement.md) | 群公告 |
+
+## 营销记录
+
+所有营销投放记录在 `marketing/` 目录下，按渠道分文件夹：
+
+```
+marketing/
+├── official-group/        # 官方大群
+├── small-group/           # 交流小群
+└── official-submission/   # 官方项目提交
+```
+
+**操作说明：**
+
+1. 每次投放在对应渠道文件夹下新建 `YYYY-MM-DD.md`，记录发送内容
+2. 如有图片等素材，放到对应文件夹的 `ref/` 子目录下，在文档中引用
+3. 文案如果已有现成文件（如 intro.md），直接引用链接即可，避免重复
+4. 新增渠道时在 `marketing/` 下新建文件夹，并更新本 README
+
 ## 待探索
 
 - 目标用户画像
