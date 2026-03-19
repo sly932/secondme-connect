@@ -7,26 +7,30 @@ import { generateEmbedding, buildProfileText } from "@/lib/embedding";
 import { saveUserEmbedding } from "@/lib/vectors";
 import { createApiKeyRecord } from "@/lib/apikey";
 import { claimDailyCredit } from "@/lib/credits";
+import { verifyAndConsumeState } from "@/lib/oauth-state";
 import logger from "@/lib/logger";
 
 const TOKEN_URL = "https://api.mindverse.com/gate/lab/api/oauth/token/code";
 
 export async function GET(req: NextRequest) {
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const storedState = req.cookies.get("sm-oauth-state")?.value;
 
   if (!code) {
     logger.error("No authorization code in callback");
-    return NextResponse.redirect(new URL("/?error=no_code", req.url));
+    return NextResponse.redirect(new URL("/?error=no_code", baseUrl));
   }
 
-  if (!state || !storedState || state !== storedState) {
-    logger.warn("OAuth callback state mismatch");
-    const response = NextResponse.redirect(new URL("/?error=invalid_state", req.url));
-    response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
-    return response;
+  // 优先用服务端 state 验证（解决跨 App WebView cookie 不共享的问题）
+  // 回退到 cookie 验证（兼容同浏览器内的正常流程）
+  const storedState = req.cookies.get("sm-oauth-state")?.value;
+  const stateValid = (state && verifyAndConsumeState(state)) || (state && storedState && state === storedState);
+
+  if (!stateValid) {
+    logger.warn("OAuth callback state mismatch", { hasState: !!state, hasStoredState: !!storedState });
+    return NextResponse.redirect(new URL("/?error=invalid_state", baseUrl));
   }
 
   try {
@@ -50,9 +54,7 @@ export async function GET(req: NextRequest) {
 
     if (tokenJson.code !== 0 || !tokenJson.data) {
       logger.error("Token exchange failed", { code: tokenJson.code });
-      const response = NextResponse.redirect(new URL("/?error=token_failed", req.url));
-      response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
-      return response;
+      return NextResponse.redirect(new URL("/?error=token_failed", baseUrl));
     }
 
     const { accessToken, refreshToken, expiresIn } = tokenJson.data;
@@ -66,9 +68,7 @@ export async function GET(req: NextRequest) {
 
     if (userInfoJson.code !== 0 || !userInfoJson.data) {
       logger.error("User info failed", { code: userInfoJson.code });
-      const response = NextResponse.redirect(new URL("/?error=userinfo_failed", req.url));
-      response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
-      return response;
+      return NextResponse.redirect(new URL("/?error=userinfo_failed", baseUrl));
     }
 
     const userInfo = userInfoJson.data;
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
 
     if (!secondmeId) {
       logger.error("No user ID in response", { data: JSON.stringify(userInfo).slice(0, 200) });
-      return NextResponse.redirect(new URL("/?error=no_user_id", req.url));
+      return NextResponse.redirect(new URL("/?error=no_user_id", baseUrl));
     }
 
     // Step 3: 创建或更新用户
@@ -165,7 +165,6 @@ export async function GET(req: NextRequest) {
       salt: cookieName,
     });
 
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
     const response = NextResponse.redirect(new URL("/", baseUrl));
     response.cookies.set(cookieName, token, {
       httpOnly: true,
@@ -174,14 +173,11 @@ export async function GET(req: NextRequest) {
       path: "/",
       maxAge: 30 * 24 * 60 * 60,
     });
-    response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
     response.headers.set("Cache-Control", "no-store");
     logger.info("Session created for user", { userId: sessionUser.id });
     return response;
   } catch (err) {
     logger.error("OAuth callback error", { error: (err as Error).message, stack: (err as Error).stack });
-    const response = NextResponse.redirect(new URL("/?error=callback_failed", req.url));
-    response.cookies.set("sm-oauth-state", "", { path: "/", maxAge: 0 });
-    return response;
+    return NextResponse.redirect(new URL("/?error=callback_failed", baseUrl));
   }
 }
