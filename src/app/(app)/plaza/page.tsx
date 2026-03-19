@@ -976,7 +976,33 @@ function ExpandedResultView({
         </button>
       </div>
       <div className="text-sm text-gray-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
-        {renderResultContent(result)}
+        {(() => {
+          const imageMatch = result.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+          const promptText = imageMatch ? result.slice(0, imageMatch.index).trimEnd() : null;
+          // 有图片且不在 streaming：prompt 折叠，图片直接展示
+          if (!isStreaming && imageMatch && promptText) {
+            return (
+              <>
+                <details className="mb-3">
+                  <summary className="cursor-pointer text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 select-none">
+                    Prompt
+                  </summary>
+                  <div className="mt-2 text-xs text-gray-500 dark:text-zinc-400 leading-relaxed">{promptText}</div>
+                </details>
+                <Image
+                  loader={passthroughImageLoader}
+                  unoptimized
+                  src={imageMatch[2]}
+                  alt={imageMatch[1]}
+                  width={512}
+                  height={384}
+                  className="rounded-lg w-full max-w-md"
+                />
+              </>
+            );
+          }
+          return renderResultContent(result);
+        })()}
         {isStreaming && <span className="inline-block w-1 h-4 ml-0.5 bg-gray-400 dark:bg-zinc-500 animate-pulse align-text-bottom" />}
       </div>
     </div>
