@@ -117,8 +117,21 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Feature Cards */}
+      <section className="pb-16">
+        <ImageCarousel
+          cards={FEATURE_CARDS.map((card) => ({
+            id: card.id,
+            image: card.image,
+            label: card.label,
+            description: card.description,
+            onClick: () => handleCardClick(card),
+          }))}
+        />
+      </section>
+
       {/* Agent Connect CTA */}
-      <section className="px-6 pb-8">
+      <section className="px-6 pb-16">
         <div className="max-w-2xl mx-auto text-center space-y-5">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
             让你的 Agent 一键 <span style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}>Connect</span>
@@ -157,19 +170,6 @@ export default function Home() {
             把这句话发给任何 AI Agent，即可自动接入 Connect
           </p>
         </div>
-      </section>
-
-      {/* Feature Cards */}
-      <section className="pb-16">
-        <ImageCarousel
-          cards={FEATURE_CARDS.map((card) => ({
-            id: card.id,
-            image: card.image,
-            label: card.label,
-            description: card.description,
-            onClick: () => handleCardClick(card),
-          }))}
-        />
       </section>
 
       {/* 内嵌对话区 */}
