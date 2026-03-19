@@ -114,55 +114,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-zinc-950 pt-24 px-6">
-        <div className="max-w-4xl mx-auto flex gap-8">
-          {/* 侧栏骨架 */}
-          <aside className="hidden md:block w-48 flex-shrink-0">
-            <div className="sticky top-28 space-y-1">
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-4 px-3">设置</h1>
-              {SECTIONS.map((s) => (
-                <div key={s.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-zinc-400">
-                  <span className="opacity-60">{s.icon}</span>
-                  {s.label}
-                </div>
-              ))}
-            </div>
-          </aside>
-          {/* 内容骨架 */}
-          <main className="flex-1 min-w-0 space-y-8 pb-16 animate-pulse">
-            <div>
-              <div className="w-10 h-3 rounded bg-gray-200 dark:bg-zinc-700 mb-4" />
-              <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/80 border border-gray-200/80 dark:border-zinc-800 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-zinc-700" />
-                  <div className="space-y-2"><div className="w-24 h-5 rounded bg-gray-200 dark:bg-zinc-700" /><div className="w-40 h-3 rounded bg-gray-200 dark:bg-zinc-700" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-20 rounded-xl bg-gray-100 dark:bg-zinc-800" />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div>
-              <div className="w-6 h-3 rounded bg-gray-200 dark:bg-zinc-700 mb-4" />
-              <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/80 border border-gray-200/80 dark:border-zinc-800 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-zinc-700" />
-                  <div className="space-y-2"><div className="w-16 h-5 rounded bg-gray-200 dark:bg-zinc-700" /><div className="w-36 h-3 rounded bg-gray-200 dark:bg-zinc-700" /></div>
-                </div>
-                <div className="h-11 rounded-xl bg-gray-100 dark:bg-zinc-800" />
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  if (!settings) return null;
+  if (status === "loading") return null;
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-zinc-950 pt-24 px-6">
@@ -285,6 +237,13 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+              {loading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-11 rounded-xl bg-gray-100 dark:bg-zinc-800" />
+                  <div className="w-56 h-3 rounded bg-gray-200 dark:bg-zinc-700" />
+                  <div className="w-32 h-8 rounded-xl bg-gray-200 dark:bg-zinc-700" />
+                </div>
+              ) : settings && (<>
               <div className="flex items-center gap-2">
                 <div className="flex-1 px-4 py-3 bg-gray-50 dark:bg-zinc-800/80 rounded-xl font-mono text-sm text-gray-700 dark:text-zinc-300 overflow-hidden border border-gray-100 dark:border-zinc-700">
                   {saving ? (
@@ -346,6 +305,7 @@ export default function SettingsPage() {
               >
                 重新生成 API Key
               </button>
+              </>)}
             </div>
           </div>
         </main>

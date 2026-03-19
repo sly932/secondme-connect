@@ -108,7 +108,7 @@ export default function ProfilePage() {
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  profile.name[0]
+                  (profile.name || "?")[0]
                 )}
               </div>
             </div>

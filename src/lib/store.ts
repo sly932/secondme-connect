@@ -147,15 +147,25 @@ function loadFontIndex(): number {
 interface FontState {
   fontIndex: number;
   logoFont: LogoFontKey;
+  hydrated: boolean;
+  hydrate: () => void;
   setFontIndex: (index: number) => void;
   setLogoFont: (font: LogoFontKey) => void;
   /** Call once after login to sync from server */
   syncFromServer: (index: number) => void;
 }
 
-export const useFontStore = create<FontState>((set) => ({
-  fontIndex: loadFontIndex(),
-  logoFont: indexToKey(loadFontIndex()),
+export const useFontStore = create<FontState>((set, get) => ({
+  // Always start with default to match SSR
+  fontIndex: 0,
+  logoFont: "caveat",
+  hydrated: false,
+
+  hydrate: () => {
+    if (get().hydrated) return;
+    const idx = loadFontIndex();
+    set({ fontIndex: idx, logoFont: indexToKey(idx), hydrated: true });
+  },
 
   setFontIndex: (index) => {
     const safeIndex = index >= 0 && index < LOGO_FONTS.length ? index : 0;
