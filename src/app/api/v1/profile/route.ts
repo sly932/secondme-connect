@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
         totalEarnings: true,
         orderMode: true,
         autoTopN: true,
+        fontIndex: true,
         createdAt: true,
       },
     });

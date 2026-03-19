@@ -68,6 +68,11 @@ export function ImageCarousel({ cards: cardSet }: { cards: CarouselCard[] }) {
 
   return (
     <div className="relative w-full py-10 md:py-16">
+      {/* Left fade edge */}
+      <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-white dark:from-zinc-950 to-transparent z-10 pointer-events-none" />
+      {/* Right fade edge */}
+      <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent z-10 pointer-events-none" />
+
       <div
         ref={scrollRef}
         className="overflow-hidden px-2 pt-6 pb-16 md:px-4 md:pt-8 md:pb-20"
@@ -117,7 +122,7 @@ export function ImageCarousel({ cards: cardSet }: { cards: CarouselCard[] }) {
                     className="object-cover"
                     sizes="(max-width: 768px) 20rem, 28rem"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
                   <div className="relative flex h-full flex-col justify-end p-5 md:p-6">
                     <p className="text-xs text-white/70 mb-1 leading-relaxed">

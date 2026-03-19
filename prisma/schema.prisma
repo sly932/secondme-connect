@@ -33,6 +33,7 @@ model User {
   orderMode      OrderMode              @default(AUTO)
   autoTopN       Int                    @default(5)
   isNpc          Boolean                @default(false)
+  fontIndex      Int                    @default(0)
   autoJoinGame   Boolean                @default(false)
   boundUserId    String?
   boundUser      User?                  @relation("npcBinding", fields: [boundUserId], references: [id])

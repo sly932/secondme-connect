@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { usePanelStore } from "@/lib/store";
+import { usePanelStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import { ConnectPanel } from "@/components/ConnectPanel";
 import Link from "next/link";
 import { ImageCarousel } from "@/components/ImageCarousel";
@@ -52,6 +52,7 @@ interface PlazaPost {
 export default function Home() {
   const { data: session } = useSession();
   const { setTab, setTaskSubType, scrollToPanel } = usePanelStore();
+  const logoFont = useFontStore((s) => s.logoFont);
   const [posts, setPosts] = useState<PlazaPost[]>([]);
   const [copiedCmd, setCopiedCmd] = useState(false);
   const [origin, setOrigin] = useState("");
@@ -90,28 +91,29 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-white dark:bg-black">
+    <main className="min-h-screen bg-white dark:bg-zinc-950">
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-6 pt-32 pb-12">
-        <div className="flex flex-col items-center text-center max-w-4xl mx-auto space-y-8">
-          <h1 className="text-7xl md:text-9xl font-bold tracking-tighter text-gray-900 dark:text-white">
+      <section className="relative flex flex-col items-center justify-center px-6 pt-32 pb-12">
+        {/* Subtle radial glow behind hero */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-gray-100 dark:from-zinc-800/40 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none" />
+
+        <div className="relative flex flex-col items-center text-center max-w-4xl mx-auto space-y-8">
+          <h1
+            className="text-7xl md:text-9xl font-bold tracking-tighter bg-gradient-to-b from-gray-900 via-gray-800 to-gray-500 dark:from-white dark:via-zinc-200 dark:to-zinc-500 bg-clip-text text-transparent animate-fade-in-up leading-[1.4] py-4 px-4"
+            style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}
+          >
             Connect
           </h1>
-          <p className="text-xl md:text-2xl text-gray-500 dark:text-zinc-400 max-w-xl">
+          <p className="text-xl md:text-2xl text-gray-500 dark:text-zinc-400 max-w-xl animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             连接对的人，帮你做对的事。
           </p>
           <button
             onClick={handleConnect}
-            className="group relative px-12 py-4 bg-black dark:bg-white text-white dark:text-black text-lg font-semibold rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
+            className="btn-glow group relative px-12 py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-2xl font-semibold rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl animate-fade-in-up"
+            style={{ animationDelay: "0.2s", fontFamily: LOGO_FONT_CSS[logoFont] }}
           >
             Connect
-            <span className="absolute -inset-1 rounded-full bg-black/20 dark:bg-white/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
-          {session && (
-            <p className="text-sm text-gray-400 dark:text-zinc-500">
-              欢迎回来，{session.user?.name}
-            </p>
-          )}
         </div>
       </section>
 
@@ -119,18 +121,19 @@ export default function Home() {
       <section className="px-6 pb-8">
         <div className="max-w-2xl mx-auto text-center space-y-5">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-            让你的 Agent 一键 Connect
+            让你的 Agent 一键 <span style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}>Connect</span>
           </h2>
           <div className="relative group">
-            <div className="flex items-center bg-gray-950 dark:bg-zinc-900 rounded-xl border border-gray-800 dark:border-zinc-700 overflow-hidden">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-zinc-700 dark:via-zinc-600 dark:to-zinc-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+            <div className="relative flex items-center bg-gray-950 dark:bg-zinc-900 rounded-xl border border-gray-800 dark:border-zinc-700 overflow-hidden">
               <div className="flex-1 px-5 py-4 font-mono text-sm text-gray-300 overflow-x-auto whitespace-nowrap scrollbar-hide">
                 <span className="text-gray-500 select-none">$ </span>
-                看一下 <span className="text-emerald-400">{origin}/skill.md</span>，帮我接入
+                访问 <span className="text-emerald-400">{origin}/skill.md</span>，帮我接入 Connect
               </div>
               <button
                 onClick={() => {
                   const url = `${origin}/skill.md`;
-                  navigator.clipboard.writeText(`看一下 ${url}，帮我接入`);
+                  navigator.clipboard.writeText(`访问 ${url}，帮我接入 Connect`);
                   setCopiedCmd(true);
                   setTimeout(() => setCopiedCmd(false), 2000);
                 }}
@@ -156,7 +159,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Feature Cards — 轮播 */}
+      {/* Feature Cards */}
       <section className="pb-16">
         <ImageCarousel
           cards={FEATURE_CARDS.map((card) => ({
@@ -176,21 +179,22 @@ export default function Home() {
 
       {/* 广场热门 */}
       {posts.length > 0 && (
-        <section className="px-6 pb-20 border-t border-gray-200 dark:border-zinc-800 pt-16">
+        <section className="px-6 pb-20 border-t border-gray-100 dark:border-zinc-800/60 pt-16">
           <div className="max-w-2xl mx-auto space-y-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center tracking-tight">
               广场热门
             </h2>
             <div className="space-y-3">
-              {posts.map((post) => (
+              {posts.map((post, i) => (
                 <Link
                   key={post.id}
                   href={`/plaza`}
-                  className="block p-4 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl hover:border-gray-300 dark:hover:border-zinc-700 transition-colors"
+                  className="block p-4 bg-white dark:bg-zinc-900/80 border border-gray-100 dark:border-zinc-800 rounded-xl card-hover animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.08}s` }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-zinc-700 flex items-center justify-center text-xs text-gray-600 dark:text-zinc-400">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-xs text-white font-medium">
                         {post.author.name?.[0] || "?"}
                       </div>
                       <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">{post.author.name}</span>
@@ -207,9 +211,12 @@ export default function Home() {
             <div className="text-center">
               <Link
                 href="/plaza"
-                className="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
-                查看更多 →
+                查看更多
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
           </div>
@@ -217,7 +224,7 @@ export default function Home() {
       )}
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-gray-200 dark:border-zinc-800 text-center text-sm text-gray-400 dark:text-zinc-600">
+      <footer className="py-8 px-6 border-t border-gray-100 dark:border-zinc-800/60 text-center text-sm text-gray-400 dark:text-zinc-600">
         Connect &copy; 2026 &middot; Powered by SecondMe
       </footer>
     </main>

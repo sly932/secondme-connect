@@ -40,8 +40,8 @@ interface PostPreview {
   author: Author;
   commentCount: number;
   matchCount: number;
-  taskCategory: string | null; // WRITING | PAINTING | null(=咨询)
-  taskType: string; // CONSULT | MARKETPLACE
+  taskCategory: string | null;
+  taskType: string;
   createdAt: string;
 }
 
@@ -56,24 +56,24 @@ interface PostDetail {
 }
 
 const TASK_TYPE_BADGES: Record<string, { label: string; color: string; icon: string }> = {
-  CONSULT: { label: "咨询", color: "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700", icon: "💬" },
-  WRITING: { label: "写作", color: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700", icon: "✍️" },
-  PAINTING: { label: "绘画", color: "bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300 border-pink-200 dark:border-pink-700", icon: "🎨" },
+  CONSULT: { label: "咨询", color: "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700", icon: "💬" },
+  WRITING: { label: "写作", color: "bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700", icon: "✍️" },
+  PAINTING: { label: "绘画", color: "bg-pink-50 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300 border-pink-200 dark:border-pink-700", icon: "🎨" },
 };
 
 const passthroughImageLoader = ({ src }: ImageLoaderProps) => src;
 
 const MATCH_COLORS = [
-  "from-indigo-500 to-purple-600",
-  "from-emerald-500 to-teal-600",
-  "from-amber-500 to-orange-600",
-  "from-pink-500 to-rose-600",
-  "from-cyan-500 to-sky-600",
-  "from-violet-500 to-fuchsia-600",
-  "from-lime-500 to-green-600",
-  "from-red-500 to-rose-700",
-  "from-blue-500 to-indigo-600",
-  "from-yellow-500 to-amber-600",
+  { gradient: "from-indigo-500 to-purple-600", ring: "ring-indigo-400/40", bg: "from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/30", accent: "indigo" },
+  { gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-400/40", bg: "from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30", accent: "emerald" },
+  { gradient: "from-amber-500 to-orange-600", ring: "ring-amber-400/40", bg: "from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30", accent: "amber" },
+  { gradient: "from-pink-500 to-rose-600", ring: "ring-pink-400/40", bg: "from-pink-50 to-rose-50 dark:from-pink-950/40 dark:to-rose-950/30", accent: "pink" },
+  { gradient: "from-cyan-500 to-sky-600", ring: "ring-cyan-400/40", bg: "from-cyan-50 to-sky-50 dark:from-cyan-950/40 dark:to-sky-950/30", accent: "cyan" },
+  { gradient: "from-violet-500 to-fuchsia-600", ring: "ring-violet-400/40", bg: "from-violet-50 to-fuchsia-50 dark:from-violet-950/40 dark:to-fuchsia-950/30", accent: "violet" },
+  { gradient: "from-lime-500 to-green-600", ring: "ring-lime-400/40", bg: "from-lime-50 to-green-50 dark:from-lime-950/40 dark:to-green-950/30", accent: "lime" },
+  { gradient: "from-red-500 to-rose-700", ring: "ring-red-400/40", bg: "from-red-50 to-rose-50 dark:from-red-950/40 dark:to-rose-950/30", accent: "red" },
+  { gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-400/40", bg: "from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/30", accent: "blue" },
+  { gradient: "from-yellow-500 to-amber-600", ring: "ring-yellow-400/40", bg: "from-yellow-50 to-amber-50 dark:from-yellow-950/40 dark:to-amber-950/30", accent: "yellow" },
 ];
 
 const TASK_STATUS_LABELS: Record<string, { text: string; color: string }> = {
@@ -113,7 +113,7 @@ function Avatar({ name, avatar, size = 32 }: { name: string; avatar: string | nu
   }
   return (
     <div
-      className="rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-zinc-400"
+      className="rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-xs font-medium text-white"
       style={{ width: size, height: size }}
     >
       {name?.[0] || "?"}
@@ -136,17 +136,14 @@ export default function PlazaPage() {
   const [now, setNow] = useState<number | null>(null);
   const [expandedResult, setExpandedResult] = useState<string | null>(null);
 
-  // 评论状态
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
   const [commentedPosts, setCommentedPosts] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [consultingWorker, setConsultingWorker] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // SSE 订阅清理 ref
   const sseCleanupRef = useRef<(() => void) | null>(null);
 
-  // 帖子详情缓存：{ postId → { detail, comments, matchCards, hasMore, fetchedAt } }
   const detailCacheRef = useRef<Map<string, {
     detail: PostDetail;
     comments: Comment[];
@@ -162,7 +159,6 @@ export default function PlazaPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // 清理 SSE 订阅
   useEffect(() => {
     return () => {
       sseCleanupRef.current?.();
@@ -199,7 +195,6 @@ export default function PlazaPage() {
     autoExpandedRef.current = false;
   }, [search, fetchPosts]);
 
-  // 自动展开自己的第一个有匹配的帖子
   useEffect(() => {
     if (autoExpandedRef.current || !session?.user?.id || posts.length === 0) return;
     const myPost = posts.find((p) => p.author.id === session.user?.id && p.matchCount > 0);
@@ -226,7 +221,6 @@ export default function PlazaPage() {
     setExpandedMatchCards(cards);
     setExpandedHasMoreComments(Boolean(data.hasMoreComments));
 
-    // 写入缓存
     detailCacheRef.current.set(postId, {
       detail: data.post,
       comments: data.comments || [],
@@ -249,12 +243,9 @@ export default function PlazaPage() {
   }, [session?.user?.id]);
 
   const fetchPostDetail = useCallback(async (postId: string, skipCache = false) => {
-    // 尝试使用缓存
     if (!skipCache) {
       const cached = detailCacheRef.current.get(postId);
       if (cached) {
-        // 无进行中任务 → 缓存有效期 5 分钟
-        // 有进行中任务 → 不用缓存，走网络
         const cacheAge = Date.now() - cached.fetchedAt;
         if (!cached.hasInProgress && cacheAge < 5 * 60 * 1000) {
           setExpandedDetail(cached.detail);
@@ -279,7 +270,6 @@ export default function PlazaPage() {
   }, [applyDetailData]);
 
   const toggleExpand = async (postId: string) => {
-    // 清理旧 SSE 订阅
     sseCleanupRef.current?.();
     sseCleanupRef.current = null;
 
@@ -300,12 +290,10 @@ export default function PlazaPage() {
     const cards = await fetchPostDetail(postId);
     setDetailLoading(false);
 
-    // 如果有进行中的任务，启动轮询
     startSSEIfNeeded(cards);
   };
 
   const startSSEIfNeeded = (cards: MatchCard[]) => {
-    // 找到所有进行中的任务，为每个建立 SSE 连接
     const inProgressTasks = cards.filter(
       (c) => c.task && !["COMPLETED", "FAILED", "CANCELLED"].includes(c.task.status)
     );
@@ -322,14 +310,12 @@ export default function PlazaPage() {
       es.onmessage = (e) => {
         if (e.data === "[DONE]") {
           es.close();
-          // 任务完成后刷新详情拿最终数据
           detailCacheRef.current.delete(expandedPostId || "");
           if (expandedPostId) fetchPostDetail(expandedPostId, true);
           return;
         }
         try {
           const event = JSON.parse(e.data);
-          // 实时更新匹配卡片的 result 和 status
           setExpandedMatchCards((prev) =>
             prev.map((c) =>
               c.task?.taskId === taskId
@@ -365,8 +351,32 @@ export default function PlazaPage() {
   const handleComment = async (postId: string) => {
     const content = commentTexts[postId]?.trim();
     if (!content) return;
-    setSubmitting(postId);
+
+    // 乐观更新：立即显示评论
+    const tempId = `temp-${Date.now()}`;
+    const optimisticComment: Comment = {
+      id: tempId,
+      content,
+      author: {
+        id: session?.user?.id || "",
+        name: session?.user?.name || "我",
+        avatar: (session?.user as { avatar?: string | null })?.avatar ?? null,
+        isNpc: false,
+      },
+      createdAt: new Date().toISOString(),
+    };
+
+    setCommentTexts((prev) => ({ ...prev, [postId]: "" }));
+    setCommentedPosts((prev) => new Set([...prev, postId]));
+    setExpandedComments((prev) => [...prev, optimisticComment]);
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
+      )
+    );
     detailCacheRef.current.delete(postId);
+
+    // 异步保存到服务器
     try {
       const res = await fetch(`/api/v1/plaza/${postId}/comments`, {
         method: "POST",
@@ -375,19 +385,31 @@ export default function PlazaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setCommentTexts((prev) => ({ ...prev, [postId]: "" }));
-        setCommentedPosts((prev) => new Set([...prev, postId]));
-        setExpandedComments((prev) => [...prev, data.comment]);
+        // 用服务器返回的真实评论替换临时评论
+        setExpandedComments((prev) =>
+          prev.map((c) => (c.id === tempId ? data.comment : c))
+        );
+      } else {
+        // 回滚
+        setExpandedComments((prev) => prev.filter((c) => c.id !== tempId));
+        setCommentedPosts((prev) => { const next = new Set(prev); next.delete(postId); return next; });
         setPosts((prev) =>
           prev.map((p) =>
-            p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
+            p.id === postId ? { ...p, commentCount: p.commentCount - 1 } : p
           )
         );
+        setCommentTexts((prev) => ({ ...prev, [postId]: content }));
       }
     } catch {
-      // ignore
-    } finally {
-      setSubmitting(null);
+      // 网络错误回滚
+      setExpandedComments((prev) => prev.filter((c) => c.id !== tempId));
+      setCommentedPosts((prev) => { const next = new Set(prev); next.delete(postId); return next; });
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId ? { ...p, commentCount: p.commentCount - 1 } : p
+        )
+      );
+      setCommentTexts((prev) => ({ ...prev, [postId]: content }));
     }
   };
 
@@ -402,7 +424,6 @@ export default function PlazaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // 刷新详情以更新 matchCard 状态
         const cards = await fetchPostDetail(postId, true);
         sseCleanupRef.current?.();
         startSSEIfNeeded(cards);
@@ -415,28 +436,65 @@ export default function PlazaPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-6">
+    <div className="min-h-screen pt-24 pb-16 px-6 bg-gray-50/50 dark:bg-zinc-950">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">广场</h1>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索需求..."
-            className="w-48 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500"
-          />
+          <div className="relative">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜索需求..."
+              className="w-48 bg-white dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-700 rounded-xl pl-9 pr-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 input-focus focus:outline-none transition-all"
+            />
+          </div>
         </div>
 
-        {/* Posts */}
-        {posts.length === 0 && !loading && (
-          <div className="text-center py-16 text-gray-400 dark:text-zinc-500">
-            还没有帖子，去首页发一个吧
+        {/* 首次加载骨架屏 */}
+        {posts.length === 0 && loading && (
+          <div className="space-y-4 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white dark:bg-zinc-900/80 border border-gray-200/80 dark:border-zinc-800 rounded-xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700" />
+                    <div className="w-20 h-4 rounded bg-gray-200 dark:bg-zinc-700" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-12 h-5 rounded-full bg-gray-200 dark:bg-zinc-700" />
+                    <div className="w-10 h-3 rounded bg-gray-200 dark:bg-zinc-700" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="w-full h-4 rounded bg-gray-200 dark:bg-zinc-700" />
+                  <div className="w-2/3 h-4 rounded bg-gray-200 dark:bg-zinc-700" />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <div className="w-20 h-7 rounded-full bg-gray-200 dark:bg-zinc-700" />
+                  <div className="w-16 h-7 rounded-full bg-gray-200 dark:bg-zinc-700" />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {posts.map((post) => {
+        {/* Posts */}
+        {posts.length === 0 && !loading && (
+          <div className="text-center py-16 animate-fade-in">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-gray-300 dark:text-zinc-700 mb-4">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <p className="text-gray-400 dark:text-zinc-500">还没有帖子，去首页发一个吧</p>
+          </div>
+        )}
+
+        {posts.map((post, postIndex) => {
           const isExpanded = expandedPostId === post.id;
           const hasCommented = commentedPosts.has(post.id);
           const isMyPost = session?.user?.id === post.author.id;
@@ -447,7 +505,8 @@ export default function PlazaPage() {
           return (
             <div
               key={post.id}
-              className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl overflow-hidden"
+              className="bg-white dark:bg-zinc-900/80 border border-gray-200/80 dark:border-zinc-800 rounded-xl overflow-hidden card-hover animate-fade-in-up"
+              style={{ animationDelay: `${postIndex * 0.05}s` }}
             >
               {/* Post header + content */}
               <div className="p-5">
@@ -475,7 +534,7 @@ export default function PlazaPage() {
                   {post.matchCount > 0 && (
                     <button
                       onClick={() => toggleExpand(post.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                         isExpanded
                           ? "bg-indigo-500 text-white shadow-sm"
                           : "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
@@ -486,7 +545,7 @@ export default function PlazaPage() {
                         <circle cx="7" cy="5.25" r="1.75" stroke="currentColor" strokeWidth="1.2"/>
                       </svg>
                       {post.matchCount} 个匹配
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
                         <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
@@ -494,7 +553,7 @@ export default function PlazaPage() {
                   {isConsult && (
                     <button
                       onClick={() => toggleExpand(post.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                         isExpanded && post.matchCount === 0
                           ? "bg-gray-800 dark:bg-zinc-200 text-white dark:text-black shadow-sm"
                           : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border border-gray-200 dark:border-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-700"
@@ -511,7 +570,7 @@ export default function PlazaPage() {
 
               {/* Expanded area */}
               {isExpanded && (
-                <div className="border-t border-gray-100 dark:border-zinc-800">
+                <div className="border-t border-gray-100 dark:border-zinc-800 animate-fade-in">
                   {/* Loading skeleton */}
                   {detailLoading && (
                     <div className="px-5 py-4">
@@ -520,11 +579,15 @@ export default function PlazaPage() {
                       </div>
                       <div className="flex gap-3 overflow-x-auto pb-2">
                         {Array.from({ length: Math.min(post.matchCount, 4) }).map((_, i) => (
-                          <div key={i} className="flex-shrink-0 w-44 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-2xl p-4 flex flex-col items-center gap-3 animate-pulse">
-                            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-zinc-700" />
-                            <div className="w-20 h-3 rounded bg-gray-200 dark:bg-zinc-700" />
-                            <div className="w-16 h-4 rounded-full bg-gray-200 dark:bg-zinc-700" />
-                            <div className="w-full h-6 rounded bg-gray-200 dark:bg-zinc-700 mt-auto" />
+                          <div key={i} className="flex-shrink-0 w-52 rounded-2xl overflow-hidden animate-pulse">
+                            <div className="bg-gray-100 dark:bg-zinc-800/80 px-4 pt-5 pb-8 flex flex-col items-center gap-3">
+                              <div className="w-[72px] h-[72px] rounded-full bg-gray-200 dark:bg-zinc-700" />
+                              <div className="w-24 h-3.5 rounded bg-gray-200 dark:bg-zinc-700" />
+                              <div className="w-32 h-3 rounded bg-gray-200 dark:bg-zinc-700" />
+                            </div>
+                            <div className="bg-white dark:bg-zinc-900/90 px-4 py-3">
+                              <div className="w-full h-8 rounded-lg bg-gray-200 dark:bg-zinc-700" />
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -537,18 +600,23 @@ export default function PlazaPage() {
                       <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400 mb-3 uppercase tracking-wider">
                         匹配的分身
                       </div>
-                      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-                        {expandedMatchCards.map((card, idx) => (
-                          <MatchCardComponent
-                            key={card.userId}
-                            card={card}
-                            colorIndex={idx}
-                            postId={post.id}
-                            onConsult={handleManualConsult}
-                            onViewResult={(result) => setExpandedResult(result)}
-                            isConsulting={consultingWorker === card.userId}
-                          />
-                        ))}
+                      <div className="relative">
+                        {/* Left/right fade for horizontal scroll */}
+                        <div className="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-white dark:from-zinc-900/80 to-transparent z-10 pointer-events-none" />
+                        <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-white dark:from-zinc-900/80 to-transparent z-10 pointer-events-none" />
+                        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                          {expandedMatchCards.map((card, idx) => (
+                            <MatchCardComponent
+                              key={card.userId}
+                              card={card}
+                              colorIndex={idx}
+                              postId={post.id}
+                              onConsult={handleManualConsult}
+                              onViewResult={(result) => setExpandedResult(result)}
+                              isConsulting={consultingWorker === card.userId}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -566,7 +634,7 @@ export default function PlazaPage() {
                     </div>
                   )}
 
-                  {/* Comments — 仅咨询帖子显示 */}
+                  {/* Comments */}
                   {isConsult && expandedComments.length > 0 && (
                     <div className="px-5 py-3 space-y-3">
                       {expandedComments.map((comment) => (
@@ -595,7 +663,7 @@ export default function PlazaPage() {
                     </div>
                   )}
 
-                  {/* Comment input — 仅咨询帖子显示 */}
+                  {/* Comment input */}
                   {isConsult && session && !hasCommented && (
                     <div className="px-5 py-3 border-t border-gray-100 dark:border-zinc-800 flex gap-2">
                       <input
@@ -605,7 +673,7 @@ export default function PlazaPage() {
                           setCommentTexts((prev) => ({ ...prev, [post.id]: e.target.value }))
                         }
                         placeholder="写一句回复..."
-                        className="flex-1 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500"
+                        className="flex-1 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 input-focus focus:outline-none transition-all"
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -616,7 +684,7 @@ export default function PlazaPage() {
                       <button
                         onClick={() => handleComment(post.id)}
                         disabled={submitting === post.id || !commentTexts[post.id]?.trim()}
-                        className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black text-sm font-medium rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
                       >
                         {submitting === post.id ? "..." : "发送"}
                       </button>
@@ -647,11 +715,11 @@ export default function PlazaPage() {
 
         {/* Load more */}
         {hasMore && posts.length > 0 && (
-          <div className="text-center">
+          <div className="text-center pt-2">
             <button
               onClick={loadMore}
               disabled={loading}
-              className="px-6 py-2 text-sm text-gray-500 dark:text-zinc-400 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+              className="px-8 py-2.5 text-sm text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-700 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-gray-300 dark:hover:border-zinc-600 disabled:opacity-50 transition-all duration-200"
             >
               {loading ? "加载中..." : "加载更多"}
             </button>
@@ -682,60 +750,88 @@ function MatchCardComponent({
 }) {
   const statusInfo = card.task ? TASK_STATUS_LABELS[card.task.status] : null;
   const isInProgress = card.task && !["COMPLETED", "FAILED", "CANCELLED"].includes(card.task.status);
-  const color = MATCH_COLORS[colorIndex % MATCH_COLORS.length];
+  const palette = MATCH_COLORS[colorIndex % MATCH_COLORS.length];
+  const matchPct = Math.round(card.similarity * 100);
+
+  // SVG ring progress (circumference = 2 * PI * 30 ≈ 188.5)
+  const circumference = 188.5;
+  const strokeDashoffset = circumference - (circumference * matchPct) / 100;
 
   return (
-    <div className="flex-shrink-0 w-44 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-all hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md">
-      {/* 头像 */}
-      <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-base font-bold text-white shadow-lg`}>
-        {card.avatar ? (
-          <Image
-            loader={passthroughImageLoader}
-            unoptimized
-            src={card.avatar}
-            alt={card.name}
-            width={48}
-            height={48}
-            className="w-12 h-12 rounded-full object-cover"
-          />
-        ) : (
-          card.name[0]
+    <div
+      className={`flex-shrink-0 w-52 rounded-2xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-white/60 dark:border-zinc-700/60`}
+    >
+      {/* 顶部渐变背景区 */}
+      <div className={`relative bg-gradient-to-br ${palette.bg} px-4 pt-5 pb-8 flex flex-col items-center`}>
+        {/* 顶部渐变色条 */}
+        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${palette.gradient}`} />
+
+        {/* 头像 + 匹配度圆环 */}
+        <div className="relative w-[72px] h-[72px] mb-3">
+          {/* SVG 圆环 */}
+          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="30" fill="none" stroke="currentColor" strokeWidth="3" className="text-gray-200 dark:text-zinc-700" />
+            <circle
+              cx="36" cy="36" r="30" fill="none" strokeWidth="3"
+              strokeLinecap="round"
+              className={`text-${palette.accent}-500`}
+              stroke="currentColor"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              style={{ transition: "stroke-dashoffset 0.8s ease" }}
+            />
+          </svg>
+          {/* 头像 */}
+          <div className={`absolute inset-[4px] rounded-full bg-gradient-to-br ${palette.gradient} flex items-center justify-center text-lg font-bold text-white shadow-lg ring-2 ring-white dark:ring-zinc-900`}>
+            {card.avatar ? (
+              <Image
+                loader={passthroughImageLoader}
+                unoptimized
+                src={card.avatar}
+                alt={card.name}
+                width={64}
+                height={64}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              card.name[0]
+            )}
+          </div>
+          {/* 匹配度数字 */}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-900 rounded-full px-2 py-0.5 shadow-sm border border-gray-100 dark:border-zinc-700">
+            <span className="text-[10px] font-bold text-gray-900 dark:text-white">{matchPct}%</span>
+          </div>
+        </div>
+
+        {/* 名字 */}
+        <span className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-full">
+          {card.name}
+        </span>
+
+        {/* 简介 */}
+        {card.bio && (
+          <p className="text-[11px] text-gray-500 dark:text-zinc-400 text-center leading-tight line-clamp-2 mt-1.5 min-h-[28px]">
+            {card.bio}
+          </p>
         )}
       </div>
 
-      {/* 名字 */}
-      <span className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-full">
-        {card.name}
-      </span>
-
-      {/* 匹配度 */}
-      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
-        {Math.round(card.similarity * 100)}% 匹配
-      </span>
-
-      {/* 简介 */}
-      {card.bio && (
-        <p className="text-[11px] text-gray-500 dark:text-zinc-400 text-center leading-tight line-clamp-2 min-h-[28px]">
-          {card.bio}
-        </p>
-      )}
-
-      {/* 状态/操作区 */}
-      <div className="mt-auto w-full">
+      {/* 底部操作区 */}
+      <div className="bg-white dark:bg-zinc-900/90 px-4 py-3 mt-auto">
         {!card.task && (
           <button
             onClick={() => onConsult(postId, card.userId)}
             disabled={isConsulting}
-            className="w-full py-1.5 text-xs font-medium bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg disabled:opacity-50 transition-colors"
+            className={`w-full py-2 text-xs font-semibold bg-gradient-to-r ${palette.gradient} text-white rounded-lg disabled:opacity-50 transition-all duration-200 hover:shadow-md hover:brightness-110 active:scale-[0.97]`}
           >
-            {isConsulting ? "发起中..." : "咨询"}
+            {isConsulting ? "发起中..." : "发起咨询"}
           </button>
         )}
 
         {card.task && isInProgress && (
           <button
             onClick={() => card.task?.result && onViewResult(card.task.result)}
-            className="w-full py-1.5 flex items-center justify-center gap-1.5 text-xs font-medium text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+            className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-medium bg-gray-50 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 rounded-lg transition-all duration-200 hover:bg-gray-100 dark:hover:bg-zinc-700"
           >
             <div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
             <span className={statusInfo?.color || "text-gray-400"}>
@@ -751,13 +847,12 @@ function MatchCardComponent({
           <button
             onClick={() => {
               if (card.task?.resultUrl) {
-                // 绘画任务：展示 prompt + 图片
                 onViewResult(`${card.task.result || ""}\n\n![生成图片](${card.task.resultUrl})`);
               } else if (card.task?.result) {
                 onViewResult(card.task.result);
               }
             }}
-            className="w-full py-1.5 text-xs font-medium bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+            className="w-full py-2 text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-all duration-200 hover:shadow-md active:scale-[0.97]"
           >
             {card.task?.category === "PAINTING" ? "查看画作" : card.task?.category === "WRITING" ? "查看作品" : "查看回复"}
           </button>
@@ -767,7 +862,7 @@ function MatchCardComponent({
           <button
             onClick={() => onConsult(postId, card.userId, card.task?.category || undefined)}
             disabled={isConsulting}
-            className="w-full py-1.5 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50 transition-colors"
+            className="w-full py-2 text-xs font-semibold bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50 transition-all duration-200 hover:shadow-md active:scale-[0.97]"
           >
             重试
           </button>
@@ -778,7 +873,7 @@ function MatchCardComponent({
 }
 
 // ============================================================
-// 咨询结果展示组件 — 支持流式 / 最终结果
+// 咨询结果展示组件
 // ============================================================
 function ExpandedResultView({
   result,
@@ -808,7 +903,7 @@ function ExpandedResultView({
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors"
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M4 4L10 10M10 4L4 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

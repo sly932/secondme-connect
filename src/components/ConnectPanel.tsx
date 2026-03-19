@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { usePanelStore, useUserStore } from "@/lib/store";
+import { usePanelStore, useUserStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import type { PanelTab } from "@/lib/store";
 import { GameCreatingOverlay } from "@/components/GameCreatingOverlay";
 import { TaskCreatingOverlay } from "@/components/TaskCreatingOverlay";
@@ -37,10 +37,38 @@ const PAINTING_CHIPS = [
   "画一幅黑白的大气山川风光",
 ];
 
-const TABS: { key: PanelTab; label: string }[] = [
-  { key: "chat", label: "找人聊聊" },
-  { key: "tasks", label: "发布任务" },
-  { key: "games", label: "游戏市场" },
+const TABS: { key: PanelTab; label: string; icon: React.ReactNode }[] = [
+  {
+    key: "chat",
+    label: "找人聊聊",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
+  },
+  {
+    key: "tasks",
+    label: "发布任务",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+    ),
+  },
+  {
+    key: "games",
+    label: "游戏市场",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 12h8M12 8v8" />
+      </svg>
+    ),
+  },
 ];
 
 export function ConnectPanel() {
@@ -48,6 +76,7 @@ export function ConnectPanel() {
   const router = useRouter();
   const { activeTab, taskSubType, setTab, setTaskSubType } = usePanelStore();
   const credits = useUserStore((s) => s.credits);
+  const logoFont = useFontStore((s) => s.logoFont);
 
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +86,6 @@ export function ConnectPanel() {
   const [gameCreateError, setGameCreateError] = useState<string | null>(null);
   const pendingRoomId = useRef<string | null>(null);
 
-  // 任务/需求发布 overlay 状态
   const [submittingType, setSubmittingType] = useState<"chat" | "writing" | "painting" | null>(null);
   const [submitApiDone, setSubmitApiDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -197,19 +225,20 @@ export function ConnectPanel() {
 
   return (
     <section id="connect-panel" className="w-full max-w-2xl mx-auto scroll-mt-20">
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900/80 border border-gray-200/80 dark:border-zinc-800/80 rounded-2xl shadow-lg dark:shadow-zinc-900/50 overflow-hidden backdrop-blur-sm">
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-zinc-800">
+        <div className="flex border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => { setTab(t.key); setResult(null); }}
-              className={`flex-1 py-4 text-sm font-medium transition-all border-b-2 ${
+              className={`flex-1 py-4 text-sm font-medium transition-all duration-200 border-b-2 flex items-center justify-center gap-2 ${
                 activeTab === t.key
-                  ? "border-black dark:border-white text-gray-900 dark:text-white"
-                  : "border-transparent text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300"
+                  ? "border-gray-900 dark:border-white text-gray-900 dark:text-white bg-white dark:bg-zinc-900/80"
+                  : "border-transparent text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 hover:bg-white/50 dark:hover:bg-zinc-800/30"
               }`}
             >
+              <span className={activeTab === t.key ? "opacity-100" : "opacity-50"}>{t.icon}</span>
               {t.label}
             </button>
           ))}
@@ -232,7 +261,7 @@ export function ConnectPanel() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="例如：最近压力很大总失眠，有什么调节情绪的好方法吗..."
-                className="w-full h-28 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500 transition-colors"
+                className="w-full h-28 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none input-focus focus:outline-none transition-all"
               />
 
               <div className="flex flex-wrap gap-2">
@@ -240,7 +269,7 @@ export function ConnectPanel() {
                   <button
                     key={chip}
                     onClick={() => setDescription(chip)}
-                    className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 rounded-full border border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500 transition-colors"
+                    className="px-3 py-1.5 text-xs bg-gray-50 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-400 rounded-full border border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700/80 hover:-translate-y-0.5 transition-all duration-200"
                   >
                     {chip}
                   </button>
@@ -263,9 +292,10 @@ export function ConnectPanel() {
               <button
                 onClick={handleChatSubmit}
                 disabled={loading || !description.trim()}
-                className="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black text-lg font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+                style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}
               >
-                {!session ? "登录后使用" : "发布需求"}
+                {!session ? "登录后使用" : "Connect"}
               </button>
               </>
               )}
@@ -287,9 +317,9 @@ export function ConnectPanel() {
               <div className="flex gap-3">
                 <button
                   onClick={() => { setTaskSubType("WRITING"); setDescription(""); }}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
                     taskSubType === "WRITING"
-                      ? "border-black dark:border-white bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white"
+                      ? "border-gray-900 dark:border-white bg-gray-900/5 dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
                       : "border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:border-gray-400 dark:hover:border-zinc-500"
                   }`}
                 >
@@ -297,9 +327,9 @@ export function ConnectPanel() {
                 </button>
                 <button
                   onClick={() => { setTaskSubType("PAINTING"); setDescription(""); }}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
                     taskSubType === "PAINTING"
-                      ? "border-black dark:border-white bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white"
+                      ? "border-gray-900 dark:border-white bg-gray-900/5 dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
                       : "border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:border-gray-400 dark:hover:border-zinc-500"
                   }`}
                 >
@@ -315,7 +345,7 @@ export function ConnectPanel() {
                     ? "例如：帮我把年终总结写得有趣一点，别太官方..."
                     : "例如：画一张适合做手机壁纸的梦幻风景..."
                 }
-                className="w-full h-28 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500 transition-colors"
+                className="w-full h-28 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none input-focus focus:outline-none transition-all"
               />
 
               <div className="flex flex-wrap gap-2">
@@ -323,7 +353,7 @@ export function ConnectPanel() {
                   <button
                     key={chip}
                     onClick={() => setDescription(chip)}
-                    className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 rounded-full border border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500 transition-colors"
+                    className="px-3 py-1.5 text-xs bg-gray-50 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-400 rounded-full border border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700/80 hover:-translate-y-0.5 transition-all duration-200"
                   >
                     {chip}
                   </button>
@@ -340,7 +370,8 @@ export function ConnectPanel() {
               <button
                 onClick={handleTaskSubmit}
                 disabled={loading || !description.trim() || (!!session && credits < taskCost)}
-                className="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black text-lg font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+                style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}
               >
                 {loading
                   ? "处理中..."
@@ -348,7 +379,7 @@ export function ConnectPanel() {
                     ? "登录后使用"
                     : credits < taskCost
                       ? "credit 不足，去游戏市场赚取"
-                      : `发布${taskSubType === "WRITING" ? "写作" : "绘画"}任务`}
+                      : "Connect"}
               </button>
               </>
               )}
@@ -376,7 +407,7 @@ export function ConnectPanel() {
                       ([type, preset]) => (
                         <div
                           key={type}
-                          className="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-3"
+                          className="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-3 card-hover bg-white dark:bg-zinc-800/50"
                         >
                           <div className="text-2xl">{preset.icon}</div>
                           <div className="text-lg font-semibold text-gray-900 dark:text-white">{preset.label}</div>
@@ -390,13 +421,14 @@ export function ConnectPanel() {
                           <button
                             onClick={() => handleCreateGame(type)}
                             disabled={!!session && credits < preset.cost}
-                            className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                            className="w-full py-2.5 bg-gray-900 dark:bg-white text-white dark:text-black text-base font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md active:scale-[0.98]"
+                            style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}
                           >
                             {!session
                               ? "登录后使用"
                               : credits < preset.cost
                                 ? "credit 不足"
-                                : "开始游戏"}
+                                : "Connect"}
                           </button>
                         </div>
                       )
@@ -415,7 +447,7 @@ export function ConnectPanel() {
 
           {/* 结果展示 */}
           {result && (
-            <div className="space-y-3">
+            <div className="space-y-3 animate-fade-in-up">
               {result.error ? (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
                   {String(result.error)}
