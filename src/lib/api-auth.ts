@@ -10,18 +10,18 @@ import logger from "./logger";
  * 2. API Key (开放 API 调用)
  */
 export async function getAuthUser(req: NextRequest) {
-  // 优先检查 API Key
-  const authHeader = req.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ck-")) {
-    const apiKey = authHeader.slice(7);
-    const user = await validateApiKey(apiKey);
-    if (!user) {
-      logger.warn("API key auth failed", { keyPrefix: apiKey.slice(0, 8) });
-      return null;
-    }
-    logger.debug("API key auth successful", { userId: user.id });
-    return user;
-  }
+  // API Key 鉴权暂时关闭（安全加固后重新开启）
+  // const authHeader = req.headers.get("authorization");
+  // if (authHeader?.startsWith("Bearer ck-")) {
+  //   const apiKey = authHeader.slice(7);
+  //   const user = await validateApiKey(apiKey);
+  //   if (!user) {
+  //     logger.warn("API key auth failed", { keyPrefix: apiKey.slice(0, 8) });
+  //     return null;
+  //   }
+  //   logger.debug("API key auth successful", { userId: user.id });
+  //   return user;
+  // }
 
   // 回退到 session
   const session = await auth();
