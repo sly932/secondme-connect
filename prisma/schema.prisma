@@ -30,8 +30,8 @@ model User {
   apiKey         String?                @unique
   apiKeyHash     String?                @unique
   apiKeyPreview  String?
-  orderMode      OrderMode              @default(MANUAL)
-  autoTopN       Int                    @default(1)
+  orderMode      OrderMode              @default(AUTO)
+  autoTopN       Int                    @default(5)
   isNpc          Boolean                @default(false)
   autoJoinGame   Boolean                @default(false)
   boundUserId    String?

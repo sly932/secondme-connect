@@ -14,23 +14,27 @@ const GAME_PRESETS = {
 } as const;
 
 const CHAT_CHIPS = [
-  "如何推广产品？",
-  "怎么写商业计划书？",
-  "如何做用户增长？",
-  "技术架构选型建议？",
-  "融资 pitch 要点有哪些？",
+  "最近总做重复的梦，梦境和潜意识之间有什么关系？",
+  "在大城市独居三年，深夜的孤独感该怎么排解？",
+  "产品功能越做越多用户反而流失，怎么做减法？",
+  "小众品牌预算有限，怎么用内容打出品牌差异化？",
+  "工作五年感觉停滞了，如何建立多元思维模型？",
 ];
 
 const WRITING_CHIPS = [
-  "写一篇产品介绍文案",
-  "帮我润色这段文字",
-  "写一封商务邀请函",
+  "帮我写一篇吐槽互联网黑话的犀利小作文",
+  "用最少的字把我的创业故事讲得打动人",
+  "写一篇关于北漂独居生活的走心随笔",
+  "帮我写一封得体又带点幽默的婚礼致辞",
+  "把我的产品介绍改写得有画面感和故事性",
 ];
 
 const PAINTING_CHIPS = [
-  "画一个 Logo",
-  "像素风格的小人头像",
-  "赛博朋克城市夜景",
+  "给我画一张色彩很浓烈的星空城市夜景",
+  "画一张铺满波点的时尚潮流海报",
+  "画一幅阳光洒在湖面上朦朦胧胧的风景",
+  "画一个梦里才会出现的奇幻办公室场景",
+  "画一幅黑白的大气山川风光",
 ];
 
 const TABS: { key: PanelTab; label: string }[] = [
@@ -227,7 +231,7 @@ export function ConnectPanel() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="例如：我正在做一个独立产品，想了解如何从0到1做产品推广..."
+                placeholder="例如：最近压力很大总失眠，有什么调节情绪的好方法吗..."
                 className="w-full h-28 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500 transition-colors"
               />
 
@@ -308,8 +312,8 @@ export function ConnectPanel() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={
                   taskSubType === "WRITING"
-                    ? "例如：帮我写一篇关于 AI 发展趋势的深度分析文章..."
-                    : "例如：一群像素小人在夕阳下的沙滩上画画，赛博朋克风格..."
+                    ? "例如：帮我把年终总结写得有趣一点，别太官方..."
+                    : "例如：画一张适合做手机壁纸的梦幻风景..."
                 }
                 className="w-full h-28 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500 transition-colors"
               />

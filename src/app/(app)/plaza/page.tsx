@@ -391,14 +391,14 @@ export default function PlazaPage() {
     }
   };
 
-  const handleManualConsult = async (postId: string, workerId: string) => {
+  const handleManualConsult = async (postId: string, workerId: string, category?: string) => {
     setConsultingWorker(workerId);
     detailCacheRef.current.delete(postId);
     try {
       const res = await fetch(`/api/v1/plaza/${postId}/consult`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId }),
+        body: JSON.stringify({ workerId, ...(category && { category }) }),
       });
       const data = await res.json();
       if (data.success) {
@@ -676,7 +676,7 @@ function MatchCardComponent({
   card: MatchCard;
   colorIndex: number;
   postId: string;
-  onConsult: (postId: string, workerId: string) => void;
+  onConsult: (postId: string, workerId: string, category?: string) => void;
   onViewResult: (result: string) => void;
   isConsulting: boolean;
 }) {
@@ -765,7 +765,7 @@ function MatchCardComponent({
 
         {card.task?.status === "FAILED" && (
           <button
-            onClick={() => onConsult(postId, card.userId)}
+            onClick={() => onConsult(postId, card.userId, card.task?.category || undefined)}
             disabled={isConsulting}
             className="w-full py-1.5 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50 transition-colors"
           >

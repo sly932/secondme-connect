@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
-import { executeConsultTask } from "@/lib/task-executor";
+import { executeConsultTask, executeWritingTask, executePaintingTask } from "@/lib/task-executor";
 import logger from "@/lib/logger";
-import { TaskType, TaskStatus } from "@prisma/client";
+import { TaskType, TaskCategory, TaskStatus } from "@prisma/client";
 
 const CREDIT_PER_CONSULT = 1;
 
@@ -26,7 +26,7 @@ export async function POST(
 
     const { id: postId } = await params;
     const body = await req.json();
-    const { workerId } = body;
+    const { workerId, category } = body;
 
     if (!workerId) return badRequest("请提供 workerId");
 
@@ -46,7 +46,7 @@ export async function POST(
 
     // 检查是否已存在同 postId + workerId 的任务
     const existing = await prisma.task.findFirst({
-      where: { postId, workerId, type: TaskType.CONSULT },
+      where: { postId, workerId },
     });
     if (existing) {
       if (existing.status === TaskStatus.FAILED) {
@@ -55,7 +55,7 @@ export async function POST(
       } else {
         return NextResponse.json({
           success: true,
-          message: "已存在咨询任务",
+          message: "已存在任务",
           task: { taskId: existing.id, status: existing.status, result: existing.result },
         });
       }
@@ -76,36 +76,53 @@ export async function POST(
       prisma.user.findUnique({ where: { id: workerId }, select: { secondmeId: true } }),
     ]);
 
+    // 根据 category 决定任务类型和超时
+    const isWriting = category === "WRITING";
+    const isPainting = category === "PAINTING";
+    const isConsult = !isWriting && !isPainting;
+    const taskType = isConsult ? TaskType.CONSULT : TaskType.MARKETPLACE;
+    const taskCategory = isWriting ? TaskCategory.WRITING : isPainting ? TaskCategory.PAINTING : undefined;
+    const timeoutMs = isPainting ? 3 * 60 * 1000 : 2 * 60 * 1000;
+
     // 创建任务
     const task = await prisma.task.create({
       data: {
-        type: TaskType.CONSULT,
+        type: taskType,
+        ...(taskCategory && { category: taskCategory }),
         status: TaskStatus.MATCHING,
         description: post.content,
         creditCost: CREDIT_PER_CONSULT,
         publisherId: user.id,
         workerId,
         postId,
-        timeoutMs: 2 * 60 * 1000,
+        timeoutMs,
       },
     });
 
-    // 异步执行
-    if (worker?.secondmeId && publisherUser?.secondmeId) {
-      executeConsultTask(
-        task.id,
-        user.id,
-        publisherUser.secondmeId,
-        workerId,
-        worker.secondmeId,
-        post.content,
-        CREDIT_PER_CONSULT
-      ).catch((err) =>
-        logger.error("Manual consult task error", { taskId: task.id, error: err.message })
-      );
+    // 异步执行 — 根据 category 选择对应的执行器
+    if (worker?.secondmeId) {
+      if (isWriting) {
+        executeWritingTask(
+          task.id, user.id, workerId, worker.secondmeId, post.content, CREDIT_PER_CONSULT
+        ).catch((err) =>
+          logger.error("Retry writing task error", { taskId: task.id, error: err.message })
+        );
+      } else if (isPainting) {
+        executePaintingTask(
+          task.id, user.id, workerId, worker.secondmeId, post.content, CREDIT_PER_CONSULT
+        ).catch((err) =>
+          logger.error("Retry painting task error", { taskId: task.id, error: err.message })
+        );
+      } else if (publisherUser?.secondmeId) {
+        executeConsultTask(
+          task.id, user.id, publisherUser.secondmeId, workerId, worker.secondmeId, post.content, CREDIT_PER_CONSULT
+        ).catch((err) =>
+          logger.error("Manual consult task error", { taskId: task.id, error: err.message })
+        );
+      }
     }
 
-    logger.info("Manual consult started", { postId, workerId, taskId: task.id });
+    logger.info("Task started", { postId, workerId, taskId: task.id, category: category || "CONSULT" });
 
     return NextResponse.json({
       success: true,

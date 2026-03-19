@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     // 获取用户完整信息
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, credits: true, orderMode: true, autoTopN: true, secondmeId: true },
+      select: { id: true, credits: true, autoTopN: true, secondmeId: true },
     });
     if (!fullUser) return unauthorized();
 
@@ -97,10 +97,9 @@ export async function POST(req: NextRequest) {
     logger.info("Post created with matching", { postId: post.id, matchCount: matchCandidates.length });
 
     // 决定是否自动发起咨询
-    const effectiveMode = fullUser.orderMode;
     let tasks: { taskId: string; worker: { id: string; name: string; avatar: string | null; similarity: number } }[] = [];
 
-    if (effectiveMode === "AUTO" && matchCandidates.length > 0) {
+    if (matchCandidates.length > 0) {
       const selected = matchCandidates.slice(0, Math.min(fullUser.autoTopN, matchCandidates.length));
       const totalCost = selected.length * CREDIT_PER_CONSULT;
 
@@ -170,7 +169,7 @@ export async function POST(req: NextRequest) {
         author: post.author,
         createdAt: post.createdAt,
       },
-      mode: effectiveMode,
+      mode: "AUTO",
       matchCount: matchCandidates.length,
       candidates: matchCandidates,
       tasks: tasks.length > 0 ? tasks : undefined,

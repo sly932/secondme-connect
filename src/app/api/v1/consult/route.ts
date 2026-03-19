@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!user) return unauthorized();
 
     const body = await req.json();
-    const { description, mode, topN = 1 } = body;
+    const { description, topN = 5 } = body;
 
     if (!description || typeof description !== "string") {
       return badRequest("请提供需求描述 (description)");
@@ -25,11 +25,10 @@ export async function POST(req: NextRequest) {
     // 获取用户完整信息
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, credits: true, orderMode: true, autoTopN: true, secondmeId: true },
+      select: { id: true, credits: true, autoTopN: true, secondmeId: true },
     });
     if (!fullUser) return unauthorized();
 
-    const effectiveMode = mode || fullUser.orderMode;
     const effectiveTopN = topN || fullUser.autoTopN;
 
     // 匹配分身（向量优先，fallback BM25）
@@ -39,21 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "未找到匹配的分身", candidates: [] });
     }
 
-    // 手动模式: 返回候选列表
-    if (effectiveMode === "MANUAL") {
-      return NextResponse.json({
-        mode: "MANUAL",
-        candidates: candidates.map((c) => ({
-          id: c.id,
-          name: c.name,
-          avatar: c.avatar,
-          bio: c.bio,
-          similarity: Math.round(c.similarity * 100) / 100,
-        })),
-      });
-    }
-
-    // 自动模式: 取 Top N 直接执行
+    // 取 Top N 直接执行
     const selected = candidates.slice(0, Math.min(effectiveTopN, candidates.length));
     const totalCost = selected.length * CREDIT_PER_CONSULT;
 
