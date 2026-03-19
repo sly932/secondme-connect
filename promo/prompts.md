@@ -2,7 +2,7 @@
 
 > 适用于即梦 Seedance 2.0 / 可灵 Kling 2.6+ 等支持音画一体的 AI 视频生成工具。
 > 每条提示词对应一个独立镜头，建议先用即梦生图生成关键帧，再 @引用生视频。
-> 角色：金发外国女性（主角，不露脸）/ 鲁迅 / 乔布斯 / 梵高 / 同事（露脸）
+> 角色：美国男生（主角，不露脸）/ 鲁迅 / 乔布斯 / 安迪·沃霍尔 / 同事（露脸）
 
 ---
 
@@ -11,23 +11,23 @@
 ### Shot 1a — 走入（正面，不露头）
 
 ```
-Low-angle front view of a young woman in a clean white top walking into a bright modern office. The camera frames her from the neck down — we see her torso, arms, and legs walking confidently, but her head is cut off by the top of the frame. Floor-to-ceiling windows flood the space with natural sunlight. Bright, airy, cinematic, slow motion.
+Low-angle front view of a young American guy in a white T-shirt and gray hoodie walking into a bright modern office. The camera frames him from the neck down — we see his torso, arms, and legs walking casually, but his head is cut off by the top of the frame. Floor-to-ceiling windows flood the space with natural sunlight. Bright, airy, cinematic, slow motion.
 
-Audio: soft heels on wood floor, bright ambient office tone, gentle morning atmosphere.
+Audio: soft sneakers on wood floor, bright ambient office tone, gentle morning atmosphere.
 ```
 
-### Shot 1b — 坐下（背面，露金发）
+### Shot 1b — 坐下（背面，露卷发）
 
 ```
-Camera cuts to behind her. We now see her blonde hair and shoulders from the back as she approaches a sleek white desk with a large monitor. She pulls out the chair and sits down gracefully. Her golden hair catches the sunlight. The monitor is dark, about to turn on. Back view, shallow depth of field, cinematic warm light.
+Camera cuts to behind him. We now see his brown curly hair and hoodie-clad shoulders from the back as he approaches a sleek white desk with a large monitor. He pulls out the chair and drops into it casually. The sunlight catches his curly hair. The monitor is dark, about to turn on. Back view, shallow depth of field, cinematic warm light.
 
-Audio: chair sliding, soft settling sound, fabric rustle.
+Audio: chair sliding, soft settling sound, hoodie fabric rustle.
 ```
 
-### Shot 1c — 她的视角（第一人称，看到屏幕）
+### Shot 1c — 他的视角（第一人称，看到屏幕）
 
 ```
-Cut to first-person POV from her perspective. The monitor comes to life with a soft glow, revealing the Connect landing page (use uploaded landing page screenshot as reference). The camera slowly pushes toward the screen, the web interface fills the frame. Clean modern UI, bright screen against the sunlit office. First-person perspective, screen focus.
+Cut to first-person POV from his perspective. The monitor comes to life with a soft glow, revealing the Connect landing page (use uploaded landing page screenshot as reference). The camera slowly pushes toward the screen, the web interface fills the frame. Clean modern UI, bright screen against the sunlit office. First-person perspective, screen focus.
 
 Audio: monitor powering on hum, soft UI loading chime.
 ```
@@ -57,7 +57,7 @@ Audio: typewriter key strikes for each character, crisp and rhythmic. Final ente
 ### Shot 3 — 发送
 
 ```
-Close-up of the blonde woman's slender hand pressing the Enter key. The moment she presses it, the monitor erupts with intense blue-white light that floods the bright office. Camera rapidly zooms into the screen — reality dissolves into streams of light particles. We never see her face. Transition from bright realistic office into digital cyberspace. Lens flare, motion blur, speed lines.
+Close-up of the young man's hand pressing the Enter key. The moment he presses it, the monitor erupts with intense blue-white light that floods the bright office. Camera rapidly zooms into the screen — reality dissolves into streams of light particles. We never see his face. Transition from bright realistic office into digital cyberspace. Lens flare, motion blur, speed lines.
 
 Audio: a powerful digital "whoosh" surge, rising electronic tone, reality-breaking bass drop.
 ```
@@ -104,10 +104,10 @@ Audio: digital whoosh fading into ticking old clock, paper rustling, distant str
 Split-screen composition divided into three equal vertical panels:
 LEFT: Lu Xun's dim study — a golden light orb glows on his manuscript-covered desk, he reaches toward it with ink-stained fingers. Warm yellow lamp tones, Republican-era Chinese aesthetic.
 CENTER: Steve Jobs in a minimalist white office — a white light orb illuminates his clean desk, he looks at it intently. Apple-style clean aesthetic.
-RIGHT: Vincent van Gogh's colorful studio — a rainbow light orb lands on a paint-splattered easel. He has a red-brown beard, bandaged ear, blue work jacket. Bold colors everywhere, post-impressionist atmosphere.
+RIGHT: Andy Warhol's pop art studio — a rainbow light orb lands on a silk-screen printing table. He has iconic silver-white explosive hair, black-framed glasses, and a black leather jacket. Walls covered with bold, colorful pop art prints. Vibrant, commercial-art atmosphere.
 All three orbs pulse simultaneously. Triple split-screen, each panel has its own distinct color palette and mood.
 
-Audio: three distinct ambient tones — ticking clock and paper (left), minimal electronic hum (center), paint mixing and brush tapping (right).
+Audio: three distinct ambient tones — ticking clock and paper (left), minimal electronic hum (center), silk-screen press clacking and spray paint hiss (right).
 ```
 
 ---
@@ -130,12 +130,12 @@ Medium shot of Steve Jobs in his iconic black turtleneck, standing in a pure whi
 Audio: subtle ambient electronic tone, soft whoosh as each text phrase appears.
 ```
 
-### Shot 9c — 梵高作画
+### Shot 9c — 沃霍尔创作
 
 ```
-Vincent van Gogh stands before a large canvas in a sunlit studio. He has a distinctive red-brown beard, a bandaged left ear, and wears a blue work jacket. He squeezes thick paint from tubes, mixes vibrant yellows and blues on his palette, then applies bold, swirling brushstrokes to the canvas. With each stroke, a product launch poster gradually emerges in his signature Starry Night style — swirling skies, bold colors, thick impasto texture. Post-impressionist, painterly, natural warm light.
+Andy Warhol stands at a silk-screen printing table in his iconic Factory studio. Silver-white explosive hair, black-framed glasses, black leather jacket. He methodically applies layers of bold fluorescent ink through a silk screen — hot pink, electric blue, neon yellow — one color at a time. With each pass, a product launch poster gradually emerges in his signature pop art style: flat bold colors, high contrast, repeated graphic motifs. The walls behind him are covered with his famous works — Marilyn Monroe prints, Campbell's soup cans. Commercial-art-meets-fine-art atmosphere, fluorescent studio lighting.
 
-Audio: thick brush strokes on canvas, paint squeezing from tubes, palette knife scraping, gentle wind through studio window.
+Audio: silk-screen press clacking rhythmically, spray paint hiss, ink roller sounds, faint radio playing in the background.
 ```
 
 ### Shot 10 — 完成信号
@@ -144,7 +144,7 @@ Audio: thick brush strokes on canvas, paint squeezing from tubes, palette knife 
 Triple split-screen: all three characters finish their work at the same moment.
 LEFT: Lu Xun puts down his brush pen with satisfaction, a golden orb of light rises from his completed manuscript full of bold Chinese characters.
 CENTER: Jobs gives a subtle nod, a white orb of light emerges from the floating text.
-RIGHT: Van Gogh steps back to admire his finished poster — a swirling, colorful masterpiece — a rainbow orb rises from the canvas.
+RIGHT: Warhol steps back to admire his finished poster — a bold, vibrant pop art masterpiece — a rainbow orb rises from the print.
 All three orbs glow brighter simultaneously, ready to depart. Synchronized completion moment.
 
 Audio: three ascending chimes in harmony, building to a unified resonant tone.
@@ -165,7 +165,7 @@ Audio: three streams merging with harmonic electronic tones building to a cresce
 ### Shot 12 — 穿出屏幕
 
 ```
-First-person POV as the merged data beam races back through the cyber tunnel at high speed. The neon environment gradually dissolves — circuit lines fade, reality textures emerge. The beam bursts through the screen surface with a flash of light. We're back in the bright modern office, looking at the monitor from behind the blonde woman's shoulder. We never see her face. Digital-to-reality transition, light burst, natural sunlight returns.
+First-person POV as the merged data beam races back through the cyber tunnel at high speed. The neon environment gradually dissolves — circuit lines fade, reality textures emerge. The beam bursts through the screen surface with a flash of light. We're back in the bright modern office, looking at the monitor from behind the young man's hoodie-clad shoulder. We never see his face. Digital-to-reality transition, light burst, natural sunlight returns.
 
 Audio: decelerating whoosh, digital-to-analog transition sound, bright office ambience returning softly.
 ```
@@ -173,7 +173,7 @@ Audio: decelerating whoosh, digital-to-analog transition sound, bright office am
 ### Shot 13 — 成果展示
 
 ```
-Over-the-shoulder shot from behind the blonde woman — we see her hair and shoulders but never her face. She looks at the monitor. The screen displays beautiful results appearing one by one: a sharp, compelling copywriting document in Chinese, a growth strategy framework with clean charts, and a stunning product launch poster in Van Gogh's swirling Starry Night style. She leans back with satisfaction. Bright office, natural sunlight, sense of accomplishment and wonder.
+Over-the-shoulder shot from behind the young man in his gray hoodie — we see his brown curly hair and shoulders but never his face. He looks at the monitor. The screen displays beautiful results appearing one by one: a sharp, compelling copywriting document in Chinese, a growth strategy framework with clean charts, and a stunning product launch poster in Andy Warhol's bold pop art style. He leans back with satisfaction. Bright office, natural sunlight, sense of accomplishment and wonder.
 
 Audio: soft UI reveal sounds, gentle triumphant music swell, a soft satisfied exhale.
 ```
@@ -185,7 +185,7 @@ Audio: soft UI reveal sounds, gentle triumphant music swell, a soft satisfied ex
 ### Shot 14 — 门边偷看
 
 ```
-Camera angle shifts. A comedic shot from the doorway perspective: a male coworker in a blue plaid shirt and glasses peeks around the door frame with wide curious eyes, secretly watching the blonde woman's impressive results on screen. His eyes light up with excitement and envy. He slowly ducks back behind the door. Office hallway lighting, comedic timing, voyeuristic angle. Sitcom-style humor. His face is clearly visible.
+Camera angle shifts. A comedic shot from the doorway perspective: an American guy with short blonde hair, blue plaid shirt and glasses peeks around the door frame with wide curious eyes, secretly watching the young man's impressive results on screen. His eyes light up with excitement and envy. He slowly ducks back behind the door. Office hallway lighting, comedic timing, voyeuristic angle. Sitcom-style humor. His face is clearly visible.
 
 Audio: sneaky tiptoeing sound, comedic "discovery" sting, suppressed excited gasp.
 ```
@@ -193,7 +193,7 @@ Audio: sneaky tiptoeing sound, comedic "discovery" sting, suppressed excited gas
 ### Shot 15 — 同事尝试
 
 ```
-The coworker in glasses hurries back to his own desk, sits down eagerly, and opens Connect on his monitor. He cracks his knuckles with exaggerated confidence, types a task, and hits the "Connect" button with a dramatic finger press. He leans back and crosses his arms, waiting smugly for results. His face shows cocky anticipation. Office setting, upbeat comedic energy.
+The blonde coworker in glasses hurries back to his own desk, sits down eagerly, and opens Connect on his monitor. He cracks his knuckles with exaggerated confidence, types a task, and hits the "Connect" button with a dramatic finger press. He leans back and crosses his arms, waiting smugly for results. His face shows cocky anticipation. Office setting, upbeat comedic energy.
 
 Audio: fast footsteps, eager keyboard typing, confident button click, chair squeak.
 ```
@@ -201,7 +201,7 @@ Audio: fast footsteps, eager keyboard typing, confident button click, chair sque
 ### Shot 16 — 反复失败
 
 ```
-Close-up of the coworker's monitor: a big red "ERROR" message pops up on screen. Cut to his confused face — glasses slightly askew. He tries again — ERROR. Again — ERROR. The cuts get faster: type-click-ERROR, type-click-ERROR, type-click-ERROR. His expression escalates from confusion to frustration to despair. He slumps in his chair, head tilted back. Comedy montage, increasingly rapid cuts, sitcom frustration.
+Close-up of the coworker's monitor: a big red "ERROR" message pops up on screen. Cut to his confused face — blonde hair, glasses slightly askew. He tries again — ERROR. Again — ERROR. The cuts get faster: type-click-ERROR, type-click-ERROR, type-click-ERROR. His expression escalates from confusion to frustration to despair. He slumps in his chair, head tilted back. Comedy montage, increasingly rapid cuts, sitcom frustration.
 
 Audio: error buzzer sound repeating with increasing urgency, frustrated sighs and groans escalating, comedic escalation rhythm.
 ```
@@ -252,6 +252,6 @@ Audio: single elegant piano note, soft reverb tail fading out.
 2. **@引用生视频**：将关键帧 + 角色参考图 @引用，配合上方提示词在即梦/可灵中生成带音效的视频
 3. **三分屏镜头**（Shot 8/9/10）：分别生成三个独立镜头，后期用剪映拼接为分屏
 4. **UI 部分**（Shot 2a/2b/16）：用 Remotion 或屏幕录制，上传 Landing Page 首页参考图
-5. **主角不露脸**：所有主角镜头保持背影/手部/过肩视角，金发作为视觉辨识
+5. **主角不露脸**：所有主角镜头保持背影/手部/过肩视角，棕色卷发+灰色连帽衫作为视觉辨识
 6. **音效微调**：AI 生成的音效可能不完美，用剪映/DaVinci 替换或叠加素材库音效
 7. **节奏控制**：喜剧段（第五六幕）需要精准的剪辑节奏，建议手动调整时间线
