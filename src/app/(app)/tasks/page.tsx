@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image, { type ImageLoaderProps } from "next/image";
+import { useT, useLocale } from "@/lib/i18n";
 
 interface TaskItem {
   id: string;
@@ -21,18 +22,20 @@ interface TaskItem {
 
 const passthroughImageLoader = ({ src }: ImageLoaderProps) => src;
 
-const STATUS_LABELS: Record<string, { label: string; color: string; barColor: string }> = {
-  MATCHING: { label: "匹配中", color: "text-yellow-500 dark:text-yellow-400", barColor: "bg-yellow-400" },
-  PENDING: { label: "待确认", color: "text-yellow-500 dark:text-yellow-400", barColor: "bg-yellow-400" },
-  EVALUATING: { label: "评估中", color: "text-blue-500 dark:text-blue-400", barColor: "bg-blue-400" },
-  ACCEPTED: { label: "已接单", color: "text-blue-500 dark:text-blue-400", barColor: "bg-blue-400" },
-  EXECUTING: { label: "执行中", color: "text-indigo-500 dark:text-indigo-400", barColor: "bg-indigo-400" },
-  COMPLETED: { label: "已完成", color: "text-emerald-500 dark:text-emerald-400", barColor: "bg-emerald-400" },
-  FAILED: { label: "失败", color: "text-red-500 dark:text-red-400", barColor: "bg-red-400" },
-  CANCELLED: { label: "已取消", color: "text-gray-400 dark:text-zinc-400", barColor: "bg-gray-400" },
+const STATUS_COLORS: Record<string, { color: string; barColor: string }> = {
+  MATCHING: { color: "text-yellow-500 dark:text-yellow-400", barColor: "bg-yellow-400" },
+  PENDING: { color: "text-yellow-500 dark:text-yellow-400", barColor: "bg-yellow-400" },
+  EVALUATING: { color: "text-blue-500 dark:text-blue-400", barColor: "bg-blue-400" },
+  ACCEPTED: { color: "text-blue-500 dark:text-blue-400", barColor: "bg-blue-400" },
+  EXECUTING: { color: "text-indigo-500 dark:text-indigo-400", barColor: "bg-indigo-400" },
+  COMPLETED: { color: "text-emerald-500 dark:text-emerald-400", barColor: "bg-emerald-400" },
+  FAILED: { color: "text-red-500 dark:text-red-400", barColor: "bg-red-400" },
+  CANCELLED: { color: "text-gray-400 dark:text-zinc-400", barColor: "bg-gray-400" },
 };
 
 export default function TasksPage() {
+  const t = useT();
+  const { locale } = useLocale();
   const { status } = useSession();
   const router = useRouter();
   const [tab, setTab] = useState<"published" | "received">("published");
@@ -55,7 +58,7 @@ export default function TasksPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-zinc-950 pt-24 px-6">
       <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">我的任务</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.tasks.title}</h1>
 
         {/* Tab 切换 */}
         <div className="flex gap-1 bg-gray-100 dark:bg-zinc-900 rounded-xl p-1 w-fit">
@@ -65,7 +68,7 @@ export default function TasksPage() {
               tab === "published" ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
             }`}
           >
-            我发布的
+            {t.tasks.published}
           </button>
           <button
             onClick={() => setTab("received")}
@@ -73,7 +76,7 @@ export default function TasksPage() {
               tab === "received" ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
             }`}
           >
-            分身接的
+            {t.tasks.received}
           </button>
         </div>
 
@@ -105,13 +108,14 @@ export default function TasksPage() {
               <line x1="16" y1="13" x2="8" y2="13" />
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
-            <p className="text-gray-400 dark:text-zinc-500">暂无任务</p>
-            <p className="text-sm text-gray-300 dark:text-zinc-600 mt-1">去首页发布你的第一个需求吧</p>
+            <p className="text-gray-400 dark:text-zinc-500">{t.tasks.noTasks}</p>
+            <p className="text-sm text-gray-300 dark:text-zinc-600 mt-1">{t.tasks.noTasksHint}</p>
           </div>
         ) : (
           <div className="space-y-3">
             {tasks.map((task, i) => {
-              const statusInfo = STATUS_LABELS[task.status] || { label: task.status, color: "text-gray-400 dark:text-zinc-400", barColor: "bg-gray-400" };
+              const statusColors = STATUS_COLORS[task.status] || { color: "text-gray-400 dark:text-zinc-400", barColor: "bg-gray-400" };
+              const statusLabel = t.tasks.status[task.status] || task.status;
               return (
                 <div
                   key={task.id}
@@ -120,23 +124,23 @@ export default function TasksPage() {
                   onClick={() => router.push(`/tasks/${task.id}`)}
                 >
                   {/* 左侧状态色条 */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusInfo.barColor} rounded-l-xl`} />
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColors.barColor} rounded-l-xl`} />
 
                   <div className="flex items-start justify-between pl-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 font-medium">
-                          {task.type === "CONSULT" ? "咨询" : task.category === "PAINTING" ? "绘画" : "写作"}
+                          {task.type === "CONSULT" ? t.tasks.consult : task.category === "PAINTING" ? t.tasks.paintingLabel : t.tasks.writingLabel}
                         </span>
-                        <span className={`text-xs font-medium ${statusInfo.color}`}>
-                          {statusInfo.label}
+                        <span className={`text-xs font-medium ${statusColors.color}`}>
+                          {statusLabel}
                         </span>
                       </div>
                       <p className="text-gray-900 dark:text-white text-sm truncate">{task.description}</p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-zinc-500">
                         <span>{task.creditCost} credit</span>
-                        <span>{new Date(task.createdAt).toLocaleString("zh-CN")}</span>
-                        {task.worker && <span>分身: {task.worker.name}</span>}
+                        <span>{new Date(task.createdAt).toLocaleString(locale === "zh" ? "zh-CN" : locale)}</span>
+                        {task.worker && <span>{t.tasks.worker} {task.worker.name}</span>}
                       </div>
                     </div>
                   </div>

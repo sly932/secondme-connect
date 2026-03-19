@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Image, { type ImageLoaderProps } from "next/image";
+import { useT, useLocale } from "@/lib/i18n";
 
 interface Author {
   id: string;
@@ -55,11 +56,7 @@ interface PostDetail {
   createdAt: string;
 }
 
-const TASK_TYPE_BADGES: Record<string, { label: string; color: string; icon: string }> = {
-  CONSULT: { label: "咨询", color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700", icon: "💬" },
-  WRITING: { label: "写作", color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700", icon: "✍️" },
-  PAINTING: { label: "绘画", color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700", icon: "🎨" },
-};
+// TASK_TYPE_BADGES moved inside PlazaPage for i18n
 
 const passthroughImageLoader = ({ src }: ImageLoaderProps) => src;
 
@@ -77,25 +74,7 @@ const MATCH_COLORS = [
   { gradient: "from-stone-600 to-stone-800 dark:from-stone-300 dark:to-stone-400", bg: "from-gray-50 to-gray-100/50 dark:from-zinc-800/60 dark:to-zinc-800/40", accent: "gray" },
 ];
 
-const TASK_STATUS_LABELS: Record<string, { text: string; color: string }> = {
-  MATCHING: { text: "匹配中", color: "text-gray-500 dark:text-zinc-400" },
-  EVALUATING: { text: "评估中", color: "text-gray-500 dark:text-zinc-400" },
-  ACCEPTED: { text: "已接受", color: "text-gray-600 dark:text-zinc-300" },
-  EXECUTING: { text: "咨询中", color: "text-gray-600 dark:text-zinc-300" },
-  COMPLETED: { text: "已完成", color: "text-gray-900 dark:text-white" },
-  FAILED: { text: "失败", color: "text-red-500 dark:text-red-400" },
-};
-
-function timeAgo(date: string, currentTime: number | null) {
-  if (!currentTime) return "";
-  const diff = currentTime - new Date(date).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "刚刚";
-  if (mins < 60) return `${mins}分钟前`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}小时前`;
-  return `${Math.floor(hours / 24)}天前`;
-}
+// TASK_STATUS_LABELS and timeAgo moved inside PlazaPage for i18n
 
 function Avatar({ name, avatar, size = 32 }: { name: string; avatar: string | null; size?: number }) {
   if (avatar) {
@@ -123,7 +102,36 @@ function Avatar({ name, avatar, size = 32 }: { name: string; avatar: string | nu
 }
 
 export default function PlazaPage() {
+  const t = useT();
+  const { locale } = useLocale();
   const { data: session } = useSession();
+
+  const TASK_TYPE_BADGES: Record<string, { label: string; color: string; icon: string }> = {
+    CONSULT: { label: t.plaza.taskType.CONSULT, color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700", icon: "💬" },
+    WRITING: { label: t.plaza.taskType.WRITING, color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700", icon: "✍️" },
+    PAINTING: { label: t.plaza.taskType.PAINTING, color: "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700", icon: "🎨" },
+  };
+
+  const TASK_STATUS_LABELS: Record<string, { text: string; color: string }> = {
+    MATCHING: { text: t.plaza.taskStatus.MATCHING, color: "text-gray-500 dark:text-zinc-400" },
+    EVALUATING: { text: t.plaza.taskStatus.EVALUATING, color: "text-gray-500 dark:text-zinc-400" },
+    ACCEPTED: { text: t.plaza.taskStatus.ACCEPTED, color: "text-gray-600 dark:text-zinc-300" },
+    EXECUTING: { text: t.plaza.taskStatus.EXECUTING, color: "text-gray-600 dark:text-zinc-300" },
+    COMPLETED: { text: t.plaza.taskStatus.COMPLETED, color: "text-gray-900 dark:text-white" },
+    FAILED: { text: t.plaza.taskStatus.FAILED, color: "text-red-500 dark:text-red-400" },
+  };
+
+  function timeAgo(date: string, currentTime: number | null) {
+    if (!currentTime) return "";
+    const diff = currentTime - new Date(date).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return t.plaza.timeAgo.justNow;
+    if (mins < 60) return t.plaza.timeAgo.minutesAgo.replace("{n}", String(mins));
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return t.plaza.timeAgo.hoursAgo.replace("{n}", String(hours));
+    return t.plaza.timeAgo.daysAgo.replace("{n}", String(Math.floor(hours / 24)));
+  }
+
   const [posts, setPosts] = useState<PostPreview[]>([]);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [expandedDetail, setExpandedDetail] = useState<PostDetail | null>(null);
@@ -458,7 +466,7 @@ export default function PlazaPage() {
       <div className="max-w-3xl mx-auto space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex-shrink-0">广场</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex-shrink-0">{t.plaza.title}</h1>
           <div className="relative flex-1 max-w-xs">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500">
               <circle cx="11" cy="11" r="8" />
@@ -471,7 +479,7 @@ export default function PlazaPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索需求..."
+              placeholder={t.plaza.searchPlaceholder}
               className="w-full bg-white dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-700 rounded-xl pl-9 pr-9 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 input-focus focus:outline-none transition-all"
             />
           </div>
@@ -507,7 +515,7 @@ export default function PlazaPage() {
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-gray-300 dark:text-zinc-700 mb-4">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <p className="text-gray-400 dark:text-zinc-500">{search ? "没有找到匹配的帖子" : "还没有帖子，去首页发一个吧"}</p>
+            <p className="text-gray-400 dark:text-zinc-500">{search ? t.plaza.noPostsSearch : t.plaza.noPostsEmpty}</p>
           </div>
         )}
 
@@ -549,7 +557,7 @@ export default function PlazaPage() {
                         <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 rounded">AI</span>
                       )}
                       {isMyPost && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 rounded">我的</span>
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 rounded">{t.plaza.myPost}</span>
                       )}
                     </div>
                     <span className="text-xs text-gray-400 dark:text-zinc-500">{timeAgo(post.createdAt, now)}</span>
@@ -589,7 +597,7 @@ export default function PlazaPage() {
                         {post.commentCount}
                       </span>
                     )}
-                    {!hasDetails && "展开"}
+                    {!hasDetails && t.plaza.expand}
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
                       <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -606,7 +614,7 @@ export default function PlazaPage() {
                       {detailLoading && (
                         <div className="px-5 py-4">
                           <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400 mb-3 uppercase tracking-wider">
-                            匹配的分身
+                            {t.plaza.matchedShades}
                           </div>
                           <div className="flex gap-3 overflow-x-auto pb-2">
                             {Array.from({ length: Math.min(post.matchCount || 1, 4) }).map((_, i) => (
@@ -629,7 +637,7 @@ export default function PlazaPage() {
                       {!detailLoading && expandedMatchCards.length > 0 && isMyPost && (
                         <div className="px-5 py-4 border-b border-gray-100 dark:border-zinc-800">
                           <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400 mb-3 uppercase tracking-wider">
-                            匹配的分身
+                            {t.plaza.matchedShades}
                           </div>
                           <div className="relative">
                             <div className="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-white dark:from-zinc-900/80 to-transparent z-10 pointer-events-none" />
@@ -694,7 +702,7 @@ export default function PlazaPage() {
 
                       {isConsult && expandedHasMoreComments && (
                         <div className="px-5 pb-3 text-xs text-gray-400 dark:text-zinc-500">
-                          仅展示最近 50 条评论。
+                          {t.plaza.recentComments}
                         </div>
                       )}
 
@@ -708,7 +716,7 @@ export default function PlazaPage() {
                               onChange={(e) =>
                                 setCommentTexts((prev) => ({ ...prev, [post.id]: e.target.value }))
                               }
-                              placeholder="写一句回复..."
+                              placeholder={t.plaza.commentPlaceholder}
                               className="flex-1 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 input-focus focus:outline-none transition-all"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
@@ -736,7 +744,7 @@ export default function PlazaPage() {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-zinc-500">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
-                          你已回复过这条帖子
+                          {t.plaza.alreadyReplied}
                         </div>
                       )}
 
@@ -746,7 +754,7 @@ export default function PlazaPage() {
                             onClick={() => window.location.href = "/api/auth/login"}
                             className="text-gray-600 dark:text-zinc-300 hover:underline font-medium"
                           >
-                            登录后回复
+                            {t.plaza.loginToReply}
                           </button>
                         </div>
                       )}
@@ -765,14 +773,14 @@ export default function PlazaPage() {
         {loading && posts.length > 0 && (
           <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-400 dark:text-zinc-500">
             <div className="w-4 h-4 border-2 border-gray-300 dark:border-zinc-600 border-t-transparent rounded-full animate-spin" />
-            加载中...
+            {t.plaza.loading}
           </div>
         )}
 
         {/* End of list */}
         {!hasMore && posts.length > 0 && (
           <div className="text-center py-4 text-xs text-gray-300 dark:text-zinc-700">
-            — 没有更多了 —
+            {t.plaza.noMore}
           </div>
         )}
       </div>
@@ -798,6 +806,17 @@ function MatchCardComponent({
   onViewResult: (result: string) => void;
   isConsulting: boolean;
 }) {
+  const t = useT();
+
+  const TASK_STATUS_LABELS: Record<string, { text: string; color: string }> = {
+    MATCHING: { text: t.plaza.taskStatus.MATCHING, color: "text-gray-500 dark:text-zinc-400" },
+    EVALUATING: { text: t.plaza.taskStatus.EVALUATING, color: "text-gray-500 dark:text-zinc-400" },
+    ACCEPTED: { text: t.plaza.taskStatus.ACCEPTED, color: "text-gray-600 dark:text-zinc-300" },
+    EXECUTING: { text: t.plaza.taskStatus.EXECUTING, color: "text-gray-600 dark:text-zinc-300" },
+    COMPLETED: { text: t.plaza.taskStatus.COMPLETED, color: "text-gray-900 dark:text-white" },
+    FAILED: { text: t.plaza.taskStatus.FAILED, color: "text-red-500 dark:text-red-400" },
+  };
+
   const statusInfo = card.task ? TASK_STATUS_LABELS[card.task.status] : null;
   const isInProgress = card.task && !["COMPLETED", "FAILED", "CANCELLED"].includes(card.task.status);
   const palette = MATCH_COLORS[colorIndex % MATCH_COLORS.length];
@@ -874,7 +893,7 @@ function MatchCardComponent({
             disabled={isConsulting}
             className="w-full py-2 text-xs font-semibold bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg disabled:opacity-50 transition-all duration-200 hover:bg-gray-800 dark:hover:bg-zinc-200 hover:shadow-md active:scale-[0.97]"
           >
-            {isConsulting ? "发起中..." : "发起咨询"}
+            {isConsulting ? t.plaza.initiating : t.plaza.initiateConsult}
           </button>
         )}
 
@@ -888,7 +907,7 @@ function MatchCardComponent({
               {statusInfo?.text || card.task.status}
             </span>
             {card.task?.result && (
-              <span className="text-gray-400 dark:text-zinc-500 ml-0.5">· 查看</span>
+              <span className="text-gray-400 dark:text-zinc-500 ml-0.5">· {t.plaza.viewResult}</span>
             )}
           </button>
         )}
@@ -904,7 +923,7 @@ function MatchCardComponent({
             }}
             className="w-full py-2 text-xs font-semibold bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg transition-all duration-200 hover:bg-gray-800 dark:hover:bg-zinc-200 hover:shadow-md active:scale-[0.97]"
           >
-            {card.task?.category === "PAINTING" ? "查看画作" : card.task?.category === "WRITING" ? "查看作品" : "查看回复"}
+            {card.task?.category === "PAINTING" ? t.plaza.viewPainting : card.task?.category === "WRITING" ? t.plaza.viewWriting : t.plaza.viewReply}
           </button>
         )}
 
@@ -914,7 +933,7 @@ function MatchCardComponent({
             disabled={isConsulting}
             className="w-full py-2 text-xs font-semibold bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50 transition-all duration-200 hover:shadow-md active:scale-[0.97]"
           >
-            重试
+            {t.plaza.retry}
           </button>
         )}
       </div>
@@ -934,12 +953,14 @@ function ExpandedResultView({
   isStreaming: boolean;
   onClose: () => void;
 }) {
+  const t = useT();
+
   return (
     <div className="border rounded-xl p-4 bg-gray-50 dark:bg-zinc-800/60 border-gray-200 dark:border-zinc-700">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-gray-600 dark:text-zinc-300">
-            {isStreaming ? "正在回复中..." : "咨询回复"}
+            {isStreaming ? t.plaza.streaming : t.plaza.consultReply}
           </span>
           {isStreaming && (
             <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-zinc-500 animate-pulse" />

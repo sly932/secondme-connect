@@ -15,6 +15,7 @@ import {
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { I18nProvider } from "@/lib/i18n";
 import { Navbar } from "@/components/Navbar";
 
 const geistSans = Geist({
@@ -53,6 +54,15 @@ const fontVars = [
   kalam.variable,
 ].join(" ");
 
+import type { Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: "Connect — 连接对的人，帮你做对的事",
   description: "以 AI 分身为核心的需求撮合与任务执行平台",
@@ -64,15 +74,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body
         className={`${fontVars} antialiased bg-white dark:bg-black text-gray-900 dark:text-white`}
       >
         <SessionProvider>
-          <ThemeProvider>
-            <Navbar />
-            {children}
-          </ThemeProvider>
+          <I18nProvider>
+            <ThemeProvider>
+              <Navbar />
+              {children}
+            </ThemeProvider>
+          </I18nProvider>
         </SessionProvider>
       </body>
     </html>

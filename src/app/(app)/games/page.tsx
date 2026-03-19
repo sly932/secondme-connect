@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { GameCreatingOverlay } from "@/components/GameCreatingOverlay";
+import { useT, useLocale } from "@/lib/i18n";
 
 interface Room {
   id: string;
@@ -20,20 +21,22 @@ interface Room {
   createdAt: string;
 }
 
-const GAME_LABELS: Record<string, string> = {
-  BLACKJACK: "21点",
-  TEXAS_HOLDEM: "德州扑克",
-};
-
-const STATUS_LABELS: Record<string, { text: string; color: string }> = {
-  PLAYING: { text: "进行中", color: "bg-green-500" },
-  COMPLETED: { text: "已结束", color: "bg-gray-500" },
-  CANCELLED: { text: "已取消", color: "bg-red-500" },
-};
-
 export default function GamesPage() {
   const { status } = useSession();
   const router = useRouter();
+  const t = useT();
+  const { locale } = useLocale();
+
+  const GAME_LABELS: Record<string, string> = {
+    BLACKJACK: t.games.blackjack,
+    TEXAS_HOLDEM: t.games.texasHoldem,
+  };
+
+  const STATUS_LABELS: Record<string, { text: string; color: string }> = {
+    PLAYING: { text: t.games.playing, color: "bg-green-500" },
+    COMPLETED: { text: t.games.completed, color: "bg-gray-500" },
+    CANCELLED: { text: t.games.cancelled, color: "bg-red-500" },
+  };
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,14 +95,14 @@ export default function GamesPage() {
           router.push(`/games/${data.room.id}`);
         }, 800);
       } else {
-        setCreateError(data.message || data.error || "创建失败");
+        setCreateError(data.message || data.error || t.panel.createFailed);
         setTimeout(() => {
           setCreating(false);
           setCreateError(null);
         }, 2000);
       }
     } catch {
-      setCreateError("网络错误，请重试");
+      setCreateError(t.panel.networkError);
       setTimeout(() => {
         setCreating(false);
         setCreateError(null);
@@ -117,14 +120,14 @@ export default function GamesPage() {
       <div className="max-w-5xl mx-auto px-4 pt-20 pb-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">游戏广场</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">创建房间，与 AI 分身对战</p>
+            <h1 className="text-3xl font-bold">{t.games.title}</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">{t.games.subtitle}</p>
           </div>
           <button
             onClick={() => setShowCreate(!showCreate)}
             className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition"
           >
-            创建房间
+            {t.games.createRoom}
           </button>
         </div>
 
@@ -140,12 +143,12 @@ export default function GamesPage() {
               />
             ) : (
               <>
-                <h2 className="text-xl font-semibold mb-4">创建新房间</h2>
+                <h2 className="text-xl font-semibold mb-4">{t.games.createNewRoom}</h2>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   {/* 游戏类型 */}
                   <div>
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">游戏类型</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t.games.gameType}</label>
                     <div className="flex gap-2">
                       {(["BLACKJACK", "TEXAS_HOLDEM"] as const).map((type) => (
                         <button
@@ -168,7 +171,7 @@ export default function GamesPage() {
 
                   {/* 人数 */}
                   <div>
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">人数 (含你自己)</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t.games.players}</label>
                     <select
                       value={maxPlayers}
                       onChange={(e) => setMaxPlayers(Number(e.target.value))}
@@ -178,14 +181,14 @@ export default function GamesPage() {
                         ? [2, 3, 4, 5]
                         : [3, 4, 5, 6, 7, 8]
                       ).map((n) => (
-                        <option key={n} value={n}>{n} 人</option>
+                        <option key={n} value={n}>{n} {t.games.personUnit}</option>
                       ))}
                     </select>
                   </div>
 
                   {/* 最小筹码 */}
                   <div>
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">最小筹码 (每局)</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t.games.minChips}</label>
                     <select
                       value={minChips}
                       onChange={(e) => setMinChips(Number(e.target.value))}
@@ -199,14 +202,14 @@ export default function GamesPage() {
 
                   {/* 局数 */}
                   <div>
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">局数</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t.games.rounds}</label>
                     <select
                       value={totalRounds}
                       onChange={(e) => setTotalRounds(Number(e.target.value))}
                       className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
                     >
                       {[1, 3, 5, 10].map((n) => (
-                        <option key={n} value={n}>{n} 局</option>
+                        <option key={n} value={n}>{n} {t.games.roundUnit}</option>
                       ))}
                     </select>
                   </div>
@@ -214,21 +217,21 @@ export default function GamesPage() {
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    预扣费用: <span className="text-gray-900 dark:text-white font-semibold">{totalCost} credit</span>
-                    <span className="ml-2 text-gray-400 dark:text-gray-500">({minChips} × {totalRounds} 局)</span>
+                    {t.games.preCost} <span className="text-gray-900 dark:text-white font-semibold">{totalCost} credit</span>
+                    <span className="ml-2 text-gray-400 dark:text-gray-500">({minChips} × {totalRounds} {t.games.roundsMultiply})</span>
                   </div>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setShowCreate(false)}
                       className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                     >
-                      取消
+                      {t.games.cancelBtn}
                     </button>
                     <button
                       onClick={createRoom}
                       className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition"
                     >
-                      创建并开始
+                      {t.games.createAndStart}
                     </button>
                   </div>
                 </div>
@@ -240,28 +243,28 @@ export default function GamesPage() {
         {/* Tab 切换 */}
         <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
           {([
-            { key: "all", label: "全部" },
-            { key: "PLAYING", label: "进行中" },
-            { key: "COMPLETED", label: "已结束" },
-          ] as const).map((t) => (
+            { key: "all", label: t.games.all },
+            { key: "PLAYING", label: t.games.playing },
+            { key: "COMPLETED", label: t.games.completed },
+          ] as const).map((item) => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={item.key}
+              onClick={() => setTab(item.key)}
               className={`px-4 py-1.5 rounded-md text-sm transition ${
-                tab === t.key ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                tab === item.key ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
-              {t.label}
+              {item.label}
             </button>
           ))}
         </div>
 
         {/* 房间列表 */}
         {loading ? (
-          <div className="text-center py-20 text-gray-400 dark:text-gray-500">加载中...</div>
+          <div className="text-center py-20 text-gray-400 dark:text-gray-500">{t.games.loadingText}</div>
         ) : rooms.length === 0 ? (
           <div className="text-center py-20 text-gray-400 dark:text-gray-500">
-            暂无房间，点击「创建房间」开始游戏
+            {t.games.noRooms}
           </div>
         ) : (
           <div className="grid gap-4">
@@ -287,19 +290,19 @@ export default function GamesPage() {
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                       {room.status === "PLAYING"
-                        ? `第 ${room.currentRound}/${room.totalRounds} 局`
-                        : `共 ${room.totalRounds} 局`}
+                        ? t.games.roundProgress.replace("{current}", String(room.currentRound)).replace("{total}", String(room.totalRounds))
+                        : t.games.roundTotal.replace("{total}", String(room.totalRounds))}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span>创建者: {room.creator.name}</span>
+                    <span>{t.games.creator} {room.creator.name}</span>
                     <span>·</span>
-                    <span>{room.players.length} 人</span>
+                    <span>{room.players.length} {t.games.personUnit}</span>
                     <span>·</span>
-                    <span>{room.minChips} credit/局</span>
+                    <span>{room.minChips} {t.games.creditPerRound}</span>
                     <span>·</span>
-                    <span>{new Date(room.createdAt).toLocaleString("zh-CN")}</span>
+                    <span>{new Date(room.createdAt).toLocaleString(locale === "zh" ? "zh-CN" : locale)}</span>
                   </div>
 
                   {/* 玩家列表 */}

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useFontStore, LOGO_FONTS, getFontCssByIndex } from "@/lib/store";
 import { Tooltip } from "@/components/Tooltip";
+import { useT } from "@/lib/i18n";
 
 interface Settings {
   hasApiKey: boolean;
@@ -12,32 +13,33 @@ interface Settings {
   newApiKey?: string | null;
 }
 
-const SECTIONS = [
-  {
-    id: "appearance",
-    label: "外观",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-      </svg>
-    ),
-  },
-  {
-    id: "api",
-    label: "API",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-      </svg>
-    ),
-  },
-] as const;
-
-type SectionId = typeof SECTIONS[number]["id"];
+type SectionId = "appearance" | "api";
 
 export default function SettingsPage() {
+  const t = useT();
+
+  const SECTIONS = [
+    {
+      id: "appearance" as const,
+      label: t.settings.appearance,
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+      ),
+    },
+    {
+      id: "api" as const,
+      label: t.settings.api,
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      ),
+    },
+  ];
   const { status } = useSession();
   const router = useRouter();
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -122,7 +124,7 @@ export default function SettingsPage() {
         {/* 左侧导航 */}
         <aside className="hidden md:block w-48 flex-shrink-0">
           <div className="sticky top-28 space-y-1">
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-4 px-3">设置</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-4 px-3">{t.settings.title}</h1>
             {SECTIONS.map((section) => {
               const isActive = activeSection === section.id;
               return (
@@ -145,7 +147,7 @@ export default function SettingsPage() {
 
         {/* 移动端标题 */}
         <div className="md:hidden absolute top-24 left-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">设置</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.settings.title}</h1>
         </div>
 
         {/* 右侧内容 */}
@@ -156,7 +158,7 @@ export default function SettingsPage() {
             ref={(el) => { sectionRefs.current.appearance = el; }}
             className="scroll-mt-28"
           >
-            <h2 className="text-xs font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-4 px-1">外观</h2>
+            <h2 className="text-xs font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-4 px-1">{t.settings.appearance}</h2>
 
             <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/80 border border-gray-200/80 dark:border-zinc-800 space-y-4 animate-fade-in-up">
               <div className="flex items-center gap-3">
@@ -168,9 +170,9 @@ export default function SettingsPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">Logo 字体</h3>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">{t.settings.logoFont}</h3>
                   <p className="text-sm text-gray-500 dark:text-zinc-400">
-                    选择 Connect 标题使用的花体字
+                    {t.settings.logoFontDesc}
                   </p>
                 </div>
               </div>
@@ -204,7 +206,7 @@ export default function SettingsPage() {
                       </span>
                       <span className="text-xs text-gray-500 dark:text-zinc-400">
                         {font.label}
-                        <span className="text-gray-400 dark:text-zinc-500 ml-1">· {font.style}</span>
+                        <span className="text-gray-400 dark:text-zinc-500 ml-1">· {t.settings.fontStyles[font.key] || font.style}</span>
                       </span>
                     </button>
                   );
@@ -219,7 +221,7 @@ export default function SettingsPage() {
             ref={(el) => { sectionRefs.current.api = el; }}
             className="scroll-mt-28"
           >
-            <h2 className="text-xs font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-4 px-1">API</h2>
+            <h2 className="text-xs font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-4 px-1">{t.settings.api}</h2>
 
             <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/80 border border-gray-200/80 dark:border-zinc-800 space-y-4 animate-fade-in-up">
               <div className="flex items-center gap-3">
@@ -230,9 +232,9 @@ export default function SettingsPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">API Key</h3>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">{t.settings.apiKeyTitle}</h3>
                   <p className="text-sm text-gray-500 dark:text-zinc-400">
-                    用于调用 Connect 开放 API，请妥善保管
+                    {t.settings.apiKeyDesc}
                   </p>
                 </div>
               </div>
@@ -252,9 +254,9 @@ export default function SettingsPage() {
                     ? freshApiKey
                     : settings.hasApiKey
                     ? settings.apiKeyPreview
-                    : "尚未生成 API Key"}
+                    : t.settings.noApiKey}
                 </div>
-                <Tooltip text={showKey ? "隐藏" : "显示一次"}>
+                <Tooltip text={showKey ? t.settings.hide : t.settings.showOnce}>
                   <button
                     onClick={() => setShowKey((value) => !value)}
                     disabled={!freshApiKey || saving}
@@ -274,7 +276,7 @@ export default function SettingsPage() {
                     )}
                   </button>
                 </Tooltip>
-                <Tooltip text={copied ? "已复制" : "复制"}>
+                <Tooltip text={copied ? t.settings.copied : t.settings.copy}>
                   <button
                     onClick={copyApiKey}
                     disabled={!freshApiKey || saving}
@@ -295,7 +297,7 @@ export default function SettingsPage() {
               </div>
 
               <p className="text-xs text-gray-400 dark:text-zinc-500">
-                出于安全原因，完整 API Key 只会在生成或重新生成后显示一次。
+                {t.settings.apiKeySecurityNote}
               </p>
 
               <button
@@ -303,7 +305,7 @@ export default function SettingsPage() {
                 disabled={saving}
                 className="px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-sm font-medium rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition-all duration-200 border border-red-200 dark:border-red-800/50 disabled:opacity-50"
               >
-                重新生成 API Key
+                {t.settings.regenerateApiKey}
               </button>
               </>)}
             </div>
@@ -328,9 +330,9 @@ export default function SettingsPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">重新生成 API Key</h3>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">{t.settings.regenerateConfirmTitle}</h3>
                 <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
-                  旧的 API Key 将立即失效，所有使用该 Key 的应用将无法访问。
+                  {t.settings.regenerateConfirmDesc}
                 </p>
               </div>
             </div>
@@ -339,7 +341,7 @@ export default function SettingsPage() {
                 onClick={() => setShowConfirm(false)}
                 className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all duration-200"
               >
-                取消
+                {t.settings.cancel}
               </button>
               <button
                 onClick={() => {
@@ -349,7 +351,7 @@ export default function SettingsPage() {
                 disabled={saving}
                 className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition-all duration-200 disabled:opacity-50"
               >
-                确认生成
+                {t.settings.confirmGenerate}
               </button>
             </div>
           </div>

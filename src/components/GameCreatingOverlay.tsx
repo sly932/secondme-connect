@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-
-const STEPS = [
-  { label: "正在为你匹配玩家", duration: 1200 },
-  { label: "正在准备牌桌", duration: 1000 },
-  { label: "正在部署筹码", duration: 800 },
-  { label: "即将开局", duration: 600 },
-];
-
-const TOTAL_FAKE_DURATION = STEPS.reduce((s, step) => s + step.duration, 0);
+import { useT } from "@/lib/i18n";
 
 interface GameCreatingOverlayProps {
   gameLabel: string;
@@ -25,6 +17,14 @@ export function GameCreatingOverlay({
   apiDone,
   error,
 }: GameCreatingOverlayProps) {
+  const t = useT();
+
+  const STEPS = t.gameOverlay.steps.map((label: string, i: number) => ({
+    label,
+    duration: [1200, 1000, 800, 600][i],
+  }));
+
+  const TOTAL_FAKE_DURATION = STEPS.reduce((s: number, step: { duration: number }) => s + step.duration, 0);
   const [stepIndex, setStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const startTimeRef = useRef<number | null>(null);
@@ -64,9 +64,9 @@ export function GameCreatingOverlay({
   }, [apiDone, error]);
 
   const currentLabel = error
-    ? "创建失败"
+    ? t.gameOverlay.failed
     : apiDone
-    ? "准备就绪，正在跳转..."
+    ? t.gameOverlay.ready
     : STEPS[stepIndex].label;
 
   return (
@@ -102,7 +102,7 @@ export function GameCreatingOverlay({
         </p>
         {!error && !apiDone && (
           <p className="text-xs text-gray-400 dark:text-zinc-500">
-            {gameLabel} · {playerCount} 人对战
+            {t.gameOverlay.playerBattle.replace("{game}", gameLabel).replace("{count}", String(playerCount))}
           </p>
         )}
         {error && (
@@ -126,7 +126,7 @@ export function GameCreatingOverlay({
         </div>
         <div className="flex justify-between mt-1.5">
           <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-            {error ? "出错了" : `${Math.round(progress)}%`}
+            {error ? t.gameOverlay.error : `${Math.round(progress)}%`}
           </span>
         </div>
       </div>

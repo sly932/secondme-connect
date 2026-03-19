@@ -94,7 +94,7 @@ export function ImageCarousel({ cards: cardSet }: { cards: CarouselCard[] }) {
                 ref={(node) => {
                   slotRefs.current[index] = node;
                 }}
-                className="relative shrink-0 w-[20rem] md:w-[28rem] cursor-pointer"
+                className="relative shrink-0 w-[16rem] sm:w-[20rem] md:w-[28rem] cursor-pointer"
                 style={{ aspectRatio: "16 / 9" }}
                 onMouseEnter={() => {
                   pausedRef.current = true;
@@ -120,7 +120,7 @@ export function ImageCarousel({ cards: cardSet }: { cards: CarouselCard[] }) {
                     alt={card.label}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 768px) 20rem, 28rem"
+                    sizes="(max-width: 640px) 16rem, (max-width: 768px) 20rem, 28rem"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { PlayingCard, CardGroup } from "@/components/PlayingCard";
+import { useT } from "@/lib/i18n";
 
 interface Card {
   suit: string;
@@ -94,14 +95,16 @@ const SEAT_COLORS = [
   "from-lime-500 to-green-600",
 ];
 
-const OUTCOME_STYLES: Record<string, { text: string; bg: string; text_color: string; border: string }> = {
-  win: { text: "胜出", bg: "bg-green-500/20", text_color: "text-green-400", border: "border-green-500/40" },
-  blackjack: { text: "Blackjack!", bg: "bg-yellow-500/20", text_color: "text-yellow-300", border: "border-yellow-500/40" },
-  lose: { text: "落败", bg: "bg-red-500/10", text_color: "text-red-400", border: "border-red-500/20" },
-  push: { text: "平局", bg: "bg-gray-500/10", text_color: "text-gray-400", border: "border-gray-500/20" },
-  split: { text: "平分", bg: "bg-blue-500/15", text_color: "text-blue-400", border: "border-blue-500/30" },
-  fold: { text: "弃牌", bg: "bg-gray-500/10", text_color: "text-gray-500", border: "border-gray-500/15" },
-};
+function getOutcomeStyles(t: ReturnType<typeof useT>): Record<string, { text: string; bg: string; text_color: string; border: string }> {
+  return {
+    win: { text: t.spectator.outcome.win, bg: "bg-green-500/20", text_color: "text-green-400", border: "border-green-500/40" },
+    blackjack: { text: t.spectator.outcome.blackjack, bg: "bg-yellow-500/20", text_color: "text-yellow-300", border: "border-yellow-500/40" },
+    lose: { text: t.spectator.outcome.lose, bg: "bg-red-500/10", text_color: "text-red-400", border: "border-red-500/20" },
+    push: { text: t.spectator.outcome.push, bg: "bg-gray-500/10", text_color: "text-gray-400", border: "border-gray-500/20" },
+    split: { text: t.spectator.outcome.split, bg: "bg-blue-500/15", text_color: "text-blue-400", border: "border-blue-500/30" },
+    fold: { text: t.spectator.outcome.fold, bg: "bg-gray-500/10", text_color: "text-gray-500", border: "border-gray-500/15" },
+  };
+}
 
 const EVENT_STYLES: Record<string, { color: string; bg: string; icon: string }> = {
   action: { color: "text-blue-200", bg: "bg-blue-500/10", icon: "🎯" },
@@ -133,6 +136,7 @@ export default function SpectatorPage() {
   const router = useRouter();
   const params = useParams();
   const roomId = params.id as string;
+  const t = useT();
 
   const [room, setRoom] = useState<RoomData | null>(null);
   const [events, setEvents] = useState<GameEvent[]>([]);
@@ -315,7 +319,7 @@ export default function SpectatorPage() {
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          <span className="text-white/60">加载中...</span>
+          <span className="text-white/60">{t.spectator.loading}</span>
         </div>
       </div>
     );
@@ -324,12 +328,12 @@ export default function SpectatorPage() {
   if (!room) {
     return (
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-        <span className="text-white/40">房间不存在</span>
+        <span className="text-white/40">{t.spectator.roomNotFound}</span>
       </div>
     );
   }
 
-  const gameLabel = room.gameType === "BLACKJACK" ? "21点" : "德州扑克";
+  const gameLabel = room.gameType === "BLACKJACK" ? t.games.blackjack : t.games.texasHoldem;
   const isBlackjack = room.gameType === "BLACKJACK";
   const completedRound = room.rounds.find((r) => r.roundNumber === activeTab);
   const roundEvents = events.filter((e) => e.round === activeTab);
@@ -349,7 +353,7 @@ export default function SpectatorPage() {
                 ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/30"
                 : "bg-white/5 text-white/50 ring-1 ring-white/10"
             }`}>
-              {room.status === "PLAYING" ? "进行中" : room.status === "COMPLETED" ? "已结束" : "已取消"}
+              {room.status === "PLAYING" ? t.spectator.playing : room.status === "COMPLETED" ? t.spectator.completed : t.spectator.cancelled}
             </span>
             {connected && (
               <span className="flex items-center gap-1.5 text-xs text-green-400">
@@ -362,7 +366,7 @@ export default function SpectatorPage() {
             onClick={() => router.push("/games")}
             className="px-4 py-2 bg-white/5 rounded-lg text-sm text-white/60 hover:bg-white/10 hover:text-white transition ring-1 ring-white/10"
           >
-            返回广场
+            {t.spectator.backToPlaza}
           </button>
         </div>
 
@@ -404,7 +408,7 @@ export default function SpectatorPage() {
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-500/15 text-green-400 ring-1 ring-green-500/30 hover:bg-green-500/25 transition-all whitespace-nowrap animate-pulse"
             >
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-              跟随直播
+              {t.spectator.followLive}
             </button>
           )}
         </div>
@@ -443,8 +447,8 @@ export default function SpectatorPage() {
         {(roundEvents.length > 0 || (completedRound?.roundSnapshot as unknown as RoundSnapshot)?.actions?.length > 0) && (
           <div className="mt-5 bg-gray-900/80 rounded-2xl border border-white/5 overflow-hidden backdrop-blur">
             <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-3">
-              <span className="text-sm font-semibold text-white/80">第 {activeTab} 局</span>
-              <span className="text-xs text-white/30">对局流程</span>
+              <span className="text-sm font-semibold text-white/80">{t.spectator.round.replace("{n}", String(activeTab))}</span>
+              <span className="text-xs text-white/30">{t.spectator.gameFlow}</span>
             </div>
             <div className="p-4 max-h-[320px] overflow-y-auto">
               <EventLog
@@ -484,6 +488,7 @@ function PlayerTooltip({ name, bio, isAI, children }: {
   isAI: boolean;
   children: React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div className="relative group/tip">
       {children}
@@ -494,13 +499,13 @@ function PlayerTooltip({ name, bio, isAI, children }: {
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
               isAI ? "bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/30" : "bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/30"
             }`}>
-              {isAI ? "AI 分身" : "玩家"}
+              {isAI ? t.spectator.aiClone : t.spectator.player}
             </span>
           </div>
           {bio ? (
             <p className="text-xs text-white/60 leading-relaxed line-clamp-3">{bio}</p>
           ) : (
-            <p className="text-xs text-white/30 italic">暂无简介</p>
+            <p className="text-xs text-white/30 italic">{t.spectator.noBio}</p>
           )}
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-white/15" />
         </div>
@@ -527,13 +532,14 @@ function LiveTable({
   thinking: { playerId: string; playerName: string; text: string } | null;
   blinds: { dealerPlayerId?: string; sbPlayerId?: string; bbPlayerId?: string } | null;
 }) {
+  const t = useT();
   return (
     <>
       {/* 庄家/公共牌 */}
       {isBlackjack ? (
         <div className="mb-8">
           <div className="text-center mb-3">
-            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">庄家</span>
+            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">{t.spectator.dealer}</span>
           </div>
           <div className="flex gap-2 justify-center">
             {dealerCards.length > 0 ? (
@@ -549,7 +555,7 @@ function LiveTable({
       ) : (
         <div className="mb-8">
           <div className="text-center mb-3">
-            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">公共牌</span>
+            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">{t.spectator.communityCards}</span>
           </div>
           <div className="flex gap-2 justify-center">
             {communityCards.length > 0 ? (
@@ -584,10 +590,11 @@ function LiveTable({
 // 底池
 // ============================================================
 function PotDisplay({ pot }: { pot: number }) {
+  const t = useT();
   return (
     <div className="mb-5 flex items-center gap-2 px-5 py-2 bg-black/40 rounded-full border border-yellow-500/20 shadow-lg shadow-yellow-500/5">
       <span className="text-yellow-400 text-sm">🪙</span>
-      <span className="text-yellow-400 font-bold text-base tabular-nums">底池 {pot}</span>
+      <span className="text-yellow-400 font-bold text-base tabular-nums">{t.spectator.pot} {pot}</span>
     </div>
   );
 }
@@ -604,6 +611,8 @@ function CompletedTable({
   isBlackjack: boolean;
   roomPlayers: Player[];
 }) {
+  const t = useT();
+  const OUTCOME_STYLES = getOutcomeStyles(t);
   // 排序：赢家排前面
   const sortedPlayers = [...snapshot.players].sort((a, b) => {
     const order = { win: 0, blackjack: 0, split: 1, push: 2, lose: 3, fold: 4, unknown: 5 };
@@ -616,20 +625,20 @@ function CompletedTable({
       {isBlackjack && snapshot.dealer ? (
         <div className="mb-6">
           <div className="text-center mb-3">
-            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">庄家</span>
+            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">{t.spectator.dealer}</span>
           </div>
           <CardGroup cards={snapshot.dealer.hand} size="lg" />
         </div>
       ) : !isBlackjack && snapshot.communityCards && snapshot.communityCards.length > 0 ? (
         <div className="mb-6">
           <div className="text-center mb-3">
-            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">公共牌</span>
+            <span className="px-3 py-1 rounded-full bg-black/30 text-xs font-semibold uppercase tracking-widest text-white/50 border border-white/10">{t.spectator.communityCards}</span>
           </div>
           <CardGroup cards={snapshot.communityCards} size="lg" />
         </div>
       ) : !isBlackjack ? (
         <div className="mb-6 text-center">
-          <span className="text-xs text-white/30">本局未翻出公共牌（提前结束）</span>
+          <span className="text-xs text-white/30">{t.spectator.noCommunityCards}</span>
         </div>
       ) : null}
 
@@ -726,6 +735,7 @@ function PlayerSeats({
   status: string;
   blinds: { dealerPlayerId?: string; sbPlayerId?: string; bbPlayerId?: string } | null;
 }) {
+  const t = useT();
   return (
     <div className="w-full max-w-5xl px-6">
       <div className={`grid gap-4 ${
@@ -775,9 +785,9 @@ function PlayerSeats({
                     {p.isCreator && <span className="text-yellow-400 ml-0.5">★</span>}
                   </span>
                   <span className="text-[10px] text-white/40 mt-0.5">
-                    {p.isAI ? "AI 分身" : "玩家"}
-                    {p.status === "BUSTED" && " · 出局"}
-                    {p.status === "FOLDED" && " · 弃牌"}
+                    {p.isAI ? t.spectator.aiClone : t.spectator.player}
+                    {p.status === "BUSTED" && ` · ${t.spectator.busted}`}
+                    {p.status === "FOLDED" && ` · ${t.spectator.folded}`}
                   </span>
                   <div className="mt-2 px-2.5 py-0.5 bg-yellow-500/15 rounded-full border border-yellow-500/20">
                     <span className="text-[11px] font-semibold text-yellow-400 tabular-nums">{p.chips}</span>
@@ -828,12 +838,13 @@ function EventLog({
   events: GameEvent[];
   snapshot: RoundSnapshot | null;
 }) {
+  const t = useT();
   const items = snapshot
     ? snapshot.actions.map((a) => ({ type: a.type, message: a.message, thinking: (a.data?.thinking as string) || "", playerName: (a.data?.playerName as string) || "" }))
     : events.map((e) => ({ type: e.type, message: e.message, thinking: (e.data?.thinking as string) || "", playerName: (e.data?.playerName as string) || "" }));
 
   if (items.length === 0) {
-    return <div className="text-center text-white/30 py-8 text-sm">暂无事件</div>;
+    return <div className="text-center text-white/30 py-8 text-sm">{t.spectator.noEvents}</div>;
   }
 
   return (
@@ -862,15 +873,16 @@ function EventLog({
 // ============================================================
 // 等待游戏开始
 // ============================================================
-const WAITING_STEPS = [
-  { label: "正在初始化牌桌", icon: "🎰" },
-  { label: "正在连接 AI 分身", icon: "🤖" },
-  { label: "正在准备发牌", icon: "🃏" },
-  { label: "即将开始", icon: "✨" },
-];
-
 function WaitingForGame({ status }: { status: string }) {
+  const t = useT();
   const [step, setStep] = useState(0);
+
+  const WAITING_STEPS = [
+    { label: t.spectator.waiting.step1, icon: "🎰" },
+    { label: t.spectator.waiting.step2, icon: "🤖" },
+    { label: t.spectator.waiting.step3, icon: "🃏" },
+    { label: t.spectator.waiting.step4, icon: "✨" },
+  ];
 
   useEffect(() => {
     if (status !== "PLAYING") return;
@@ -881,10 +893,10 @@ function WaitingForGame({ status }: { status: string }) {
   }, [status]);
 
   if (status === "COMPLETED") {
-    return <span className="text-white/30 text-sm">游戏已结束</span>;
+    return <span className="text-white/30 text-sm">{t.spectator.gameEnded}</span>;
   }
   if (status === "CANCELLED") {
-    return <span className="text-red-400/60 text-sm">游戏已取消</span>;
+    return <span className="text-red-400/60 text-sm">{t.spectator.gameCancelled}</span>;
   }
 
   const current = WAITING_STEPS[step];

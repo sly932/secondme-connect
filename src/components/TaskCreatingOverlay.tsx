@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useT } from "@/lib/i18n";
 
 interface TaskCreatingOverlayProps {
   type: "chat" | "writing" | "painting";
@@ -10,46 +11,42 @@ interface TaskCreatingOverlayProps {
   summary?: string;
 }
 
-const STEP_CONFIGS = {
-  chat: {
-    icon: "💬",
-    color: "from-violet-400 to-purple-500",
-    shadow: "shadow-violet-500/20",
-    doneLabel: "发布成功，正在跳转广场...",
-    steps: [
-      { label: "正在分析你的需求", duration: 1000 },
-      { label: "正在匹配最合适的分身", duration: 1200 },
-      { label: "正在发布到广场", duration: 800 },
-      { label: "即将完成", duration: 600 },
-    ],
-  },
-  writing: {
-    icon: "✍️",
-    color: "from-amber-400 to-orange-500",
-    shadow: "shadow-amber-500/20",
-    doneLabel: "任务已发布，分身正在创作...",
-    steps: [
-      { label: "正在分析写作需求", duration: 1000 },
-      { label: "正在匹配最合适的分身", duration: 1200 },
-      { label: "正在分配写作任务", duration: 800 },
-      { label: "即将完成", duration: 600 },
-    ],
-  },
-  painting: {
-    icon: "🎨",
-    color: "from-pink-400 to-rose-500",
-    shadow: "shadow-pink-500/20",
-    doneLabel: "任务已发布，分身正在创作...",
-    steps: [
-      { label: "正在理解绘画需求", duration: 1000 },
-      { label: "正在匹配最合适的分身", duration: 1200 },
-      { label: "正在分配绘画任务", duration: 800 },
-      { label: "即将完成", duration: 600 },
-    ],
-  },
-};
-
 export function TaskCreatingOverlay({ type, apiDone, error, summary }: TaskCreatingOverlayProps) {
+  const t = useT();
+
+  const STEP_CONFIGS = {
+    chat: {
+      icon: "💬",
+      color: "from-violet-400 to-purple-500",
+      shadow: "shadow-violet-500/20",
+      doneLabel: t.taskOverlay.chat.doneLabel,
+      steps: t.taskOverlay.chat.steps.map((label: string, i: number) => ({
+        label,
+        duration: [1000, 1200, 800, 600][i],
+      })),
+    },
+    writing: {
+      icon: "✍️",
+      color: "from-amber-400 to-orange-500",
+      shadow: "shadow-amber-500/20",
+      doneLabel: t.taskOverlay.writing.doneLabel,
+      steps: t.taskOverlay.writing.steps.map((label: string, i: number) => ({
+        label,
+        duration: [1000, 1200, 800, 600][i],
+      })),
+    },
+    painting: {
+      icon: "🎨",
+      color: "from-pink-400 to-rose-500",
+      shadow: "shadow-pink-500/20",
+      doneLabel: t.taskOverlay.painting.doneLabel,
+      steps: t.taskOverlay.painting.steps.map((label: string, i: number) => ({
+        label,
+        duration: [1000, 1200, 800, 600][i],
+      })),
+    },
+  };
+
   const config = STEP_CONFIGS[type];
   const STEPS = config.steps;
   const TOTAL_FAKE_DURATION = STEPS.reduce((s, step) => s + step.duration, 0);
@@ -90,7 +87,7 @@ export function TaskCreatingOverlay({ type, apiDone, error, summary }: TaskCreat
   }, [apiDone, error, STEPS, TOTAL_FAKE_DURATION]);
 
   const currentLabel = error
-    ? "处理失败"
+    ? t.taskOverlay.failed
     : apiDone
     ? config.doneLabel
     : STEPS[stepIndex].label;
@@ -150,7 +147,7 @@ export function TaskCreatingOverlay({ type, apiDone, error, summary }: TaskCreat
         </div>
         <div className="flex justify-between mt-1.5">
           <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-            {error ? "出错了" : `${Math.round(progress)}%`}
+            {error ? t.taskOverlay.error : `${Math.round(progress)}%`}
           </span>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image, { type ImageLoaderProps } from "next/image";
+import { useT, useLocale } from "@/lib/i18n";
 
 interface Profile {
   id: string;
@@ -31,6 +32,8 @@ const SHADE_COLORS = [
 export default function ProfilePage() {
   const { status } = useSession();
   const router = useRouter();
+  const t = useT();
+  const { locale } = useLocale();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -83,9 +86,9 @@ export default function ProfilePage() {
   if (!profile) return null;
 
   const STATS = [
-    { value: profile.credits, label: "Credit 余额", gradient: "from-violet-500 to-indigo-500" },
-    { value: profile.totalOrders, label: "接单总数", gradient: "from-emerald-500 to-teal-500" },
-    { value: profile.totalEarnings, label: "总收入", gradient: "from-amber-500 to-orange-500" },
+    { value: profile.credits, label: t.profile.creditBalance, gradient: "from-violet-500 to-indigo-500" },
+    { value: profile.totalOrders, label: t.profile.totalOrders, gradient: "from-emerald-500 to-teal-500" },
+    { value: profile.totalEarnings, label: t.profile.totalEarnings, gradient: "from-amber-500 to-orange-500" },
   ];
 
   return (
@@ -114,7 +117,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{profile.name}</h1>
-              <p className="text-gray-500 dark:text-zinc-400 mt-1">{profile.bio || "这个人很懒，什么都没留下"}</p>
+              <p className="text-gray-500 dark:text-zinc-400 mt-1">{profile.bio || t.profile.noBio}</p>
             </div>
           </div>
 
@@ -148,7 +151,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="text-sm text-gray-400 dark:text-zinc-600 text-center pb-8">
-          注册时间: {new Date(profile.createdAt).toLocaleDateString("zh-CN")}
+          {t.profile.registeredAt} {new Date(profile.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : locale)}
         </div>
       </div>
     </div>
