@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "@prisma/client": "^6.19.2",
     "@supabase/supabase-js": "^2.99.2",
     "next": "16.1.7",
