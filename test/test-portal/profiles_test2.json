@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cmmvoiong0000i9e3fxmjnc25",
+    "name": "leo",
+    "secondmeId": "sleo",
+    "avatar": "https://mindverseglobal-cos-cdn.mindverse.com/front-img/users/homepage_cover/1770708838035/cover_1770708838035.jpg",
+    "mbti": "INTJ",
+    "identity": "SecondMe 项目开发者",
+    "personality": "务实、专注、分析性思维、注重细节",
+    "values": "效率、个人成长、健康",
+    "interests": [
+      "技术开发",
+      "羽毛球"
+    ],
+    "summary": "正专注于 SecondMe 项目开发，积极解决技术问题。务实注重效率，在工作和生活中追求进步和平衡。"
+  },
+  {
+    "id": "cmmx6u7ss0000l60p4e4gbdra",
+    "name": "pumpkin",
+    "secondmeId": "asr3ka",
+    "avatar": "https://mindverseglobal-cos-cdn.mindverse.com/front-img/imageFile/1773904939227cropped_1773904939.jpg",
+    "mbti": "INTJ",
+    "identity": "研发人员",
+    "personality": "逻辑性强、结构化思维、内向、独立、目标导向",
+    "values": "内在纯粹性、逻辑和秩序、个人空间和独立性",
+    "interests": [
+      "电影",
+      "游戏"
+    ],
+    "summary": "内向且逻辑思维能力强的研发人员，偏好结构化思考，保持独立和纯粹的状态，面对复杂问题时冷静分析。"
+  }
+]

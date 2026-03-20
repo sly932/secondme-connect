@@ -10,8 +10,11 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { config } from "dotenv";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+config({ path: path.resolve(__dirname, "../../.env.local") });
+
 const PORTRAITS_DIR = path.join(__dirname, "portraits");
 fs.mkdirSync(PORTRAITS_DIR, { recursive: true });
 
@@ -20,9 +23,9 @@ const ACCESS_TOKEN =
   "lba_at_9889b2a245125368868b5d050df8c27c562dbb7176bb1c8d3355a7b629ad20ff";
 const SECONDME_CHAT_URL =
   "https://api.mindverse.com/gate/lab/api/secondme/chat/stream";
-const SILICONFLOW_URL = "https://api.siliconflow.cn/v1/images/generations";
-const SILICONFLOW_KEY = "sk-bobcetbxglmfupyagbdzcwknbakuxqbmfkhmokmzvaweekpd";
-const SILICONFLOW_MODEL = "Kwai-Kolors/Kolors";
+const SILICONFLOW_URL = process.env.SILICONFLOW_IMAGE_URL || "https://api.siliconflow.cn/v1/images/generations";
+const SILICONFLOW_KEY = process.env.SILICONFLOW_API_KEY || "sk-bobcetbxglmfupyagbdzcwknbakuxqbmfkhmokmzvaweekpd";
+const SILICONFLOW_MODEL = process.env.SILICONFLOW_AVATAR_IMAGE_MODEL || process.env.SILICONFLOW_IMAGE_MODEL || "Kwai-Kolors/Kolors";
 
 // 从 profiles.json 读取用户数据
 const PROFILES = JSON.parse(

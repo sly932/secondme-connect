@@ -1,0 +1,29 @@
+{
+  "providers": {
+    "SILICONFLOW_IMAGE_URL": "https://api.siliconflow.cn/v1/images/generations",
+    "SILICONFLOW_EMBEDDING_URL": "https://api.siliconflow.cn/v1/embeddings",
+    "SILICONFLOW_IMAGE_MODEL": "Kwai-Kolors/Kolors",
+    "SILICONFLOW_AVATAR_MODEL": "Qwen/Qwen-Image",
+    "SILICONFLOW_EMBEDDING_MODEL": "Qwen/Qwen3-Embedding-0.6B"
+  },
+  "services": {
+    "taskImage": {
+      "_comment": "任务执行中的 AI 画图（用户发布绘画任务时调用）",
+      "url": "SILICONFLOW_IMAGE_URL",
+      "model": "SILICONFLOW_IMAGE_MODEL",
+      "apiKeyEnv": "SILICONFLOW_API_KEY"
+    },
+    "portrait": {
+      "_comment": "用户像素风自画像生成（个人资料页）",
+      "url": "SILICONFLOW_IMAGE_URL",
+      "model": "SILICONFLOW_AVATAR_MODEL",
+      "apiKeyEnv": "SILICONFLOW_API_KEY"
+    },
+    "embedding": {
+      "_comment": "用户档案向量化（广场智能匹配/推荐）",
+      "url": "SILICONFLOW_EMBEDDING_URL",
+      "model": "SILICONFLOW_EMBEDDING_MODEL",
+      "apiKeyEnv": "SILICONFLOW_API_KEY"
+    }
+  }
+}

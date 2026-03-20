@@ -52,9 +52,60 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error"; action?: () => void } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
+
+  // Portrait state
+  const [portraitModalOpen, setPortraitModalOpen] = useState(false);
+  const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
+  const [portraitLoading, setPortraitLoading] = useState(false);
+  const [portraitFetched, setPortraitFetched] = useState(false);
+
+  const fetchPortrait = async () => {
+    if (portraitFetched) return;
+    try {
+      const res = await fetch("/api/v1/portrait");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.portraitUrl) setPortraitUrl(data.portraitUrl);
+      }
+    } catch {}
+    setPortraitFetched(true);
+  };
+
+  const handleOpenPortrait = () => {
+    setDropdownOpen(false);
+    setMobileMenuOpen(false);
+    fetchPortrait();
+    setPortraitModalOpen(true);
+  };
+
+  const handleGeneratePortrait = async () => {
+    setPortraitLoading(true);
+    setPortraitModalOpen(false); // 用户可以先关掉弹窗
+    setToast({ message: t.nav.portraitGenerating, type: "success" });
+    try {
+      const res = await fetch("/api/v1/portrait", { method: "POST" });
+      const data = await res.json();
+      if (data.success && data.portraitUrl) {
+        setPortraitUrl(data.portraitUrl);
+        setToast({
+          message: t.nav.portraitReady,
+          type: "success",
+          action: () => setPortraitModalOpen(true),
+        });
+        setTimeout(() => setToast(null), 5000);
+      } else {
+        setToast({ message: t.nav.portraitFailed, type: "error" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch {
+      setToast({ message: t.nav.portraitFailed, type: "error" });
+      setTimeout(() => setToast(null), 3000);
+    }
+    setPortraitLoading(false);
+  };
 
   const handleSyncProfile = async () => {
     if (syncing) return;
@@ -200,12 +251,76 @@ export function Navbar() {
     {/* Toast */}
     {toast && (
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
-        <div className={`px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg backdrop-blur-sm border ${
+        <div className={`px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg backdrop-blur-sm border flex items-center gap-2 ${
           toast.type === "success"
             ? "bg-emerald-50/90 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50"
             : "bg-red-50/90 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/50"
         }`}>
           {toast.message}
+          {toast.action && (
+            <button
+              onClick={() => { toast.action!(); setToast(null); }}
+              className="underline font-semibold hover:opacity-80 transition-opacity"
+            >
+              {t.nav.portraitReadyClick}
+            </button>
+          )}
+        </div>
+      </div>
+    )}
+
+    {/* Portrait Modal */}
+    {portraitModalOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div
+          className="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] animate-fade-in"
+          onClick={() => setPortraitModalOpen(false)}
+        />
+        <div className="relative w-full max-w-sm mx-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden animate-scale-in">
+          <div className="p-6 flex flex-col items-center text-center space-y-4">
+            {/* 图片区域 */}
+            <div className="w-64 h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
+              {portraitUrl ? (
+                <img src={portraitUrl} alt="Self Portrait" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center space-y-2">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-gray-300 dark:text-zinc-600">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <p className="text-xs text-gray-400 dark:text-zinc-500">Pixel Art Portrait</p>
+                </div>
+              )}
+            </div>
+
+            {/* 操作区域 */}
+            {!portraitUrl && !portraitLoading && (
+              <button
+                onClick={handleGeneratePortrait}
+                className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-[0.98]"
+              >
+                {t.nav.generatePortrait}
+              </button>
+            )}
+
+            {portraitLoading && (
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400">
+                <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                  <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                </svg>
+                {t.nav.portraitGenerating}
+              </div>
+            )}
+
+            <button
+              onClick={() => setPortraitModalOpen(false)}
+              className="w-full py-2.5 text-sm text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors"
+            >
+              {t.nav.portraitClose}
+            </button>
+          </div>
         </div>
       </div>
     )}
@@ -298,6 +413,13 @@ export function Navbar() {
                         API Key
                       </Link>
                       <button
+                        onClick={handleOpenPortrait}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors rounded-lg mx-1"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                        {t.nav.myPortrait}
+                      </button>
+                      <button
                         onClick={handleSyncProfile}
                         disabled={syncing}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors rounded-lg mx-1 disabled:opacity-50"
@@ -374,6 +496,12 @@ export function Navbar() {
             <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
               {t.nav.settings}
             </Link>
+            <button
+              onClick={handleOpenPortrait}
+              className="w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
+            >
+              {t.nav.myPortrait}
+            </button>
             <button
               onClick={handleSyncProfile}
               disabled={syncing}

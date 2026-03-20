@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>多图合成测试</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f0f23;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    h1 { text-align: center; margin-bottom: 8px; font-size: 24px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 32px; font-size: 14px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Upload area */
+    .upload-section {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .upload-section h2 { font-size: 16px; margin-bottom: 16px; }
+    .upload-zone {
+      border: 2px dashed #333;
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #646cff;
+      background: rgba(100, 108, 255, 0.05);
+    }
+    .upload-zone p { color: #888; }
+    .upload-zone input { display: none; }
+    .preview-grid {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .preview-item {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #333;
+    }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item .remove {
+      position: absolute; top: 4px; right: 4px;
+      width: 24px; height: 24px;
+      background: rgba(0,0,0,0.7); border: none; border-radius: 50%;
+      color: #fff; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .control-group { display: flex; gap: 8px; align-items: center; }
+    .control-group .group-label {
+      font-size: 12px; color: #888; margin-right: 4px; white-space: nowrap;
+    }
+    .toggle-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 2px solid #333;
+      background: transparent;
+      color: #e0e0e0;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .toggle-btn:hover { border-color: #646cff; }
+    .toggle-btn.active { border-color: #646cff; background: rgba(100, 108, 255, 0.15); }
+    .toggle-btn.active-green { border-color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+    .generate-btn {
+      padding: 10px 28px;
+      border-radius: 8px;
+      border: none;
+      background: #646cff;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: auto;
+    }
+    .generate-btn:hover { background: #535bf2; }
+    .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .task-count {
+      font-size: 12px; color: #888; margin-left: 8px;
+    }
+
+    /* Custom prompt */
+    .prompt-section { margin-bottom: 24px; }
+    .prompt-section textarea {
+      width: 100%; min-height: 80px; padding: 12px;
+      border-radius: 8px; border: 2px solid #333;
+      background: #1a1a2e; color: #e0e0e0; font-size: 14px; resize: vertical;
+    }
+    .prompt-section textarea:focus { outline: none; border-color: #646cff; }
+    .prompt-section label { display: block; margin-bottom: 8px; font-size: 14px; color: #aaa; }
+
+    /* Results grid — 2 columns */
+    .results-section {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .results-section h2 { font-size: 16px; margin-bottom: 16px; }
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) {
+      .results-grid { grid-template-columns: 1fr; }
+    }
+    .result-item {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #333;
+    }
+    .result-item .label {
+      padding: 8px 16px;
+      background: #16213e;
+      font-size: 13px;
+      color: #aaa;
+      display: flex;
+      justify-content: space-between;
+    }
+    .result-item .label .model-tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .model-tag.gemini { background: rgba(66, 133, 244, 0.2); color: #8ab4f8; }
+    .model-tag.gpt { background: rgba(16, 163, 127, 0.2); color: #34d399; }
+    .result-item img {
+      width: 100%; display: block; cursor: pointer;
+    }
+    .result-item .text-result {
+      padding: 16px; font-size: 13px; color: #ccc;
+      white-space: pre-wrap; max-height: 200px; overflow-y: auto;
+    }
+
+    /* Loading */
+    .loading-cell {
+      text-align: center; padding: 40px; color: #888;
+      border-radius: 12px; border: 2px dashed #333;
+    }
+    .loading-cell .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid #333; border-top-color: #646cff;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin: 0 auto 10px;
+    }
+    .loading-cell .label-text { font-size: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9); z-index: 100;
+      cursor: pointer; justify-content: center; align-items: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 多图合成测试</h1>
+    <p class="subtitle">上传多张角色图，对比 Gemini 2.5 Flash Image 和 GPT-5 Mini 的合成效果</p>
+
+    <!-- Upload -->
+    <div class="upload-section">
+      <h2>📷 上传角色图片</h2>
+      <div class="upload-zone" id="dropZone">
+        <p>拖拽图片到这里，或点击选择文件</p>
+        <p style="font-size:12px;margin-top:4px;">支持 PNG / JPG，建议 2-5 张</p>
+        <input type="file" id="fileInput" accept="image/*" multiple />
+      </div>
+      <div class="preview-grid" id="previewGrid"></div>
+    </div>
+
+    <!-- Prompt -->
+    <div class="prompt-section">
+      <label>📝 自定义提示词（可选，留空使用默认）</label>
+      <textarea id="customPrompt" placeholder="例如：生成这几个角色在海边开派对的场景..."></textarea>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <span class="group-label">风格:</span>
+        <button class="toggle-btn active" data-style="cartoon">🎨 原图风格</button>
+        <button class="toggle-btn active" data-style="pixel">👾 像素风</button>
+      </div>
+      <div class="control-group">
+        <span class="group-label">模型:</span>
+        <button class="toggle-btn active-green active" data-model="gemini">Gemini 2.5 Flash</button>
+        <button class="toggle-btn active-green active" data-model="gpt5mini">GPT-5 Mini</button>
+      </div>
+      <button class="generate-btn" id="generateBtn" disabled>
+        生成合成图 <span class="task-count" id="taskCount"></span>
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section">
+      <h2>🖼️ 生成结果</h2>
+      <div class="results-grid" id="resultsGrid">
+        <p style="color:#666;text-align:center;padding:20px;grid-column:1/-1;">上传图片后点击生成</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-size image modal -->
+  <div class="modal-overlay" id="modal">
+    <img id="modalImg" />
+  </div>
+
+  <script>
+    const uploadedImages = [];
+    const selectedStyles = new Set(['cartoon', 'pixel']);
+    const selectedModels = new Set(['gemini', 'gpt5mini']);
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const previewGrid = document.getElementById('previewGrid');
+    const generateBtn = document.getElementById('generateBtn');
+    const resultsGrid = document.getElementById('resultsGrid');
+    const taskCount = document.getElementById('taskCount');
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modalImg');
+
+    // Toggle buttons (multi-select)
+    document.querySelectorAll('.toggle-btn[data-style]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const s = btn.dataset.style;
+        if (selectedStyles.has(s)) { selectedStyles.delete(s); btn.classList.remove('active'); }
+        else { selectedStyles.add(s); btn.classList.add('active'); }
+        updateTaskCount();
+      });
+    });
+    document.querySelectorAll('.toggle-btn[data-model]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = btn.dataset.model;
+        if (selectedModels.has(m)) { selectedModels.delete(m); btn.classList.remove('active'); }
+        else { selectedModels.add(m); btn.classList.add('active'); }
+        updateTaskCount();
+      });
+    });
+
+    function updateTaskCount() {
+      const n = selectedStyles.size * selectedModels.size;
+      taskCount.textContent = n > 0 ? `(${n}张)` : '';
+      updateGenerateBtn();
+    }
+
+    function updateGenerateBtn() {
+      generateBtn.disabled = uploadedImages.length < 2 || selectedStyles.size === 0 || selectedModels.size === 0;
+    }
+
+    // Drop zone
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+    function handleFiles(files) {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          uploadedImages.push({ name: file.name, dataUrl: e.target.result });
+          renderPreviews();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderPreviews() {
+      previewGrid.innerHTML = uploadedImages.map((img, i) => `
+        <div class="preview-item">
+          <img src="${img.dataUrl}" alt="${img.name}" />
+          <button class="remove" onclick="removeImage(${i})">×</button>
+        </div>
+      `).join('');
+      updateGenerateBtn();
+    }
+
+    window.removeImage = function(index) {
+      uploadedImages.splice(index, 1);
+      renderPreviews();
+    };
+
+    // Modal
+    modal.addEventListener('click', () => modal.classList.remove('show'));
+    window.showFullImage = function(src) {
+      modalImg.src = src;
+      modal.classList.add('show');
+    };
+
+    // Prompts
+    function getPrompt(style) {
+      const custom = document.getElementById('customPrompt').value.trim();
+      if (custom) {
+        return `${custom}\n\nStyle requirement: ${style === 'pixel' ? 'Pixel art / 16-bit retro style' : 'Keep the same cute cartoon/illustration style as the original portraits'}`;
+      }
+      if (style === 'pixel') {
+        return `Please generate a new image based on these character portraits.
+The image should show all these characters in a PIXEL ART style, sitting around a table chatting together.
+Convert each character into pixel art form while keeping their distinctive features recognizable.
+Use a retro pixel art aesthetic — 16-bit style with a cozy indoor scene.
+Each character should be clearly recognizable from their original portrait.`;
+      }
+      return `Please generate a new image based on these character portraits.
+The image should show all these characters sitting together in a cozy café, chatting and having fun.
+IMPORTANT: Keep the same cute cartoon/illustration art style as the original portraits.
+The characters should look like they're from the same world — warm colors, soft lighting, detailed background.
+Make sure each character's appearance (hair, clothes, features) matches their original portrait closely.`;
+    }
+
+    const MODEL_LABELS = {
+      gemini: { name: 'Gemini 2.5 Flash', cls: 'gemini' },
+      gpt5mini: { name: 'GPT-5 Mini', cls: 'gpt' },
+    };
+    const STYLE_LABELS = { cartoon: '🎨 原图风格', pixel: '👾 像素风' };
+
+    // Generate
+    generateBtn.addEventListener('click', async () => {
+      const tasks = [];
+      for (const style of selectedStyles) {
+        for (const model of selectedModels) {
+          tasks.push({ style, model });
+        }
+      }
+      if (tasks.length === 0) return;
+
+      generateBtn.disabled = true;
+
+      // Show loading placeholders
+      resultsGrid.innerHTML = tasks.map((t, i) => {
+        const ml = MODEL_LABELS[t.model];
+        return `<div class="loading-cell" id="slot-${i}">
+          <div class="spinner"></div>
+          <div class="label-text">${STYLE_LABELS[t.style]} × <span class="model-tag ${ml.cls}">${ml.name}</span></div>
+        </div>`;
+      }).join('');
+
+      // Fire all requests in parallel
+      const promises = tasks.map((t, i) => callAPI(t.style, t.model).then(
+        result => fillResult(i, t, result),
+        err => fillError(i, t, err.message),
+      ));
+
+      await Promise.allSettled(promises);
+      generateBtn.disabled = false;
+    });
+
+    async function callAPI(style, model) {
+      const imageContents = uploadedImages.map(img => ({
+        type: 'image_url',
+        image_url: { url: img.dataUrl },
+      }));
+
+      const res = await fetch('/api/compose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          images: imageContents,
+          prompt: getPrompt(style),
+          style,
+          model,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`请求失败 (${res.status}): ${text}`);
+      }
+
+      return res.json();
+    }
+
+    function fillResult(index, task, data) {
+      const slot = document.getElementById(`slot-${index}`);
+      if (!slot) return;
+
+      const ml = MODEL_LABELS[task.model];
+      const content = data.content || '';
+
+      // Extract image
+      const imgMatch = content.match(/!\[.*?\]\((.*?)\)/);
+      const b64Match = content.match(/data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)/);
+      let imageUrl = data.imageUrl || null;
+      if (b64Match) imageUrl = `data:image/${b64Match[1]};base64,${b64Match[2]}`;
+      else if (imgMatch && imgMatch[1].startsWith('http')) imageUrl = imgMatch[1];
+
+      const div = document.createElement('div');
+      div.className = 'result-item';
+
+      if (imageUrl) {
+        div.innerHTML = `
+          <div class="label">
+            <span>${STYLE_LABELS[task.style]}</span>
+            <span class="model-tag ${ml.cls}">${ml.name}</span>
+          </div>
+          <img src="${imageUrl}" onclick="showFullImage(this.src)" title="点击查看大图" />`;
+      } else {
+        div.innerHTML = `
+          <div class="label">
+            <span>${STYLE_LABELS[task.style]} — 文本响应</span>
+            <span class="model-tag ${ml.cls}">${ml.name}</span>
+          </div>
+          <div class="text-result">${content}</div>`;
+      }
+
+      slot.replaceWith(div);
+    }
+
+    function fillError(index, task, message) {
+      const slot = document.getElementById(`slot-${index}`);
+      if (!slot) return;
+
+      const ml = MODEL_LABELS[task.model];
+      const div = document.createElement('div');
+      div.className = 'result-item';
+      div.innerHTML = `
+        <div class="label">
+          <span style="color:#f44">❌ ${STYLE_LABELS[task.style]} 失败</span>
+          <span class="model-tag ${ml.cls}">${ml.name}</span>
+        </div>
+        <div class="text-result" style="color:#f88">${message}</div>`;
+      slot.replaceWith(div);
+    }
+
+    updateTaskCount();
+  </script>
+</body>
+</html>

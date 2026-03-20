@@ -4,13 +4,11 @@ import { deductCredits, addCredits, refundCredits } from "./credits";
 import logger from "./logger";
 import { TaskStatus } from "@prisma/client";
 import { taskEvents } from "./task-events";
+import { getService } from "./ai-providers";
 
 const TIMEOUT_WRITING = 2 * 60 * 1000; // 2 分钟
 const TIMEOUT_PAINTING = 3 * 60 * 1000; // 3 分钟
-const SILICONFLOW_IMAGE_URL =
-  process.env.SILICONFLOW_IMAGE_URL || "https://api.siliconflow.cn/v1/images/generations";
-const SILICONFLOW_IMAGE_MODEL =
-  process.env.SILICONFLOW_IMAGE_MODEL || "Kwai-Kolors/Kolors";
+const { url: SILICONFLOW_IMAGE_URL, model: SILICONFLOW_IMAGE_MODEL, apiKey: SILICONFLOW_API_KEY } = getService("taskImage");
 
 const MAX_CONSULT_ROUNDS = 3;
 const TIMEOUT_PER_ROUND = 60 * 1000; // 每轮 1 分钟
@@ -355,13 +353,10 @@ export async function executePaintingTask(
 // ============================================================
 
 async function generateImage(prompt: string): Promise<string> {
-  const apiKey = process.env.SILICONFLOW_API_KEY;
-  if (!apiKey) throw new Error("SILICONFLOW_API_KEY is not configured");
-
   const res = await fetch(SILICONFLOW_IMAGE_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${SILICONFLOW_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

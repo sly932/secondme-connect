@@ -1,25 +1,22 @@
 import logger from "./logger";
+import { getService } from "./ai-providers";
 
-const DEFAULT_BASE_URL = "https://api.siliconflow.cn/v1";
-const DEFAULT_MODEL = "Qwen/Qwen3-Embedding-0.6B";
+const { url: EMBEDDING_URL, model: EMBEDDING_MODEL, apiKey: EMBEDDING_API_KEY } = getService("embedding");
 
 /**
  * 通过 SiliconFlow 调用 Embedding 模型生成向量
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const baseUrl = process.env.SILICONFLOW_EMBEDDING_URL || DEFAULT_BASE_URL;
-  const model = process.env.SILICONFLOW_EMBEDDING_MODEL || DEFAULT_MODEL;
+  logger.info("Generating embedding", { textLength: text.length, model: EMBEDDING_MODEL });
 
-  logger.info("Generating embedding", { textLength: text.length, model });
-
-  const res = await fetch(`${baseUrl}/embeddings`, {
+  const res = await fetch(EMBEDDING_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.SILICONFLOW_API_KEY}`,
+      Authorization: `Bearer ${EMBEDDING_API_KEY}`,
     },
     body: JSON.stringify({
-      model,
+      model: EMBEDDING_MODEL,
       input: text,
     }),
   });

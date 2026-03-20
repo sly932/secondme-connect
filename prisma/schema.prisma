@@ -23,9 +23,7 @@ model User {
   bio             String?
   shades          Json?
   softmemory      Json?
-  autoMemory      Json?
   embedding       Unsupported("vector")?
-  embeddingDirty  Boolean                @default(true)
   credits         Int                    @default(1000)
   totalOrders     Int                    @default(0)
   totalEarnings   Int                    @default(0)
@@ -39,6 +37,10 @@ model User {
   apiKeyHash      String?                @unique
   apiKeyPreview   String?
   fontIndex       Int                    @default(0)
+  autoMemory      Json?
+  embeddingDirty  Boolean                @default(true)
+  portraitUrl     String?
+  portraitPrompt  String?
   comments        Comment[]              @relation("CommentAuthor")
   creditLogs      CreditLog[]
   gamePlayers     GamePlayer[]
