@@ -9,6 +9,7 @@ import { createApiKeyRecord } from "@/lib/apikey";
 import { claimDailyCredit } from "@/lib/credits";
 import { verifyAndConsumeState } from "@/lib/oauth-state";
 import logger from "@/lib/logger";
+import { generatePortraitForUser } from "@/lib/portrait";
 
 const TOKEN_URL = "https://api.mindverse.com/gate/lab/api/oauth/token/code";
 
@@ -134,6 +135,11 @@ export async function GET(req: NextRequest) {
           .then(() => logger.info("User embedding created", { userId: dbUser!.id }))
           .catch((err) => logger.error("Failed to create embedding", { userId: dbUser!.id, error: err.message }));
       }
+
+      // 异步生成自画像
+      generatePortraitForUser(dbUser.id)
+        .then(() => logger.info("Portrait auto-generated for new user", { userId: dbUser!.id }))
+        .catch((err) => logger.error("Failed to auto-generate portrait", { userId: dbUser!.id, error: err.message }));
 
       logger.info("New user created", { userId: dbUser.id, credits: 1000 });
     }
