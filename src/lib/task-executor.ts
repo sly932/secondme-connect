@@ -67,11 +67,18 @@ export async function executeConsultTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const publisher = await prisma.user.findUnique({
-      where: { id: publisherId },
-      select: { accessToken: true, name: true },
-    });
+    const [publisher, worker] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: publisherId },
+        select: { accessToken: true, name: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: workerId },
+        select: { accessToken: true },
+      }),
+    ]);
     if (!publisher) throw new Error("Publisher not found");
+    if (!worker) throw new Error("Worker not found");
 
     const { workerName, rolePrompt: workerSystemPrompt } = await getWorkerRolePrompt(workerId);
 
@@ -92,7 +99,7 @@ export async function executeConsultTask(
 
     logger.info("Consult round 1: asking worker", { taskId });
     const stream1 = await chatStream(
-      publisher.accessToken,
+      worker.accessToken,
       workerSecondmeId,
       openingMessage,
       workerSystemPrompt
@@ -130,7 +137,7 @@ export async function executeConsultTask(
       const workerContext =
         `对方刚才说：\n"${publisherReply}"\n\n请继续和对方交流，分享你的见解和建议。`;
       const stream3 = await chatStream(
-        publisher.accessToken,
+        worker.accessToken,
         workerSecondmeId,
         workerContext,
         workerSystemPrompt
@@ -200,18 +207,18 @@ export async function executeWritingTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const publisher = await prisma.user.findUnique({
-      where: { id: publisherId },
+    const worker = await prisma.user.findUnique({
+      where: { id: workerId },
       select: { accessToken: true },
     });
-    if (!publisher) throw new Error("Publisher not found");
+    if (!worker) throw new Error("Worker not found");
 
     const { rolePrompt } = await getWorkerRolePrompt(workerId);
     const writingSystemPrompt = rolePrompt
       ? `${rolePrompt}\n\n请以你的风格和知识完成写作任务。`
       : undefined;
 
-    const stream = await chatStream(publisher.accessToken, workerSecondmeId, description, writingSystemPrompt);
+    const stream = await chatStream(worker.accessToken, workerSecondmeId, description, writingSystemPrompt);
     const result = await streamToText(stream, TIMEOUT_WRITING, (partial) => {
       taskEvents.emit(taskId, { result: partial, status: "EXECUTING" });
     });
@@ -264,11 +271,11 @@ export async function executePaintingTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const publisher = await prisma.user.findUnique({
-      where: { id: publisherId },
+    const worker = await prisma.user.findUnique({
+      where: { id: workerId },
       select: { accessToken: true },
     });
-    if (!publisher) throw new Error("Publisher not found");
+    if (!worker) throw new Error("Worker not found");
 
     // Step 1: 让分身生成绘画 prompt
     const { rolePrompt } = await getWorkerRolePrompt(workerId);
@@ -276,7 +283,7 @@ export async function executePaintingTask(
       ? `${rolePrompt}\n\n现在请根据用户的需求，以你的艺术风格和审美，返回一段详细的英文绘画提示词（prompt），用于 AI 图片生成模型。只返回提示词本身，不要包含任何解释、前缀、标点引号或其他多余内容。`
       : "你是一个绘画提示词生成助手。根据用户的需求，返回一段详细的英文绘画提示词（prompt），用于 AI 图片生成模型。只返回提示词本身，不要包含任何解释、前缀、标点引号或其他多余内容。";
     const stream = await chatStream(
-      publisher.accessToken,
+      worker.accessToken,
       workerSecondmeId,
       description,
       paintingSystemPrompt
