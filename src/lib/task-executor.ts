@@ -93,9 +93,8 @@ export async function executeConsultTask(
     };
 
     // ========== Round 1: 用户分身 → 匹配分身 ==========
-    // 包装用户需求为礼貌的开场白
-    const openingMessage =
-      `你好！我最近遇到了一个问题，想和您交流一下。\n\n${description}\n\n希望能听听您的看法和建议，感谢！`;
+    // 直接传递用户原始消息
+    const openingMessage = description;
 
     logger.info("Consult round 1: asking worker", { taskId });
     const stream1 = await chatStream(
