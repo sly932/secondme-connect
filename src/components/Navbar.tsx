@@ -51,8 +51,28 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
+
+  const handleSyncProfile = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/v1/profile/sync", { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setToast({ message: t.nav.syncProfileSuccess, type: "success" });
+      } else {
+        setToast({ message: data.message || t.nav.syncProfileFail, type: "error" });
+      }
+    } catch {
+      setToast({ message: t.nav.syncProfileFail, type: "error" });
+    }
+    setSyncing(false);
+    setTimeout(() => setToast(null), 2000);
+  };
 
   useEffect(() => {
     if (session?.user) {
@@ -176,6 +196,19 @@ export function Navbar() {
   );
 
   return (
+    <>
+    {/* Toast */}
+    {toast && (
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
+        <div className={`px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg backdrop-blur-sm border ${
+          toast.type === "success"
+            ? "bg-emerald-50/90 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50"
+            : "bg-red-50/90 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/50"
+        }`}>
+          {toast.message}
+        </div>
+      </div>
+    )}
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border-b border-gray-200/60 dark:border-zinc-800/60">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
         <Link
@@ -264,6 +297,17 @@ export function Navbar() {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                         API Key
                       </Link>
+                      <button
+                        onClick={handleSyncProfile}
+                        disabled={syncing}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors rounded-lg mx-1 disabled:opacity-50"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={syncing ? "animate-spin" : ""}><path d="M21.5 2v6h-6" /><path d="M2.5 22v-6h6" /><path d="M2 11.5a10 10 0 0 1 18.8-4.3" /><path d="M22 12.5a10 10 0 0 1-18.8 4.2" /></svg>
+                        {t.nav.syncProfile}
+                        {syncing && (
+                          <svg className="animate-spin ml-auto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /></svg>
+                        )}
+                      </button>
                     </div>
                     <div className="border-t border-gray-100 dark:border-zinc-800 py-1">
                       <button onClick={() => { setDropdownOpen(false); signOut(); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-lg mx-1">
@@ -330,6 +374,16 @@ export function Navbar() {
             <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
               {t.nav.settings}
             </Link>
+            <button
+              onClick={handleSyncProfile}
+              disabled={syncing}
+              className="w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 disabled:opacity-50"
+            >
+              {t.nav.syncProfile}
+              {syncing && (
+                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /></svg>
+              )}
+            </button>
             <button onClick={() => { setMobileMenuOpen(false); signOut(); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
               {t.nav.logout}
             </button>
@@ -337,5 +391,6 @@ export function Navbar() {
         </div>
       )}
     </nav>
+    </>
   );
 }

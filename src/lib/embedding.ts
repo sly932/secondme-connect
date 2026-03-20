@@ -1,14 +1,14 @@
 import logger from "./logger";
 
-const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
-const DEFAULT_MODEL = "openai/text-embedding-3-small";
+const DEFAULT_BASE_URL = "https://api.siliconflow.cn/v1";
+const DEFAULT_MODEL = "Qwen/Qwen3-Embedding-0.6B";
 
 /**
- * 通过 OpenRouter 调用 Embedding 模型生成向量
+ * 通过 SiliconFlow 调用 Embedding 模型生成向量
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const baseUrl = process.env.OPENROUTER_BASE_URL || DEFAULT_BASE_URL;
-  const model = process.env.EMBEDDING_MODEL || DEFAULT_MODEL;
+  const baseUrl = process.env.SILICONFLOW_EMBEDDING_URL || DEFAULT_BASE_URL;
+  const model = process.env.SILICONFLOW_EMBEDDING_MODEL || DEFAULT_MODEL;
 
   logger.info("Generating embedding", { textLength: text.length, model });
 
@@ -16,7 +16,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      Authorization: `Bearer ${process.env.SILICONFLOW_API_KEY}`,
     },
     body: JSON.stringify({
       model,

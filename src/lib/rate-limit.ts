@@ -21,6 +21,7 @@ export const RATE_LIMITS = {
   // 高成本接口专用限速
   heavy: { windowMs: 60_000, maxRequests: 5 } as RateLimitConfig,
   gameCreate: { windowMs: 60_000, maxRequests: 2 } as RateLimitConfig,
+  sync: { windowMs: 60_000, maxRequests: 2 } as RateLimitConfig,
 };
 
 const store = new Map<string, RateLimitEntry>();
