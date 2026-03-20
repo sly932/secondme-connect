@@ -2,7 +2,9 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import html2canvas from "html2canvas";
 import { usePathname } from "next/navigation";
 import { useUserStore, useThemeStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import { useT, useLocale, type Locale } from "@/lib/i18n";
@@ -61,6 +63,23 @@ export function Navbar() {
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const [portraitLoading, setPortraitLoading] = useState(false);
   const [portraitFetched, setPortraitFetched] = useState(false);
+  const [shareView, setShareView] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
+
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  const handleSaveShareCard = useCallback(async () => {
+    if (!shareCardRef.current) return;
+    const canvas = await html2canvas(shareCardRef.current, {
+      useCORS: true,
+      scale: 2,
+      backgroundColor: null,
+    });
+    const link = document.createElement("a");
+    link.download = "connect-portrait.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }, []);
 
   const fetchPortrait = async () => {
     if (portraitFetched) return;
@@ -274,53 +293,127 @@ export function Navbar() {
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div
           className="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] animate-fade-in"
-          onClick={() => setPortraitModalOpen(false)}
+          onClick={() => { setPortraitModalOpen(false); setShareView(false); }}
         />
         <div className="relative w-full max-w-sm mx-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden animate-scale-in">
-          <div className="p-6 flex flex-col items-center text-center space-y-4">
-            {/* 图片区域 */}
-            <div className="w-64 h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-              {portraitUrl ? (
-                <img src={portraitUrl} alt="Self Portrait" className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-center space-y-2">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-gray-300 dark:text-zinc-600">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
+          {!shareView ? (
+            /* === 自画像查看 === */
+            <div className="p-6 flex flex-col items-center text-center space-y-4">
+              <div className="w-64 h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
+                {portraitUrl ? (
+                  <img src={portraitUrl} alt="Self Portrait" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-center space-y-2">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-gray-300 dark:text-zinc-600">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <p className="text-xs text-gray-400 dark:text-zinc-500">Pixel Art Portrait</p>
+                  </div>
+                )}
+              </div>
+
+              {!portraitUrl && !portraitLoading && (
+                <button
+                  onClick={handleGeneratePortrait}
+                  className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-[0.98]"
+                >
+                  {t.nav.generatePortrait}
+                </button>
+              )}
+
+              {portraitLoading && (
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400">
+                  <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                   </svg>
-                  <p className="text-xs text-gray-400 dark:text-zinc-500">Pixel Art Portrait</p>
+                  {t.nav.portraitGenerating}
                 </div>
               )}
-            </div>
 
-            {/* 操作区域 */}
-            {!portraitUrl && !portraitLoading && (
-              <button
-                onClick={handleGeneratePortrait}
-                className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-[0.98]"
-              >
-                {t.nav.generatePortrait}
-              </button>
-            )}
-
-            {portraitLoading && (
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400">
-                <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-                  <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-                </svg>
-                {t.nav.portraitGenerating}
+              {/* 底部按钮栏 */}
+              <div className="flex gap-2.5 w-full">
+                <button
+                  onClick={() => { setPortraitModalOpen(false); setShareView(false); }}
+                  className="flex-1 py-2.5 text-sm font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all duration-200 active:scale-[0.98]"
+                >
+                  {t.nav.portraitClose}
+                </button>
+                {portraitUrl && (
+                  <button
+                    onClick={() => setShareView(true)}
+                    className="flex items-center justify-center gap-1.5 flex-1 py-2.5 text-sm font-medium text-white dark:text-black bg-gray-900 dark:bg-white rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-[0.98]"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                    {t.nav.portraitShare}
+                  </button>
+                )}
               </div>
-            )}
+            </div>
+          ) : (
+            /* === 分享卡片 === */
+            <div className="flex flex-col items-center">
+              <div ref={shareCardRef} className="w-full bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800">
+                {/* 卡片顶部 */}
+                <div className="px-6 pt-6 pb-4 text-center">
+                  <h3
+                    className="text-xl font-bold text-gray-900 dark:text-white tracking-tight"
+                    style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}
+                  >
+                    Connect
+                  </h3>
+                </div>
 
-            <button
-              onClick={() => setPortraitModalOpen(false)}
-              className="w-full py-2.5 text-sm text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors"
-            >
-              {t.nav.portraitClose}
-            </button>
-          </div>
+                {/* 肖像 */}
+                <div className="px-6">
+                  <div className="w-full aspect-square rounded-xl overflow-hidden shadow-lg">
+                    {portraitUrl && (
+                      <img src={portraitUrl} alt="Self Portrait" className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                </div>
+
+                {/* 底部：文案 + 二维码 */}
+                <div className="px-6 py-5 flex items-end justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-700 dark:text-zinc-300 leading-relaxed">
+                      {t.nav.portraitShareText}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">
+                      {t.nav.portraitShareScan}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 bg-white rounded-lg p-1.5">
+                    <QRCodeSVG value={siteUrl} size={64} level="M" />
+                  </div>
+                </div>
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="w-full px-6 py-4 flex gap-2.5 border-t border-gray-100 dark:border-zinc-800">
+                <button
+                  onClick={() => setShareView(false)}
+                  className="flex-1 py-2.5 text-sm font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all duration-200 active:scale-[0.98]"
+                >
+                  {t.nav.portraitBack}
+                </button>
+                <button
+                  onClick={handleSaveShareCard}
+                  className="flex items-center justify-center gap-1.5 flex-1 py-2.5 text-sm font-medium text-white dark:text-black bg-gray-900 dark:bg-white rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-[0.98]"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  {t.nav.portraitSave}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )}
