@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePanelStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import { useT, useLocale } from "@/lib/i18n";
 import { ConnectPanel } from "@/components/ConnectPanel";
@@ -19,10 +19,12 @@ interface PlazaPost {
 
 export default function Home() {
   const { data: session } = useSession();
-  const { setTab, setTaskSubType, scrollToPanel } = usePanelStore();
+  const { setTab, setTaskSubType } = usePanelStore();
   const logoFont = useFontStore((s) => s.logoFont);
   const t = useT();
   const { locale } = useLocale();
+  const [panelOpen, setPanelOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const FEATURE_CARDS = [
     {
@@ -115,19 +117,22 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  const handleCardClick = (card: typeof FEATURE_CARDS[number]) => {
-    setTab(card.tab);
-    if (card.subType) setTaskSubType(card.subType);
-    setTimeout(() => scrollToPanel(), 50);
-  };
-
-  const handleConnect = () => {
+  const openPanel = (tab?: "chat" | "tasks" | "games", subType?: "WRITING" | "PAINTING") => {
     if (!session) {
       setShowLoginModal(true);
       return;
     }
-    setTab("chat");
-    setTimeout(() => scrollToPanel(), 50);
+    if (tab) setTab(tab);
+    if (subType) setTaskSubType(subType);
+    setPanelOpen(true);
+  };
+
+  const handleCardClick = (card: typeof FEATURE_CARDS[number]) => {
+    openPanel(card.tab, card.subType);
+  };
+
+  const handleConnect = () => {
+    openPanel("chat");
   };
 
   const localeMap: Record<string, string> = { zh: "zh-CN", en: "en-US", ja: "ja-JP", ko: "ko-KR" };
@@ -157,13 +162,69 @@ export default function Home() {
           <p className="text-base sm:text-xl md:text-2xl text-gray-500 dark:text-zinc-400 max-w-xl animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             {t.landing.slogan}
           </p>
-          <button
-            onClick={handleConnect}
-            className="btn-glow group relative px-8 sm:px-12 py-3 sm:py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-xl sm:text-2xl font-semibold rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl animate-fade-in-up"
-            style={{ animationDelay: "0.2s", fontFamily: LOGO_FONT_CSS[logoFont] }}
-          >
-            Connect
-          </button>
+          {!panelOpen ? (
+            <button
+              onClick={handleConnect}
+              className="btn-glow group relative px-8 sm:px-12 py-3 sm:py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-xl sm:text-2xl font-semibold rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl animate-fade-in-up"
+              style={{ animationDelay: "0.2s", fontFamily: LOGO_FONT_CSS[logoFont] }}
+            >
+              Connect
+            </button>
+          ) : (
+            <div ref={panelRef} className="w-full max-w-2xl relative">
+              {/* SVG 画线动画：两条路径从顶部中心同时出发 */}
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                style={{ animation: 'drawPathFadeOut 0.3s ease-out 0.9s forwards' }}
+              >
+                {/* 右半边：中心 → 右上 → 右下 → 中心底部 */}
+                <path
+                  d="M 50,0 L 100,0 L 100,100 L 50,100"
+                  pathLength="1"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  vectorEffect="non-scaling-stroke"
+                  className="text-gray-300 dark:text-zinc-600"
+                  style={{
+                    strokeDasharray: 1,
+                    strokeDashoffset: 1,
+                    animation: 'drawPath 0.8s ease-out forwards',
+                  }}
+                />
+                {/* 左半边：中心 → 左上 → 左下 → 中心底部 */}
+                <path
+                  d="M 50,0 L 0,0 L 0,100 L 50,100"
+                  pathLength="1"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  vectorEffect="non-scaling-stroke"
+                  className="text-gray-300 dark:text-zinc-600"
+                  style={{
+                    strokeDasharray: 1,
+                    strokeDashoffset: 1,
+                    animation: 'drawPath 0.8s ease-out forwards',
+                  }}
+                />
+              </svg>
+
+              {/* 面板内容：画线完成后淡入 */}
+              <div style={{ animation: 'panelContentReveal 0.4s ease-out 0.65s both' }}>
+                <ConnectPanel />
+              </div>
+
+              <button
+                onClick={() => setPanelOpen(false)}
+                className="mt-3 text-sm text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors mx-auto block"
+                style={{ animation: 'panelContentReveal 0.3s ease-out 1s both' }}
+              >
+                {t.landing.loginModal.cancel || "收起"}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -306,11 +367,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 内嵌对话区 */}
-      <section className="px-4 sm:px-6 pb-16 sm:pb-20">
-        <ConnectPanel />
-      </section>
-
       {/* 广场热门 */}
       {posts.length > 0 && (
         <section className="px-4 sm:px-6 pb-16 sm:pb-20 border-t border-gray-100 dark:border-zinc-800/60 pt-12 sm:pt-16">
@@ -361,42 +417,32 @@ export default function Home() {
       {showLoginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] animate-fade-in"
             onClick={() => setShowLoginModal(false)}
           />
-          <div className="relative w-full max-w-sm mx-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-700 shadow-2xl p-6 space-y-5 animate-scale-in">
-            {/* SecondMe icon */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="8" r="4" stroke="white" strokeWidth="2" />
-                  <path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                  <circle cx="17" cy="6" r="2.5" fill="white" opacity="0.6" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t.landing.loginModal.title}
+          <div className="relative w-full max-w-xs mx-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden animate-scale-in">
+            <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center">
+              <h3
+                className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
+                style={{ fontFamily: LOGO_FONT_CSS[logoFont] }}
+              >
+                Connect
               </h3>
-              <p className="text-sm text-gray-500 dark:text-zinc-400 text-center">
+              <p className="mt-2 text-sm text-gray-400 dark:text-zinc-500 leading-relaxed">
                 {t.landing.loginModal.desc}
               </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="px-6 pb-6 space-y-2.5">
               <button
                 onClick={() => { window.location.href = "/api/auth/login"; }}
-                className="w-full flex items-center justify-center gap-2.5 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
+                className="btn-glow w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-[0.98]"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="8" r="3.5" stroke="white" strokeWidth="1.5" />
-                  <path d="M5 19c0-2.761 3.134-5 7-5s7 2.239 7 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                  <circle cx="16.5" cy="6" r="2" fill="white" opacity="0.6" />
-                </svg>
                 {t.landing.loginModal.btn}
               </button>
               <button
                 onClick={() => setShowLoginModal(false)}
-                className="w-full px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="w-full py-2.5 text-sm text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors"
               >
                 {t.landing.loginModal.cancel}
               </button>
