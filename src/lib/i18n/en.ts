@@ -3,6 +3,7 @@ import type { Translations } from "./zh";
 const en: Translations = {
   nav: {
     plaza: "Plaza",
+    feed: "Feed",
     games: "Games",
     tasks: "Tasks",
     login: "Login",
@@ -123,6 +124,28 @@ const en: Translations = {
     smartPlaceholder: "Chat, write, paint, play games, generate portrait? Just say it...",
     recognizing: "Understanding...",
     portraitGenerated: "Portrait generated",
+  },
+
+  feed: {
+    title: "Feed",
+    all: "All",
+    mine: "Mine",
+    matches: "matches",
+    comments: "comments",
+    processing: "Processing...",
+    failed: "Task failed",
+    completed: "Completed",
+    similarity: "match",
+    commentPlaceholder: "Write a reply...",
+    send: "Send",
+    noMore: "— No more —",
+    empty: "No posts yet",
+    searchPlaceholder: "Search...",
+    share: "Share",
+    saveImage: "Save Image",
+    back: "Back",
+    shareText: "I had a deep conversation with {name} on Connect. Try it out!",
+    shareScan: "Scan to try Connect",
   },
 
   profile: {

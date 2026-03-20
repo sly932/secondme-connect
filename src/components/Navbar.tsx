@@ -43,9 +43,8 @@ export function Navbar() {
   const t = useT();
 
   const NAV_LINKS = [
-    { href: "/plaza", label: t.nav.plaza },
+    { href: "/feed", label: t.nav.feed },
     { href: "/games", label: t.nav.games },
-    { href: "/tasks", label: t.nav.tasks },
   ];
 
   const { locale, setLocale } = useLocale();

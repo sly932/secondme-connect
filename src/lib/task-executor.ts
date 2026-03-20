@@ -13,20 +13,33 @@ const { url: SILICONFLOW_IMAGE_URL, model: SILICONFLOW_IMAGE_MODEL, apiKey: SILI
 const MAX_CONSULT_ROUNDS = 3;
 const TIMEOUT_PER_ROUND = 60 * 1000; // 每轮 1 分钟
 
-/** 查询 worker 信息并生成 NPC 角色 system prompt */
+/** 查询 worker 信息并生成 system prompt */
 async function getWorkerRolePrompt(workerId: string): Promise<{
   workerName: string;
-  rolePrompt: string | undefined;
+  rolePrompt: string;
 }> {
   const worker = await prisma.user.findUnique({
     where: { id: workerId },
     select: { name: true, bio: true, isNpc: true },
   });
   const workerName = worker?.name || "分身";
-  const rolePrompt = worker?.isNpc && worker.name
-    ? `你现在是「${worker.name}」。${worker.bio ? `你的身份：${worker.bio}。` : ""}请始终以「${worker.name}」的身份、语气和视角来交流和回答问题，不要跳出这个角色。`
-    : undefined;
-  return { workerName, rolePrompt };
+
+  if (worker?.isNpc && worker.name) {
+    const rolePrompt = [
+      `## 角色`,
+      `你是「${worker.name}」。${worker.bio || ""}`,
+      ``,
+      `## 要求`,
+      `- 始终以「${worker.name}」的身份、语气和视角交流，不要跳出角色`,
+      `- 根据你角色的实际经验和职业经历来回答`,
+    ].join("\n");
+    return { workerName, rolePrompt };
+  }
+
+  return {
+    workerName,
+    rolePrompt: "请根据你的实际经验和职业经历来回答，保持真实、有深度的交流。",
+  };
 }
 
 /**
@@ -68,7 +81,7 @@ export async function executeConsultTask(
     const [publisher, worker] = await Promise.all([
       prisma.user.findUnique({
         where: { id: publisherId },
-        select: { accessToken: true, name: true },
+        select: { accessToken: true, name: true, bio: true },
       }),
       prisma.user.findUnique({
         where: { id: workerId },
@@ -80,6 +93,17 @@ export async function executeConsultTask(
 
     const { workerName, rolePrompt: workerSystemPrompt } = await getWorkerRolePrompt(workerId);
 
+    // 发起方 system prompt
+    const publisherSystemPrompt = [
+      `## 你的身份`,
+      `你是「${publisher.name}」。${publisher.bio || ""}`,
+      ``,
+      `## 交流要求`,
+      `- 根据你的实际经验和职业经历来回应对方`,
+      `- 可以追问细节、分享自己的看法和经历`,
+      `- 保持真实自然的对话风格`,
+    ].join("\n");
+
     // 对话记录
     const transcript: string[] = [];
 
@@ -90,63 +114,61 @@ export async function executeConsultTask(
       taskEvents.emit(taskId, { result: text, status: "EXECUTING" });
     };
 
-    // ========== Round 1: 用户分身 → 匹配分身 ==========
-    // 直接传递用户原始消息
-    const openingMessage = description;
-
+    // ========== Round 1: 用户 → 匹配分身 ==========
     logger.info("Consult round 1: asking worker", { taskId });
     const stream1 = await chatStream(
       worker.accessToken,
       workerSecondmeId,
-      openingMessage,
+      description,
       workerSystemPrompt
     );
     transcript.push(`💬 ${publisher.name}：${description}`);
-    const workerReply1 = await streamToText(stream1, TIMEOUT_PER_ROUND, (partial) => {
+    const r1 = await streamToText(stream1, TIMEOUT_PER_ROUND, (partial) => {
       emitProgress(`💬 ${workerName}：${partial}`);
     });
 
-    transcript.push(`💬 ${workerName}：${workerReply1}`);
+    transcript.push(`💬 ${workerName}：${r1.text}`);
     emitProgress();
 
-    // ========== Round 2+: 交替对话 ==========
-    let lastWorkerReply = workerReply1;
+    // 保存双方的 sessionId，后续轮次直接带上，API 自动维护上下文
+    let workerSessionId = r1.sessionId;
+    let publisherSessionId: string | undefined;
 
+    // ========== Round 2+: 交替对话 ==========
     for (let round = 2; round <= MAX_CONSULT_ROUNDS; round++) {
-      // 用户分身回应
+      // 发起方分身回应
       logger.info(`Consult round ${round}: publisher responds`, { taskId });
-      const publisherContext =
-        `对方刚才说：\n"${lastWorkerReply}"\n\n请根据你的理解和经验，继续和对方交流，可以追问细节或分享你的想法。`;
       const stream2 = await chatStream(
         publisher.accessToken,
         publisherSecondmeId,
-        publisherContext
+        r1.text, // 直接传对方的回复作为消息，session 会维护上下文
+        publisherSessionId ? undefined : publisherSystemPrompt, // system prompt 仅首次
+        publisherSessionId
       );
-      const publisherReply = await streamToText(stream2, TIMEOUT_PER_ROUND, (partial) => {
+      const r2 = await streamToText(stream2, TIMEOUT_PER_ROUND, (partial) => {
         emitProgress(`💬 ${publisher.name}：${partial}`);
       });
+      if (!publisherSessionId) publisherSessionId = r2.sessionId;
 
-      transcript.push(`💬 ${publisher.name}：${publisherReply}`);
+      transcript.push(`💬 ${publisher.name}：${r2.text}`);
       emitProgress();
 
       // 匹配分身回应
       logger.info(`Consult round ${round}: worker responds`, { taskId });
-      const workerContext =
-        `对方刚才说：\n"${publisherReply}"\n\n请继续和对方交流，分享你的见解和建议。`;
       const stream3 = await chatStream(
         worker.accessToken,
         workerSecondmeId,
-        workerContext,
-        workerSystemPrompt
+        r2.text,
+        undefined, // system prompt 已在 R1 设定
+        workerSessionId
       );
-      const workerReply = await streamToText(stream3, TIMEOUT_PER_ROUND, (partial) => {
+      const r3 = await streamToText(stream3, TIMEOUT_PER_ROUND, (partial) => {
         emitProgress(`💬 ${workerName}：${partial}`);
       });
+      if (!workerSessionId) workerSessionId = r3.sessionId;
 
-      transcript.push(`💬 ${workerName}：${workerReply}`);
+      transcript.push(`💬 ${workerName}：${r3.text}`);
       emitProgress();
-
-      lastWorkerReply = workerReply;
     }
 
     // 完成
@@ -204,19 +226,55 @@ export async function executeWritingTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const worker = await prisma.user.findUnique({
-      where: { id: workerId },
-      select: { accessToken: true },
-    });
+    const [worker, workerProfile, publisherUser] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: workerId },
+        select: { accessToken: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: workerId },
+        select: { name: true, bio: true, shades: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: publisherId },
+        select: { name: true, bio: true, shades: true },
+      }),
+    ]);
     if (!worker) throw new Error("Worker not found");
 
-    const { rolePrompt } = await getWorkerRolePrompt(workerId);
-    const writingSystemPrompt = rolePrompt
-      ? `${rolePrompt}\n\n请以你的风格和知识完成写作任务。`
-      : undefined;
+    // 统一的写作 system prompt（NPC 和非 NPC 一致）
+    const workerLines: string[] = [];
+    if (workerProfile?.name) workerLines.push(`- 姓名: ${workerProfile.name}`);
+    if (workerProfile?.bio) workerLines.push(`- 简介: ${workerProfile.bio}`);
+    if (workerProfile?.shades) {
+      const list = Array.isArray(workerProfile.shades) ? workerProfile.shades : [];
+      if (list.length > 0) workerLines.push(`- 兴趣标签: ${list.join("、")}`);
+    }
 
-    const stream = await chatStream(worker.accessToken, workerSecondmeId, description, writingSystemPrompt);
-    const result = await streamToText(stream, TIMEOUT_WRITING, (partial) => {
+    const writingSystemPrompt = [
+      `## 你的身份档案`,
+      workerLines.length > 0 ? workerLines.join("\n") : "（未提供）",
+      ``,
+      `## 要求`,
+      `- 根据你的实际经验和职业经历来回答`,
+      `- 请以你的风格和知识完成写作任务`,
+    ].join("\n");
+
+    // 构建包含提问者背景的 user message
+    const publisherLines: string[] = [];
+    if (publisherUser?.name) publisherLines.push(`姓名: ${publisherUser.name}`);
+    if (publisherUser?.bio) publisherLines.push(`简介: ${publisherUser.bio}`);
+    if (publisherUser?.shades) {
+      const shadesList = Array.isArray(publisherUser.shades) ? publisherUser.shades : [];
+      if (shadesList.length > 0) publisherLines.push(`兴趣标签: ${shadesList.join("、")}`);
+    }
+
+    const writingMessage = publisherLines.length > 0
+      ? `## 提问者背景\n${publisherLines.join("\n")}\n\n## 写作需求\n${description}`
+      : description;
+
+    const stream = await chatStream(worker.accessToken, workerSecondmeId, writingMessage, writingSystemPrompt);
+    const { text: result } = await streamToText(stream, TIMEOUT_WRITING, (partial) => {
       taskEvents.emit(taskId, { result: partial, status: "EXECUTING" });
     });
 
@@ -268,29 +326,52 @@ export async function executePaintingTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const worker = await prisma.user.findUnique({
-      where: { id: workerId },
-      select: { accessToken: true },
-    });
+    const [worker, paintingPublisher] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: workerId },
+        select: { accessToken: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: publisherId },
+        select: { name: true, bio: true, shades: true },
+      }),
+    ]);
     if (!worker) throw new Error("Worker not found");
 
     // Step 1: 让分身生成绘画 prompt
-    const { rolePrompt } = await getWorkerRolePrompt(workerId);
-    const paintingSystemPrompt = rolePrompt
-      ? `${rolePrompt}\n\n现在请根据用户的需求，以你的艺术风格和审美，返回一段详细的英文绘画提示词（prompt），用于 AI 图片生成模型。只返回提示词本身，不要包含任何解释、前缀、标点引号或其他多余内容。`
-      : "你是一个绘画提示词生成助手。根据用户的需求，返回一段详细的英文绘画提示词（prompt），用于 AI 图片生成模型。只返回提示词本身，不要包含任何解释、前缀、标点引号或其他多余内容。";
+    const paintingSystemPrompt = [
+      `## 要求`,
+      `- 根据你的实际经验和职业经历，以你的艺术风格和审美来创作`,
+      `- 返回一段详细的英文绘画提示词（prompt），用于 AI 图片生成模型`,
+      `- 只返回提示词本身，不要包含任何解释、前缀、标点引号或其他多余内容`,
+    ].join("\n");
+
+    // 构建包含提问者背景的 user message
+    const paintingPubLines: string[] = [];
+    if (paintingPublisher?.name) paintingPubLines.push(`姓名: ${paintingPublisher.name}`);
+    if (paintingPublisher?.bio) paintingPubLines.push(`简介: ${paintingPublisher.bio}`);
+    if (paintingPublisher?.shades) {
+      const shadesList = Array.isArray(paintingPublisher.shades) ? paintingPublisher.shades : [];
+      if (shadesList.length > 0) paintingPubLines.push(`兴趣标签: ${shadesList.join("、")}`);
+    }
+
+    const paintingMessage = paintingPubLines.length > 0
+      ? `## 提问者背景\n${paintingPubLines.join("\n")}\n\n## 绘画需求\n${description}`
+      : description;
+
     const stream = await chatStream(
       worker.accessToken,
       workerSecondmeId,
-      description,
+      paintingMessage,
       paintingSystemPrompt
     );
 
     let generatedPrompt: string;
     try {
-      generatedPrompt = (await streamToText(stream, TIMEOUT_PAINTING, (partial) => {
+      const r = await streamToText(stream, TIMEOUT_PAINTING, (partial) => {
         taskEvents.emit(taskId, { result: `正在构思绘画提示词...\n\n${partial}`, status: "EXECUTING" });
-      })).trim();
+      });
+      generatedPrompt = r.text.trim();
     } catch (err) {
       logger.error("Painting prompt generation failed", { taskId, error: (err as Error).message });
       await prisma.task.update({
@@ -395,15 +476,24 @@ async function handleTaskFailure(taskId: string, publisherId: string, creditCost
   taskEvents.emit(taskId, { result: "任务执行失败", status: "FAILED" });
 }
 
+interface StreamResult {
+  text: string;
+  sessionId?: string;
+}
+
 /**
- * 解析 SSE 流，提取 chat completion 的 content 字段
- * 格式: data: {"choices":[{"delta":{"content":"xxx"}}]}
+ * 解析 SSE 流，提取 chat completion 的 content 字段和 sessionId
+ * 格式:
+ *   event: session
+ *   data: {"sessionId": "labs_sess_xxx"}
+ *   data: {"choices":[{"delta":{"content":"xxx"}}]}
+ *   data: [DONE]
  */
 async function streamToText(
   stream: ReadableStream,
   timeoutMs: number,
   onProgress?: (partial: string) => void
-): Promise<string> {
+): Promise<StreamResult> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error("Task execution timeout"));
@@ -412,21 +502,20 @@ async function streamToText(
     const reader = stream.getReader();
     const decoder = new TextDecoder();
     let result = "";
-    let buffer = ""; // SSE 行缓冲
+    let sessionId: string | undefined;
+    let buffer = "";
 
     function read() {
       reader.read().then(({ done, value }) => {
         if (done) {
           clearTimeout(timer);
-          resolve(result);
+          resolve({ text: result, sessionId });
           return;
         }
 
         buffer += decoder.decode(value, { stream: true });
 
-        // 按行解析 SSE
         const lines = buffer.split("\n");
-        // 最后一行可能不完整，留到下次
         buffer = lines.pop() || "";
 
         for (const line of lines) {
@@ -437,12 +526,16 @@ async function streamToText(
 
           try {
             const parsed = JSON.parse(jsonStr);
+            // 提取 sessionId
+            if (parsed?.sessionId && !sessionId) {
+              sessionId = parsed.sessionId;
+            }
             const content = parsed?.choices?.[0]?.delta?.content;
             if (content) {
               result += content;
             }
           } catch {
-            // 跳过非 JSON 行（如 event: session）
+            // 跳过非 JSON 行
           }
         }
 

@@ -40,7 +40,7 @@ export async function GET(
           result: true,
           resultUrl: true,
           workerId: true,
-          worker: { select: { id: true, name: true, avatar: true, bio: true } },
+          worker: { select: { id: true, name: true, avatar: true, bio: true, portraitUrl: true } },
         },
       },
       _count: { select: { comments: true } },
@@ -59,10 +59,11 @@ export async function GET(
     const task = taskMap.get(c.userId);
     return {
       userId: c.userId,
-      name: c.name,
-      avatar: c.avatar,
-      bio: c.bio,
+      name: task?.worker?.name ?? c.name,
+      avatar: task?.worker?.avatar ?? c.avatar,
+      bio: task?.worker?.bio ?? c.bio,
       similarity: c.similarity,
+      portraitUrl: task?.worker?.portraitUrl ?? null,
       task: task
         ? {
             taskId: task.id,

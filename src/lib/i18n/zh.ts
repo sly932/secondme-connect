@@ -2,6 +2,7 @@ const zh = {
   // Navbar
   nav: {
     plaza: "广场",
+    feed: "动态",
     games: "游戏",
     tasks: "任务",
     login: "登录",
@@ -124,6 +125,29 @@ const zh = {
     smartPlaceholder: "想聊天、写文案、画图、玩游戏、生成自画像？直接说就行...",
     recognizing: "理解中...",
     portraitGenerated: "自画像已生成",
+  },
+
+  // Feed
+  feed: {
+    title: "动态",
+    all: "全部",
+    mine: "我的",
+    matches: "个匹配",
+    comments: "条评论",
+    processing: "处理中...",
+    failed: "任务失败",
+    completed: "已完成",
+    similarity: "匹配",
+    commentPlaceholder: "写一句回复...",
+    send: "发送",
+    noMore: "— 没有更多了 —",
+    empty: "还没有动态",
+    searchPlaceholder: "搜索...",
+    share: "分享",
+    saveImage: "保存图片",
+    back: "返回",
+    shareText: "我用 Connect 和 {name} 进行了深度对话，你也来试试吧！",
+    shareScan: "扫码体验 Connect",
   },
 
   // Profile page

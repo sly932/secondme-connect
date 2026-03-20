@@ -118,15 +118,17 @@ export async function chatStream(
   accessToken: string,
   targetUserId: string,
   message: string,
-  systemPrompt?: string
+  systemPrompt?: string,
+  sessionId?: string
 ): Promise<ReadableStream> {
-  logger.info("Starting chat stream", { targetUserId, messageLength: message.length });
+  logger.info("Starting chat stream", { targetUserId, messageLength: message.length, sessionId: sessionId || "new" });
 
   const body: Record<string, string> = {
     target_user_id: targetUserId,
     message,
   };
   if (systemPrompt) body.systemPrompt = systemPrompt;
+  if (sessionId) body.sessionId = sessionId;
 
   const res = await apiCall("/api/secondme/chat/stream", accessToken, {
     method: "POST",

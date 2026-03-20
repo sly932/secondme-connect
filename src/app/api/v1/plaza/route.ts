@@ -16,8 +16,11 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit")) || 10));
   const search = searchParams.get("search")?.trim();
+  const authorId = searchParams.get("authorId")?.trim();
 
-  const where = search ? { content: { contains: search, mode: "insensitive" as const } } : {};
+  const where: Record<string, unknown> = {};
+  if (search) where.content = { contains: search, mode: "insensitive" as const };
+  if (authorId) where.authorId = authorId;
 
   const [posts, total] = await Promise.all([
     prisma.post.findMany({

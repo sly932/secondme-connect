@@ -1,0 +1,90 @@
+[
+  {
+    "id": "q-kb-01",
+    "scene": "keyboard",
+    "query": "HHKB Professional Hybrid Type-S 值不值得买？打字手感怎么样？用来写代码合适吗？",
+    "expectedMatches": ["eval-kb-001", "eval-kb-002"],
+    "expectedRoles": ["自用玩家", "外设测评博主"],
+    "notes": "应优先匹配有HHKB使用经验的人和专业测评者"
+  },
+  {
+    "id": "q-kb-02",
+    "scene": "keyboard",
+    "query": "想收一把二手HHKB，什么价格合理？有没有人在卖？",
+    "expectedMatches": ["eval-kb-003", "eval-kb-001"],
+    "expectedRoles": ["二手卖家", "自用玩家"],
+    "notes": "应优先匹配有库存的卖家和了解二手行情的人"
+  },
+  {
+    "id": "q-kb-03",
+    "scene": "keyboard",
+    "query": "预算500左右，想买一把打字舒服的键盘，主要用来办公写文档",
+    "expectedMatches": ["eval-kb-002", "eval-kb-003"],
+    "expectedRoles": ["外设测评博主", "二手卖家"],
+    "notes": "应优先匹配能给出推荐建议的测评博主和有合适价位库存的卖家"
+  },
+  {
+    "id": "q-kb-04",
+    "scene": "keyboard",
+    "query": "Keychron Q1和Leopold FC660C哪个更适合程序员？两个都纠结好久了",
+    "expectedMatches": ["eval-kb-001", "eval-kb-002"],
+    "expectedRoles": ["自用玩家", "外设测评博主"],
+    "notes": "应优先匹配有两款键盘实际对比经验的人"
+  },
+  {
+    "id": "q-shop-01",
+    "scene": "open-shop",
+    "query": "想在成都高新区开一家咖啡店，需要办什么证？有补贴吗？",
+    "expectedMatches": ["eval-shop-001", "eval-shop-002"],
+    "expectedRoles": ["高新区市场监管局工作人员", "高新区咖啡店老板"],
+    "notes": "应匹配到政策专家和同区域同类店主"
+  },
+  {
+    "id": "q-shop-02",
+    "scene": "open-shop",
+    "query": "成都高新区天府三街附近有没有适合开奶茶店的商铺？租金大概多少？",
+    "expectedMatches": ["eval-shop-003", "eval-shop-002"],
+    "expectedRoles": ["商业地产中介", "高新区咖啡店老板"],
+    "notes": "应优先匹配有铺面资源的中介和了解该区域租金的店主"
+  },
+  {
+    "id": "q-shop-03",
+    "scene": "open-shop",
+    "query": "在高新区开过店的朋友能分享下经验吗？一个月大概能赚多少钱？",
+    "expectedMatches": ["eval-shop-002"],
+    "expectedRoles": ["高新区咖啡店老板"],
+    "notes": "应优先匹配有真实经营数据的店主"
+  },
+  {
+    "id": "q-job-01",
+    "scene": "job-search",
+    "query": "有人了解字节跳动飞书部门的工作氛围吗？加班严重吗？值得去吗？",
+    "expectedMatches": ["eval-job-001", "eval-job-002"],
+    "expectedRoles": ["目标公司在职员工", "目标公司离职员工"],
+    "notes": "应优先匹配飞书在职和离职员工"
+  },
+  {
+    "id": "q-job-02",
+    "scene": "job-search",
+    "query": "飞书后端工程师的薪资待遇怎么样？和美团比哪个更好？",
+    "expectedMatches": ["eval-job-001", "eval-job-003"],
+    "expectedRoles": ["目标公司在职员工", "同行资深人士/竞品公司CTO"],
+    "notes": "应匹配到有薪资信息的在职员工和了解行业薪资的资深人士"
+  },
+  {
+    "id": "q-job-03",
+    "scene": "job-search",
+    "query": "飞书的产品经理发展前景怎么样？现在还值得加入吗？",
+    "expectedMatches": ["eval-job-002", "eval-job-003"],
+    "expectedRoles": ["目标公司离职员工", "同行资深人士/竞品公司CTO"],
+    "notes": "应匹配到有产品经理经历的离职员工和行业观察者"
+  },
+  {
+    "id": "q-job-04",
+    "scene": "job-search",
+    "query": "准备面试字节飞书，有什么需要注意的？面试难度怎么样？",
+    "expectedMatches": ["eval-job-001", "eval-job-002"],
+    "expectedRoles": ["目标公司在职员工", "目标公司离职员工"],
+    "notes": "应匹配到了解面试流程的内部人"
+  }
+]

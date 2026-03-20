@@ -36,27 +36,6 @@ export const useUserStore = create<UserState>((set) => ({
   updateCredits: (credits) => set({ credits }),
 }));
 
-export type PanelTab = "chat" | "tasks" | "games";
-export type TaskSubType = "WRITING" | "PAINTING";
-
-interface PanelState {
-  activeTab: PanelTab;
-  taskSubType: TaskSubType;
-  setTab: (tab: PanelTab) => void;
-  setTaskSubType: (sub: TaskSubType) => void;
-  scrollToPanel: () => void;
-}
-
-export const usePanelStore = create<PanelState>((set) => ({
-  activeTab: "chat",
-  taskSubType: "WRITING",
-  setTab: (tab) => set({ activeTab: tab }),
-  setTaskSubType: (sub) => set({ taskSubType: sub }),
-  scrollToPanel: () => {
-    const el = document.getElementById("connect-panel");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  },
-}));
 
 type Theme = "light" | "dark";
 

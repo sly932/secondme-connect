@@ -23,10 +23,27 @@ import {
 } from "./texas-holdem";
 import { handToString } from "./deck";
 
-/** 构建 NPC 的 system prompt */
-function buildNpcSystemPrompt(name: string, bio: string | null): string | undefined {
-  if (!bio) return undefined;
-  return `你是「${name}」— ${bio}。请以这个人物的性格、语气和思维方式来回应，保持角色一致性。`;
+/** 构建玩家 system prompt */
+function buildPlayerSystemPrompt(name: string, bio: string | null): string {
+  if (bio) {
+    return [
+      `## 角色`,
+      `你是「${name}」— ${bio}`,
+      ``,
+      `## 要求`,
+      `- 以「${name}」的性格和思维方式做决定`,
+      `- 根据你角色的实际经验和直觉来判断`,
+      ``,
+      `## 输出格式`,
+      `- 只输出 JSON，不要输出其他任何内容`,
+    ].join("\n");
+  }
+  return [
+    `请根据你的实际经验和直觉来做游戏决定。`,
+    ``,
+    `## 输出格式`,
+    `- 只输出 JSON，不要输出其他任何内容`,
+  ].join("\n");
 }
 
 // 全局事件存储 (roomId -> events[])
@@ -319,7 +336,7 @@ export async function executeBlackjackGame(roomId: string): Promise<void> {
       if (token) {
         const prompt = buildBlackjackPrompt(currentPlayer, state.dealer.hand[0]);
         const playerUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
-        const systemPrompt = playerUser ? buildNpcSystemPrompt(playerUser.name, playerUser.bio) : undefined;
+        const systemPrompt = playerUser ? buildPlayerSystemPrompt(playerUser.name, playerUser.bio) : undefined;
         const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
         const parsed = parseAIResponse(response);
 
@@ -615,7 +632,7 @@ export async function executeTexasGame(roomId: string): Promise<void> {
           state.phase
         );
         const playerUser = room.players.find((p) => p.id === currentPlayer.id)?.user;
-        const systemPrompt = playerUser ? buildNpcSystemPrompt(playerUser.name, playerUser.bio) : undefined;
+        const systemPrompt = playerUser ? buildPlayerSystemPrompt(playerUser.name, playerUser.bio) : undefined;
         const response = await getAIDecision(token, currentPlayer.userId, prompt, systemPrompt);
         const parsed = parseAIResponse(response);
         thinking = (parsed?.thinking as string) || "";

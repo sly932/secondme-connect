@@ -3,6 +3,7 @@ import type { Translations } from "./zh";
 const ko: Translations = {
   nav: {
     plaza: "광장",
+    feed: "피드",
     games: "게임",
     tasks: "작업",
     login: "로그인",
@@ -123,6 +124,28 @@ const ko: Translations = {
     smartPlaceholder: "대화, 글쓰기, 그림, 게임, 자화상 생성? 그냥 말하세요...",
     recognizing: "이해 중...",
     portraitGenerated: "자화상이 생성되었습니다",
+  },
+
+  feed: {
+    title: "피드",
+    all: "전체",
+    mine: "내 것",
+    matches: "개 매치",
+    comments: "개 댓글",
+    processing: "처리 중...",
+    failed: "작업 실패",
+    completed: "완료",
+    similarity: "매치",
+    commentPlaceholder: "답글 작성...",
+    send: "전송",
+    noMore: "— 더 이상 없음 —",
+    empty: "아직 게시물이 없습니다",
+    searchPlaceholder: "검색...",
+    share: "공유",
+    saveImage: "이미지 저장",
+    back: "뒤로",
+    shareText: "Connect에서 {name}과 깊은 대화를 나눴어요. 당신도 해보세요!",
+    shareScan: "스캔하여 Connect 체험",
   },
 
   profile: {

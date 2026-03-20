@@ -4,21 +4,36 @@ import { chatStream } from "./secondme";
 import { uploadPortrait } from "./storage";
 import { getService } from "./ai-providers";
 
-const SYSTEM_PROMPT = `You are a creative prompt engineer for pixel art portrait generation.
+/** 构建自画像 system prompt（包含分身档案） */
+function buildPortraitSystemPrompt(name: string, bio?: string | null, shades?: unknown): string {
+  const profileLines: string[] = [];
+  if (name) profileLines.push(`- 姓名: ${name}`);
+  if (bio) profileLines.push(`- 简介: ${bio}`);
+  if (shades) {
+    const list = Array.isArray(shades) ? shades : [];
+    if (list.length > 0) profileLines.push(`- 兴趣标签: ${list.join("、")}`);
+  }
 
-Style requirements (MUST follow):
-- Bright, vibrant, and energetic color palette — NO dark/gloomy tones
-- Clean pixel art style, 16-bit aesthetic, crisp edges
-- Warm and inviting atmosphere with good lighting (daylight, golden hour, or cozy indoor light)
-- The character should look lively and approachable, with a natural expression (smile, confident look, etc.)
-- Background should reflect the person's interests and personality, with rich but not cluttered details
-- Overall mood: positive, warm, full of life
-
-Output rules:
-- Output ONLY the English image generation prompt, nothing else
-- No prefix, no explanation, no markdown
-- Keep it under 200 words
-- Must be directly usable as a text-to-image prompt`;
+  return [
+    `## 你的身份档案`,
+    profileLines.length > 0 ? profileLines.join("\n") : "（未提供）",
+    ``,
+    `## 风格要求`,
+    `- 明亮、充满活力的色调，禁止阴暗色调`,
+    `- 像素风（pixel art）、16-bit 美学、干净利落的边缘`,
+    `- 温暖友好的氛围，良好的光照（日光、黄金时段或温馨室内光）`,
+    `- 角色表情生动亲切（微笑、自信等自然表情）`,
+    `- 背景应体现人物的兴趣和个性，丰富但不杂乱`,
+    ``,
+    `## 交流要求`,
+    `- 请以这个人的性格、语气和思维方式来回应`,
+    `- 根据你的实际经验和职业经历来创作`,
+    ``,
+    `## 输出格式`,
+    `- 只输出英文绘画提示词本身，200 词以内`,
+    `- 不要包含任何解释、前缀、标点引号或其他多余内容`,
+  ].join("\n");
+}
 
 const { url: SILICONFLOW_URL, model: SILICONFLOW_MODEL, apiKey: SILICONFLOW_KEY } = getService("portrait");
 
@@ -87,28 +102,15 @@ export async function generatePortraitForUser(userId: string): Promise<{ portrai
   });
   if (!dbUser) throw new Error("User not found");
 
-  // 拼接用户信息
-  const lines: string[] = [];
-  if (dbUser.name) lines.push(`name: ${dbUser.name}`);
-  if (dbUser.bio) lines.push(`summary: ${dbUser.bio}`);
-  if (dbUser.shades) {
-    const shadesList = Array.isArray(dbUser.shades) ? dbUser.shades : [];
-    if (shadesList.length > 0) lines.push(`interests: ${shadesList.join(", ")}`);
-  }
-  const userInfo = lines.join("\n");
-
-  const message = `Based on the following user profile, write a pixel art self-portrait prompt for AI image generation.
-
---- User Profile ---
-${userInfo}
---- End ---
-
-Generate a vivid, bright, and energetic pixel art portrait prompt for this person.`;
+  const systemPrompt = buildPortraitSystemPrompt(dbUser.name, dbUser.bio, dbUser.shades);
+  const message = "根据你对自己身份的认知，以及你的兴趣、经历和个性，请完成你的像素风自画像提示词。";
 
   // Step 1: 调用分身获取描述
   logger.info("Portrait: getting prompt from SecondMe", { userId });
-  const stream = await chatStream(dbUser.accessToken, dbUser.secondmeId, message, SYSTEM_PROMPT);
-  const prompt = await parseSSE(stream);
+  const stream = await chatStream(dbUser.accessToken, dbUser.secondmeId, message, systemPrompt);
+  const rawResponse = await parseSSE(stream);
+
+  const prompt = rawResponse.trim();
   if (!prompt || prompt.length < 20) {
     throw new Error("Portrait prompt too short");
   }

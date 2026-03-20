@@ -1,0 +1,407 @@
+{
+  "generatedAt": "2026-03-20T22:11:56.346Z",
+  "embeddingModel": "Qwen/Qwen3-Embedding-0.6B",
+  "totalPersonas": 9,
+  "totalQueries": 11,
+  "overallPrecision": 0.6363636363636364,
+  "overallAvgExpectedRank": 2,
+  "byScene": [
+    {
+      "scene": "keyboard",
+      "label": "键盘购买",
+      "queryCount": 4,
+      "avgPrecision": 0.75,
+      "avgExpectedRank": 1.875
+    },
+    {
+      "scene": "open-shop",
+      "label": "开店咨询",
+      "queryCount": 3,
+      "avgPrecision": 0.5,
+      "avgExpectedRank": 2.1666666666666665
+    },
+    {
+      "scene": "job-search",
+      "label": "求职打听",
+      "queryCount": 4,
+      "avgPrecision": 0.625,
+      "avgExpectedRank": 2
+    }
+  ],
+  "details": [
+    {
+      "queryId": "q-kb-01",
+      "scene": "keyboard",
+      "query": "HHKB Professional Hybrid Type-S 值不值得买？打字手感怎么样？用来写代码合适吗？",
+      "matches": [
+        {
+          "personaId": "eval-kb-001",
+          "name": "周磊",
+          "role": "自用玩家",
+          "similarity": 0.7445694939628741,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-kb-003",
+          "name": "老赵数码店",
+          "role": "二手卖家",
+          "similarity": 0.5579394491859379,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-kb-002",
+          "name": "张数码",
+          "role": "外设测评博主",
+          "similarity": 0.4383477129731998,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0.5,
+      "avgExpectedRank": 2,
+      "notes": "应优先匹配有HHKB使用经验的人和专业测评者"
+    },
+    {
+      "queryId": "q-kb-02",
+      "scene": "keyboard",
+      "query": "想收一把二手HHKB，什么价格合理？有没有人在卖？",
+      "matches": [
+        {
+          "personaId": "eval-kb-003",
+          "name": "老赵数码店",
+          "role": "二手卖家",
+          "similarity": 0.6922938940644188,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-kb-001",
+          "name": "周磊",
+          "role": "自用玩家",
+          "similarity": 0.6603363007239224,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-kb-002",
+          "name": "张数码",
+          "role": "外设测评博主",
+          "similarity": 0.37493624458557573,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配有库存的卖家和了解二手行情的人"
+    },
+    {
+      "queryId": "q-kb-03",
+      "scene": "keyboard",
+      "query": "预算500左右，想买一把打字舒服的键盘，主要用来办公写文档",
+      "matches": [
+        {
+          "personaId": "eval-kb-001",
+          "name": "周磊",
+          "role": "自用玩家",
+          "similarity": 0.630174590781876,
+          "isExpected": false,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-kb-002",
+          "name": "张数码",
+          "role": "外设测评博主",
+          "similarity": 0.6283650054684204,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-kb-003",
+          "name": "老赵数码店",
+          "role": "二手卖家",
+          "similarity": 0.5428260858772613,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0.5,
+      "avgExpectedRank": 2.5,
+      "notes": "应优先匹配能给出推荐建议的测评博主和有合适价位库存的卖家"
+    },
+    {
+      "queryId": "q-kb-04",
+      "scene": "keyboard",
+      "query": "Keychron Q1和Leopold FC660C哪个更适合程序员？两个都纠结好久了",
+      "matches": [
+        {
+          "personaId": "eval-kb-001",
+          "name": "周磊",
+          "role": "自用玩家",
+          "similarity": 0.6531894701068893,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-kb-002",
+          "name": "张数码",
+          "role": "外设测评博主",
+          "similarity": 0.4881432589420317,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-kb-003",
+          "name": "老赵数码店",
+          "role": "二手卖家",
+          "similarity": 0.45961264845306854,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配有两款键盘实际对比经验的人"
+    },
+    {
+      "queryId": "q-shop-01",
+      "scene": "open-shop",
+      "query": "想在成都高新区开一家咖啡店，需要办什么证？有补贴吗？",
+      "matches": [
+        {
+          "personaId": "eval-shop-001",
+          "name": "李建国",
+          "role": "高新区市场监管局工作人员",
+          "similarity": 0.6975276187102094,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-shop-003",
+          "name": "刘强",
+          "role": "商业地产中介",
+          "similarity": 0.5598998924834936,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-shop-002",
+          "name": "王芳",
+          "role": "高新区咖啡店老板",
+          "similarity": 0.5541851782584067,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0.5,
+      "avgExpectedRank": 2,
+      "notes": "应匹配到政策专家和同区域同类店主"
+    },
+    {
+      "queryId": "q-shop-02",
+      "scene": "open-shop",
+      "query": "成都高新区天府三街附近有没有适合开奶茶店的商铺？租金大概多少？",
+      "matches": [
+        {
+          "personaId": "eval-shop-003",
+          "name": "刘强",
+          "role": "商业地产中介",
+          "similarity": 0.7078083824168874,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-shop-002",
+          "name": "王芳",
+          "role": "高新区咖啡店老板",
+          "similarity": 0.5790000304960727,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-shop-001",
+          "name": "李建国",
+          "role": "高新区市场监管局工作人员",
+          "similarity": 0.4751730231437932,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配有铺面资源的中介和了解该区域租金的店主"
+    },
+    {
+      "queryId": "q-shop-03",
+      "scene": "open-shop",
+      "query": "在高新区开过店的朋友能分享下经验吗？一个月大概能赚多少钱？",
+      "matches": [
+        {
+          "personaId": "eval-shop-003",
+          "name": "刘强",
+          "role": "商业地产中介",
+          "similarity": 0.6055628683555327,
+          "isExpected": false,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-shop-001",
+          "name": "李建国",
+          "role": "高新区市场监管局工作人员",
+          "similarity": 0.584093986312663,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-shop-002",
+          "name": "王芳",
+          "role": "高新区咖啡店老板",
+          "similarity": 0.5758506561827779,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0,
+      "avgExpectedRank": 3,
+      "notes": "应优先匹配有真实经营数据的店主"
+    },
+    {
+      "queryId": "q-job-01",
+      "scene": "job-search",
+      "query": "有人了解字节跳动飞书部门的工作氛围吗？加班严重吗？值得去吗？",
+      "matches": [
+        {
+          "personaId": "eval-job-001",
+          "name": "赵明",
+          "role": "目标公司在职员工",
+          "similarity": 0.7971172570254806,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-job-003",
+          "name": "钱伟",
+          "role": "同行资深人士/竞品公司CTO",
+          "similarity": 0.701216938702421,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-job-002",
+          "name": "孙婷",
+          "role": "目标公司离职员工",
+          "similarity": 0.6674932281795315,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0.5,
+      "avgExpectedRank": 2,
+      "notes": "应优先匹配飞书在职和离职员工"
+    },
+    {
+      "queryId": "q-job-02",
+      "scene": "job-search",
+      "query": "飞书后端工程师的薪资待遇怎么样？和美团比哪个更好？",
+      "matches": [
+        {
+          "personaId": "eval-job-001",
+          "name": "赵明",
+          "role": "目标公司在职员工",
+          "similarity": 0.7500588697771098,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-job-003",
+          "name": "钱伟",
+          "role": "同行资深人士/竞品公司CTO",
+          "similarity": 0.6853822189689975,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-job-002",
+          "name": "孙婷",
+          "role": "目标公司离职员工",
+          "similarity": 0.5720365870273422,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应匹配到有薪资信息的在职员工和了解行业薪资的资深人士"
+    },
+    {
+      "queryId": "q-job-03",
+      "scene": "job-search",
+      "query": "飞书的产品经理发展前景怎么样？现在还值得加入吗？",
+      "matches": [
+        {
+          "personaId": "eval-job-001",
+          "name": "赵明",
+          "role": "目标公司在职员工",
+          "similarity": 0.6935577278162933,
+          "isExpected": false,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-job-002",
+          "name": "孙婷",
+          "role": "目标公司离职员工",
+          "similarity": 0.6926840210186653,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-job-003",
+          "name": "钱伟",
+          "role": "同行资深人士/竞品公司CTO",
+          "similarity": 0.6888425557309273,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0.5,
+      "avgExpectedRank": 2.5,
+      "notes": "应匹配到有产品经理经历的离职员工和行业观察者"
+    },
+    {
+      "queryId": "q-job-04",
+      "scene": "job-search",
+      "query": "准备面试字节飞书，有什么需要注意的？面试难度怎么样？",
+      "matches": [
+        {
+          "personaId": "eval-job-001",
+          "name": "赵明",
+          "role": "目标公司在职员工",
+          "similarity": 0.6670019818867585,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-job-003",
+          "name": "钱伟",
+          "role": "同行资深人士/竞品公司CTO",
+          "similarity": 0.6617489872677452,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-job-002",
+          "name": "孙婷",
+          "role": "目标公司离职员工",
+          "similarity": 0.581517448527137,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0.5,
+      "avgExpectedRank": 2,
+      "notes": "应匹配到了解面试流程的内部人"
+    }
+  ]
+}

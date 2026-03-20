@@ -3,6 +3,7 @@ import type { Translations } from "./zh";
 const ja: Translations = {
   nav: {
     plaza: "広場",
+    feed: "フィード",
     games: "ゲーム",
     tasks: "タスク",
     login: "ログイン",
@@ -123,6 +124,28 @@ const ja: Translations = {
     smartPlaceholder: "チャット、執筆、お絵描き、ゲーム、自画像生成？何でも言ってください...",
     recognizing: "理解中...",
     portraitGenerated: "自画像が生成されました",
+  },
+
+  feed: {
+    title: "フィード",
+    all: "すべて",
+    mine: "自分の",
+    matches: "件マッチ",
+    comments: "件コメント",
+    processing: "処理中...",
+    failed: "タスク失敗",
+    completed: "完了",
+    similarity: "マッチ",
+    commentPlaceholder: "返信を書く...",
+    send: "送信",
+    noMore: "— これ以上ありません —",
+    empty: "まだ投稿がありません",
+    searchPlaceholder: "検索...",
+    share: "共有",
+    saveImage: "画像を保存",
+    back: "戻る",
+    shareText: "Connectで{name}と深い対話をしました。あなたも試してみて！",
+    shareScan: "スキャンしてConnectを体験",
   },
 
   profile: {
