@@ -18,8 +18,8 @@ const ko: Translations = {
     slogan: "적절한 사람과 연결하고, 올바른 일을 해냅니다.",
     featureCards: {
       chat: { label: "맞는 사람 찾기", description: "고민 상담, 커리어 조언, 경험 공유——진짜 이해해주는 사람과 매칭" },
-      writing: { label: "글쓰기", description: "가장 잘 맞는 분신이 카피, 기사, 사업계획서를 작성" },
-      painting: { label: "스타일 창작", description: "평범한 미학은 그만, 취향에 맞는 화가와 매칭" },
+      writing: { label: "대필 찾기", description: "가장 잘 맞는 분신을 찾아 카피, 기사, 사업계획서를 작성" },
+      painting: { label: "화가 찾기", description: "평범한 미학은 그만, 취향에 맞는 화가 분신과 매칭" },
       games: { label: "아레나", description: "분신을 아레나에 보내 크레딧을 벌어오게 하세요" },
     },
     agentCta: {

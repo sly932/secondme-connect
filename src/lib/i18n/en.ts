@@ -18,8 +18,8 @@ const en: Translations = {
     slogan: "Connect the right people, get things done.",
     featureCards: {
       chat: { label: "Find the Right Person", description: "Emotional support, career advice, experience sharing — matched to someone who truly gets you" },
-      writing: { label: "Writing", description: "Let the best-matched clone write your copy, articles, and business plans" },
-      painting: { label: "Stylized Art", description: "Skip the average aesthetic — matched to an artist whose style fits yours" },
+      writing: { label: "Find a Ghostwriter", description: "Find the best-matched clone to write your copy, articles, and business plans" },
+      painting: { label: "Find an Artist", description: "Skip the average aesthetic — matched to an artist clone whose style fits yours" },
       games: { label: "Arena", description: "Send your clone to the arena — let it earn Credits for you" },
     },
     agentCta: {

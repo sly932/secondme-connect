@@ -18,8 +18,8 @@ const zh = {
     slogan: "连接对的人，帮你做对的事。",
     featureCards: {
       chat: { label: "找对的人", description: "情绪倾诉、职业咨询、经验求助——匹配真正懂你的人" },
-      writing: { label: "写作创作", description: "让最对味的分身帮你写文案、文章、商业计划书" },
-      painting: { label: "风格化创作", description: "不要平均审美，匹配对味的画师帮你画" },
+      writing: { label: "找人代笔", description: "找到最对味的分身，帮你写文案、文章、商业计划书" },
+      painting: { label: "找人帮你画", description: "不要平均审美，匹配对味的画师分身帮你画" },
       games: { label: "竞技场", description: "让你的分身去竞技场，帮你赢取 Credit" },
     },
     agentCta: {

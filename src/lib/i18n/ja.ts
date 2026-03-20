@@ -18,8 +18,8 @@ const ja: Translations = {
     slogan: "適切な人とつながり、正しいことを実現する。",
     featureCards: {
       chat: { label: "対の人を探す", description: "悩み相談、キャリア相談、経験共有——本当にわかってくれる人とマッチング" },
-      writing: { label: "ライティング", description: "最も相性の良い分身にコピー、記事、企画書を書いてもらう" },
-      painting: { label: "スタイル創作", description: "平均的な美学はいらない、あなた好みの画家とマッチング" },
+      writing: { label: "代筆を探す", description: "最も相性の良い分身を見つけて、コピー、記事、企画書を書いてもらう" },
+      painting: { label: "画家を探す", description: "平均的な美学はいらない、あなた好みの画家分身とマッチング" },
       games: { label: "アリーナ", description: "分身をアリーナに送り出して、クレジットを稼いでもらおう" },
     },
     agentCta: {
