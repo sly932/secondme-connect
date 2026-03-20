@@ -11,41 +11,43 @@ datasource db {
 }
 
 model User {
-  id             String                 @id @default(cuid())
-  createdAt      DateTime               @default(now())
-  updatedAt      DateTime               @updatedAt
-  secondmeId     String                 @unique
-  accessToken    String
-  refreshToken   String
-  tokenExpiry    DateTime
-  name           String
-  avatar         String?
-  bio            String?
-  shades         Json?
-  softmemory     Json?
-  embedding      Unsupported("vector")?
-  credits        Int                    @default(1000)
-  totalOrders    Int                    @default(0)
-  totalEarnings  Int                    @default(0)
-  apiKey         String?                @unique
-  apiKeyHash     String?                @unique
-  apiKeyPreview  String?
-  orderMode      OrderMode              @default(AUTO)
-  autoTopN       Int                    @default(5)
-  isNpc          Boolean                @default(false)
-  fontIndex      Int                    @default(0)
-  autoJoinGame   Boolean                @default(false)
-  boundUserId    String?
-  boundUser      User?                  @relation("npcBinding", fields: [boundUserId], references: [id])
-  boundNpcs      User[]                 @relation("npcBinding")
+  id              String                 @id @default(cuid())
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  secondmeId      String                 @unique
+  accessToken     String
+  refreshToken    String
+  tokenExpiry     DateTime
+  name            String
+  avatar          String?
+  bio             String?
+  shades          Json?
+  softmemory      Json?
+  autoMemory      Json?
+  embedding       Unsupported("vector")?
+  embeddingDirty  Boolean                @default(true)
+  credits         Int                    @default(1000)
+  totalOrders     Int                    @default(0)
+  totalEarnings   Int                    @default(0)
+  apiKey          String?                @unique
+  orderMode       OrderMode              @default(AUTO)
+  autoTopN        Int                    @default(5)
+  boundUserId     String?
+  isNpc           Boolean                @default(false)
+  autoJoinGame    Boolean                @default(false)
   lastDailyCredit DateTime?
-  creditLogs     CreditLog[]
-  gamePlayers    GamePlayer[]
-  createdRooms   GameRoom[]             @relation("roomCreator")
-  publishedTasks Task[]                 @relation("publisher")
-  receivedTasks  Task[]                 @relation("worker")
-  posts          Post[]                 @relation("PostAuthor")
-  comments       Comment[]              @relation("CommentAuthor")
+  apiKeyHash      String?                @unique
+  apiKeyPreview   String?
+  fontIndex       Int                    @default(0)
+  comments        Comment[]              @relation("CommentAuthor")
+  creditLogs      CreditLog[]
+  gamePlayers     GamePlayer[]
+  createdRooms    GameRoom[]             @relation("roomCreator")
+  posts           Post[]                 @relation("PostAuthor")
+  publishedTasks  Task[]                 @relation("publisher")
+  receivedTasks   Task[]                 @relation("worker")
+  boundUser       User?                  @relation("npcBinding", fields: [boundUserId], references: [id])
+  boundNpcs       User[]                 @relation("npcBinding")
 
   @@index([boundUserId])
   @@index([autoJoinGame, id])
@@ -69,9 +71,9 @@ model Task {
   publisherId String
   workerId    String?
   postId      String?
+  post        Post?         @relation("PostTasks", fields: [postId], references: [id])
   publisher   User          @relation("publisher", fields: [publisherId], references: [id])
   worker      User?         @relation("worker", fields: [workerId], references: [id])
-  post        Post?         @relation("PostTasks", fields: [postId], references: [id])
 
   @@index([publisherId])
   @@index([workerId])
@@ -172,12 +174,12 @@ model Post {
   id              String    @id @default(cuid())
   content         String
   authorId        String
+  createdAt       DateTime  @default(now())
   matchCandidates Json?
   matchedAt       DateTime?
-  author          User      @relation("PostAuthor", fields: [authorId], references: [id])
   comments        Comment[]
+  author          User      @relation("PostAuthor", fields: [authorId], references: [id])
   tasks           Task[]    @relation("PostTasks")
-  createdAt       DateTime  @default(now())
 
   @@index([authorId])
   @@index([createdAt])
@@ -189,9 +191,9 @@ model Comment {
   content   String
   postId    String
   authorId  String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author    User     @relation("CommentAuthor", fields: [authorId], references: [id])
   createdAt DateTime @default(now())
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([postId, authorId])
   @@index([postId])
