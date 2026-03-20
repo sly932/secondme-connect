@@ -134,11 +134,13 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
     setPostId(data.post?.id || null);
 
     const candidates = data.candidates || [];
-    return candidates.map((c: { userId: string; name: string; avatar: string | null }) => ({
-      id: c.userId,
-      name: c.name,
-      avatar: c.avatar,
-    }));
+    return candidates
+      .filter((c: { userId?: string; name?: string }) => c.userId && c.name)
+      .map((c: { userId: string; name: string; avatar: string | null }) => ({
+        id: c.userId,
+        name: c.name,
+        avatar: c.avatar,
+      }));
   };
 
   const dispatchTask = async (q: string, category: "WRITING" | "PAINTING"): Promise<MatchedWorker[]> => {
@@ -148,14 +150,16 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
       body: JSON.stringify({ description: q, category }),
     });
     const data = await res.json();
-    if (data.error || data.message?.includes("不足")) throw new Error(data.error || data.message);
+    if (data.error || data.message) throw new Error(data.error || data.message);
     setPostId(data.postId || null);
 
-    return (data.tasks || []).map((t: { worker: { id: string; name: string; avatar: string | null } }) => ({
-      id: t.worker.id,
-      name: t.worker.name,
-      avatar: t.worker.avatar,
-    }));
+    return (data.tasks || [])
+      .filter((t: { worker?: { id?: string } }) => t.worker?.id)
+      .map((t: { worker: { id: string; name: string; avatar: string | null } }) => ({
+        id: t.worker.id,
+        name: t.worker.name,
+        avatar: t.worker.avatar,
+      }));
   };
 
   const dispatchGame = async (): Promise<MatchedWorker[]> => {
@@ -170,7 +174,7 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
     setSpecialImage("/images/casino.jpg");
 
     return (data.room?.players || [])
-      .filter((p: { userId: string }) => p.userId !== session?.user?.id)
+      .filter((p: { userId?: string; user?: { name?: string } }) => p.userId && p.userId !== session?.user?.id && p.user?.name)
       .map((p: { userId: string; user: { name: string; avatar: string | null } }) => ({
         id: p.userId,
         name: p.user.name,
