@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUser, unauthorized, serverError } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, serverError } from "@/lib/api-auth";
 import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
 
@@ -10,6 +10,8 @@ export async function GET(
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl = applyRateLimit(req, user.id);
+    if (rl) return rl;
 
     const { id } = await params;
 

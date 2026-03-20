@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 import { findMatchingUsers } from "@/lib/vectors";
 import { executeConsultTask } from "@/lib/task-executor";
 import prisma from "@/lib/prisma";
@@ -12,6 +13,8 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl = applyRateLimit(req, user.id, RATE_LIMITS.heavy, "consult");
+    if (rl) return rl;
 
     const body = await req.json();
     const { description, topN = 5 } = body;

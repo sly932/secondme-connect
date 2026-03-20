@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 import { findMatchingUsers } from "@/lib/vectors";
 import { executeWritingTask, executePaintingTask } from "@/lib/task-executor";
 import prisma from "@/lib/prisma";
@@ -13,6 +14,8 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl = applyRateLimit(req, user.id, RATE_LIMITS.heavy, "tasks");
+    if (rl) return rl;
 
     const body = await req.json();
     const { description, category, topN = 5 } = body;
@@ -127,6 +130,8 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl2 = applyRateLimit(req, user.id);
+    if (rl2) return rl2;
 
     const url = new URL(req.url);
     const tab = url.searchParams.get("tab") || "published"; // published | received

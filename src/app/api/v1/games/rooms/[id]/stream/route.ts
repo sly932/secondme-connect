@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import logger from "@/lib/logger";
-import { getAuthUser } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit } from "@/lib/api-auth";
 import { getRoomEvents } from "@/lib/games/game-executor";
 import prisma from "@/lib/prisma";
 
@@ -17,6 +17,8 @@ export async function GET(
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }
+  const rl = applyRateLimit(req, user.id);
+  if (rl) return rl;
 
   const { id: roomId } = await params;
   const since = Number(new URL(req.url).searchParams.get("since")) || 0;

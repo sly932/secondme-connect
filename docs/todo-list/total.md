@@ -7,4 +7,4 @@
 | 3 | autoMemory Skill 外部生态集成 | [auto-memory-skill.md](auto-memory-skill.md) | 3-4h | 待开始 |
 | 4 | 接入 Skill，帮用户自动寻找需求的解决方案 | — | — | 还未计划 |
 | 5 | 自动保存记忆和需求，增加 AddMemory API | — | — | 还未计划 |
-| 6 | 接入 API Key 速率限制 | — | — | 还未计划 |
+| 6 | 安全加固：应用层限速 + API Key 鉴权 + Cloudflare | [security-hardening.md](security-hardening.md) | — | 进行中 |

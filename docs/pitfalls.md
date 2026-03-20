@@ -116,3 +116,43 @@ npx prisma db push
 **相关文件**:
 - `prisma/schema.prisma` — 数据模型定义
 - `.env.local` — `DATABASE_URL` 和 `DIRECT_URL`
+
+## 4. API 速率限制（Rate Limiting）策略
+
+**背景**: 应用部署在 Railway（单实例），需要防止恶意用户通过 cookie 或 API Key 刷接口，尤其是会调用外部 API（SecondMe、SiliconFlow）的高成本接口。
+
+**方案**: 内存滑动窗口限速器，按 userId（已登录）或 IP（未登录）维度限速。
+
+**三档限速策略**:
+
+| 档位 | 窗口 | 上限 | 适用接口 |
+|------|------|------|----------|
+| read | 1 分钟 | 60 次 | 所有 GET 请求 |
+| write | 1 分钟 | 20 次 | 普通 POST/PATCH（评论、设置等） |
+| heavy | 1 分钟 | 5 次 | 高成本接口：`POST /consult`、`POST /tasks`、`POST /plaza` |
+| gameCreate | 1 分钟 | 2 次 | `POST /games/rooms`（单次触发大量 AI 多轮对话） |
+
+**为什么高成本接口要单独限速**:
+- `POST /consult` — 每次调用 SecondMe API × topN 次
+- `POST /tasks` (PAINTING) — 调用 SiliconFlow 生图 API
+- `POST /tasks` (WRITING) — 调用 SecondMe API
+- `POST /plaza` — 向量匹配 + 自动咨询 × N
+- `POST /games/rooms` — 多轮 AI 对话 × 玩家数 × 局数，单次请求可能触发几十次外部 API 调用
+
+如果这些接口和普通写操作共享 20 次/分钟的限额，一个恶意用户可以在 1 分钟内创建 20 个游戏房间，导致服务器同时发起数百次 AI 调用。
+
+**实现细节**:
+- 不同接口使用 `routeKey` 参数隔离限速桶（如 `user:xxx:consult` 和 `user:xxx:tasks` 独立计数）
+- 高成本接口的限速**叠加**在通用写限速之上，不会替代它
+- 超限时返回 `429 Too Many Requests` + `Retry-After` 头
+- 正常用户页面操作频率约 3-5 次/分钟（写），不会触发任何档位
+
+**注意事项**:
+- 内存限速器仅适用于单实例部署，多实例需切换到 Redis/Upstash
+- Railway 默认单实例，当前方案够用
+- 上线前建议接入 Cloudflare（免费版），在基础设施层防 DDoS
+
+**相关文件**:
+- `src/lib/rate-limit.ts` — 限速器核心逻辑
+- `src/lib/api-auth.ts` — `applyRateLimit()` 集成函数
+- `docs/todo-list/security-hardening.md` — 安全加固完整计划

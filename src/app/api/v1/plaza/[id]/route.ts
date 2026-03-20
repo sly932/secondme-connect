@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { applyRateLimit } from "@/lib/api-auth";
 
 interface MatchCandidate {
   userId: string;
@@ -13,6 +14,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rl = applyRateLimit(req);
+  if (rl) return rl;
   const { id } = await params;
   const limit = Math.min(100, Math.max(10, Number(new URL(req.url).searchParams.get("commentsLimit")) || 50));
 

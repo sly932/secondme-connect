@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 import { findMatchingUsers } from "@/lib/vectors";
 import { executeConsultTask } from "@/lib/task-executor";
 import logger from "@/lib/logger";
@@ -9,6 +10,8 @@ import { TaskType, TaskStatus } from "@prisma/client";
 const CREDIT_PER_CONSULT = 1;
 
 export async function GET(req: NextRequest) {
+  const rl = applyRateLimit(req);
+  if (rl) return rl;
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit")) || 10));
@@ -59,6 +62,8 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl2 = applyRateLimit(req, user.id, RATE_LIMITS.heavy, "plaza-post");
+    if (rl2) return rl2;
 
     const body = await req.json();
     const content = body.content?.trim();

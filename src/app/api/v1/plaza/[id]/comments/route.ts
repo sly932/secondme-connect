@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getAuthUser, unauthorized, badRequest } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, badRequest } from "@/lib/api-auth";
 
 export async function POST(
   req: NextRequest,
@@ -8,6 +8,8 @@ export async function POST(
 ) {
   const user = await getAuthUser(req);
   if (!user) return unauthorized();
+  const rl = applyRateLimit(req, user.id);
+  if (rl) return rl;
 
   const { id: postId } = await params;
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUser, unauthorized, serverError } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, serverError } from "@/lib/api-auth";
 import { createApiKey } from "@/lib/apikey";
 import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
@@ -8,6 +8,8 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl = applyRateLimit(req, user.id);
+    if (rl) return rl;
 
     const settings = await prisma.user.findUnique({
       where: { id: user.id },
@@ -34,6 +36,8 @@ export async function PATCH(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl = applyRateLimit(req, user.id);
+    if (rl) return rl;
 
     const body = await req.json();
     const { regenerateApiKey, fontIndex } = body;

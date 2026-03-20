@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { taskEvents } from "@/lib/task-events";
+import { applyRateLimit } from "@/lib/api-auth";
 import prisma from "@/lib/prisma";
 
 /**
@@ -9,6 +10,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rl = applyRateLimit(req);
+  if (rl) return rl;
   const { id: taskId } = await params;
 
   // 先查任务当前状态

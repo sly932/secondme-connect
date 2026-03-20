@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
-import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 import { executeBlackjackGame, executeTexasGame } from "@/lib/games/game-executor";
 
 // POST /api/v1/games/rooms — 创建房间并开始游戏
@@ -13,6 +14,8 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl = applyRateLimit(req, user.id, RATE_LIMITS.gameCreate, "game-create");
+    if (rl) return rl;
 
     const body = await req.json();
     const { gameType, maxPlayers, minChips, totalRounds } = body;
@@ -162,6 +165,8 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl2 = applyRateLimit(req, user.id);
+    if (rl2) return rl2;
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status"); // PLAYING | COMPLETED | all

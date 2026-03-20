@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getAuthUser, unauthorized, badRequest, serverError } from "@/lib/api-auth";
+import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } from "@/lib/api-auth";
 import { executeConsultTask, executeWritingTask, executePaintingTask } from "@/lib/task-executor";
 import logger from "@/lib/logger";
 import { TaskType, TaskCategory, TaskStatus } from "@prisma/client";
@@ -23,6 +23,8 @@ export async function POST(
   try {
     const user = await getAuthUser(req);
     if (!user) return unauthorized();
+    const rl = applyRateLimit(req, user.id);
+    if (rl) return rl;
 
     const { id: postId } = await params;
     const body = await req.json();
