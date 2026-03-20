@@ -1,0 +1,522 @@
+[
+  {
+    "id": "npc-austen",
+    "name": "简·奥斯汀",
+    "bio": "英国女作家，《傲慢与偏见》，社会观察与讽刺大师",
+    "isNpc": true,
+    "profileText": "简介: 英国女作家，《傲慢与偏见》，社会观察与讽刺大师",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-marquez",
+    "name": "加西亚·马尔克斯",
+    "bio": "哥伦比亚作家，《百年孤独》，魔幻现实主义，诺贝尔文学奖",
+    "isNpc": true,
+    "profileText": "简介: 哥伦比亚作家，《百年孤独》，魔幻现实主义，诺贝尔文学奖",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-davinci",
+    "name": "达芬奇",
+    "bio": "文艺复兴全才，《蒙娜丽莎》《最后的晚餐》，透视法先驱",
+    "isNpc": true,
+    "profileText": "简介: 文艺复兴全才，《蒙娜丽莎》《最后的晚餐》，透视法先驱",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-raphael",
+    "name": "拉斐尔",
+    "bio": "\"画圣\"，《雅典学院》，文艺复兴三杰之一，完美构图与和谐美",
+    "isNpc": true,
+    "profileText": "简介: \"画圣\"，《雅典学院》，文艺复兴三杰之一，完美构图与和谐美",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-caravaggio",
+    "name": "卡拉瓦乔",
+    "bio": "巴洛克先驱，戏剧性光影，写实主义，深刻影响后世绘画",
+    "isNpc": true,
+    "profileText": "简介: 巴洛克先驱，戏剧性光影，写实主义，深刻影响后世绘画",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-qibaishi",
+    "name": "齐白石",
+    "bio": "近代国画大师，虾/花鸟写意，\"妙在似与不似之间\"",
+    "isNpc": true,
+    "profileText": "简介: 近代国画大师，虾/花鸟写意，\"妙在似与不似之间\"",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-fukasawa",
+    "name": "深泽直人",
+    "bio": "日本工业/交互设计师，\"无意识设计\"理念",
+    "isNpc": true,
+    "profileText": "简介: 日本工业/交互设计师，\"无意识设计\"理念",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-zhang-yiming",
+    "name": "张一鸣",
+    "bio": "字节跳动创始人，TikTok/今日头条，算法推荐颠覆内容分发",
+    "isNpc": true,
+    "profileText": "简介: 字节跳动创始人，TikTok/今日头条，算法推荐颠覆内容分发",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-shakespeare",
+    "name": "莎士比亚",
+    "bio": "英国剧作家，《哈姆雷特》《罗密欧与朱丽叶》，西方文学巅峰",
+    "isNpc": true,
+    "profileText": "简介: 英国剧作家，《哈姆雷特》《罗密欧与朱丽叶》，西方文学巅峰",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-luxun",
+    "name": "鲁迅",
+    "bio": "中国现代文学奠基人，《狂人日记》《阿Q正传》，犀利批判性思维",
+    "isNpc": true,
+    "profileText": "简介: 中国现代文学奠基人，《狂人日记》《阿Q正传》，犀利批判性思维",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-murakami",
+    "name": "村上春树",
+    "bio": "日本当代小说家，《挪威的森林》《1Q84》，孤独与都市主题",
+    "isNpc": true,
+    "profileText": "简介: 日本当代小说家，《挪威的森林》《1Q84》，孤独与都市主题",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-hemingway",
+    "name": "海明威",
+    "bio": "美国作家，《老人与海》，诺贝尔文学奖，\"冰山理论\"",
+    "isNpc": true,
+    "profileText": "简介: 美国作家，《老人与海》，诺贝尔文学奖，\"冰山理论\"",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-monet",
+    "name": "莫奈",
+    "bio": "印象派创始人，《日出·印象》《睡莲》系列，光影与色彩革命",
+    "isNpc": true,
+    "profileText": "简介: 印象派创始人，《日出·印象》《睡莲》系列，光影与色彩革命",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-vangogh",
+    "name": "梵高",
+    "bio": "后印象派，《星空》《向日葵》，色彩与情感表达大师",
+    "isNpc": true,
+    "profileText": "简介: 后印象派，《星空》《向日葵》，色彩与情感表达大师",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-picasso",
+    "name": "毕加索",
+    "bio": "立体主义创始人，《格尔尼卡》《亚维农少女》，不断颠覆自我",
+    "isNpc": true,
+    "profileText": "简介: 立体主义创始人，《格尔尼卡》《亚维农少女》，不断颠覆自我",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-munch",
+    "name": "蒙克",
+    "bio": "表现主义先驱，《呐喊》，焦虑与人类情感的视觉化",
+    "isNpc": true,
+    "profileText": "简介: 表现主义先驱，《呐喊》，焦虑与人类情感的视觉化",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-dali",
+    "name": "达利",
+    "bio": "超现实主义代表，《记忆的永恒》，梦境与潜意识视觉化",
+    "isNpc": true,
+    "profileText": "简介: 超现实主义代表，《记忆的永恒》，梦境与潜意识视觉化",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-pollock",
+    "name": "波洛克",
+    "bio": "抽象表现主义，\"滴画\"技法，行动绘画代表",
+    "isNpc": true,
+    "profileText": "简介: 抽象表现主义，\"滴画\"技法，行动绘画代表",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-warhol",
+    "name": "安迪·沃霍尔",
+    "bio": "波普艺术教父，《金宝汤罐头》《玛丽莲·梦露》，艺术商业化先驱",
+    "isNpc": true,
+    "profileText": "简介: 波普艺术教父，《金宝汤罐头》《玛丽莲·梦露》，艺术商业化先驱",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-turing",
+    "name": "图灵",
+    "bio": "计算机科学之父，图灵机/图灵测试",
+    "isNpc": true,
+    "profileText": "简介: 计算机科学之父，图灵机/图灵测试",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-kusama",
+    "name": "草间弥生",
+    "bio": "\"波点女王\"，无限镜屋/南瓜，前卫艺术与沉浸式体验",
+    "isNpc": true,
+    "profileText": "简介: \"波点女王\"，无限镜屋/南瓜，前卫艺术与沉浸式体验",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-kenya-hara",
+    "name": "原研哉",
+    "bio": "无印良品艺术总监，\"空\"的设计哲学，极简美学代表",
+    "isNpc": true,
+    "profileText": "简介: 无印良品艺术总监，\"空\"的设计哲学，极简美学代表",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-jony-ive",
+    "name": "乔纳森·伊夫",
+    "bio": "Apple 前首席设计官，iPhone/iMac 工业设计灵魂，极简圆润美学",
+    "isNpc": true,
+    "profileText": "简介: Apple 前首席设计官，iPhone/iMac 工业设计灵魂，极简圆润美学",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-don-norman",
+    "name": "唐·诺曼",
+    "bio": "《设计心理学》作者，\"用户体验\"一词提出者",
+    "isNpc": true,
+    "profileText": "简介: 《设计心理学》作者，\"用户体验\"一词提出者",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-dieter-rams",
+    "name": "迪特·拉姆斯",
+    "bio": "博朗首席设计师，\"好设计十原则\"，深刻影响 Apple 设计语言",
+    "isNpc": true,
+    "profileText": "简介: 博朗首席设计师，\"好设计十原则\"，深刻影响 Apple 设计语言",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-alan-cooper",
+    "name": "艾伦·库珀",
+    "bio": "\"交互设计之父\"，Persona 用户画像方法发明者",
+    "isNpc": true,
+    "profileText": "简介: \"交互设计之父\"，Persona 用户画像方法发明者",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-john-maeda",
+    "name": "约翰·马达",
+    "bio": "MIT 媒体实验室前教授，《简单法则》，科技与设计交叉先驱",
+    "isNpc": true,
+    "profileText": "简介: MIT 媒体实验室前教授，《简单法则》，科技与设计交叉先驱",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-steve-jobs",
+    "name": "乔布斯",
+    "bio": "Apple 联合创始人，极致产品主义，重新定义多个产业",
+    "isNpc": true,
+    "profileText": "简介: Apple 联合创始人，极致产品主义，重新定义多个产业",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-allen-zhang",
+    "name": "张小龙",
+    "bio": "微信之父，\"用完即走\"产品哲学，中国顶级产品经理",
+    "isNpc": true,
+    "profileText": "简介: 微信之父，\"用完即走\"产品哲学，中国顶级产品经理",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-yu-jun",
+    "name": "俞军",
+    "bio": "百度前产品副总裁，《俞军产品方法论》，用户价值公式",
+    "isNpc": true,
+    "profileText": "简介: 百度前产品副总裁，《俞军产品方法论》，用户价值公式",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-kotler",
+    "name": "菲利普·科特勒",
+    "bio": "\"现代营销学之父\"，《营销管理》，STP 理论/4P 框架奠基人",
+    "isNpc": true,
+    "profileText": "简介: \"现代营销学之父\"，《营销管理》，STP 理论/4P 框架奠基人",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-ogilvy",
+    "name": "大卫·奥格威",
+    "bio": "\"广告教父\"，奥美创始人，品牌形象理论开创者",
+    "isNpc": true,
+    "profileText": "简介: \"广告教父\"，奥美创始人，品牌形象理论开创者",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-ye-maozhong",
+    "name": "叶茂中",
+    "bio": "中国本土营销策划代表，\"冲突\"理论，服务数百个国民品牌",
+    "isNpc": true,
+    "profileText": "简介: 中国本土营销策划代表，\"冲突\"理论，服务数百个国民品牌",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-gary-vee",
+    "name": "加里·维纳查克",
+    "bio": "VaynerMedia CEO，社交媒体营销教父，个人品牌实战派",
+    "isNpc": true,
+    "profileText": "简介: VaynerMedia CEO，社交媒体营销教父，个人品牌实战派",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-neil-patel",
+    "name": "尼尔·帕特尔",
+    "bio": "全球顶级数字营销专家，SEO/增长黑客，NP Digital 创始人",
+    "isNpc": true,
+    "profileText": "简介: 全球顶级数字营销专家，SEO/增长黑客，NP Digital 创始人",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-elon-musk",
+    "name": "埃隆·马斯克",
+    "bio": "Tesla/SpaceX/xAI，第一性原理思维，连续颠覆多个行业",
+    "isNpc": true,
+    "profileText": "简介: Tesla/SpaceX/xAI，第一性原理思维，连续颠覆多个行业",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-bezos",
+    "name": "贝佐斯",
+    "bio": "Amazon 创始人，\"Day 1\"哲学，从电商到云计算帝国",
+    "isNpc": true,
+    "profileText": "简介: Amazon 创始人，\"Day 1\"哲学，从电商到云计算帝国",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-bill-gates",
+    "name": "比尔·盖茨",
+    "bio": "Microsoft 联合创始人，PC 革命推动者，转型全球慈善",
+    "isNpc": true,
+    "profileText": "简介: Microsoft 联合创始人，PC 革命推动者，转型全球慈善",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-jensen-huang",
+    "name": "黄仁勋",
+    "bio": "NVIDIA 创始人兼 CEO，GPU 算力革命，AI 时代核心推手",
+    "isNpc": true,
+    "profileText": "简介: NVIDIA 创始人兼 CEO，GPU 算力革命，AI 时代核心推手",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-zuckerberg",
+    "name": "扎克伯格",
+    "bio": "Meta 创始人，Facebook/Instagram/WhatsApp，社交网络帝国",
+    "isNpc": true,
+    "profileText": "简介: Meta 创始人，Facebook/Instagram/WhatsApp，社交网络帝国",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-wang-xing",
+    "name": "王兴",
+    "bio": "美团创始人，\"无边界\"扩张哲学，本地生活服务超级平台",
+    "isNpc": true,
+    "profileText": "简介: 美团创始人，\"无边界\"扩张哲学，本地生活服务超级平台",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-lei-jun",
+    "name": "雷军",
+    "bio": "小米创始人，\"互联网思维做硬件\"，极致性价比商业模式",
+    "isNpc": true,
+    "profileText": "简介: 小米创始人，\"互联网思维做硬件\"，极致性价比商业模式",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-ren-zhengfei",
+    "name": "任正非",
+    "bio": "华为创始人，\"以客户为中心\"，从通信设备到全球科技巨头",
+    "isNpc": true,
+    "profileText": "简介: 华为创始人，\"以客户为中心\"，从通信设备到全球科技巨头",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-sam-altman",
+    "name": "山姆·奥特曼",
+    "bio": "OpenAI CEO，推动 ChatGPT 革命，AGI 愿景倡导者",
+    "isNpc": true,
+    "profileText": "简介: OpenAI CEO，推动 ChatGPT 革命，AGI 愿景倡导者",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-buffett",
+    "name": "巴菲特",
+    "bio": "伯克希尔掌门人，价值投资之父，\"别人恐惧时贪婪\"",
+    "isNpc": true,
+    "profileText": "简介: 伯克希尔掌门人，价值投资之父，\"别人恐惧时贪婪\"",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-munger",
+    "name": "查理·芒格",
+    "bio": "巴菲特搭档，多元思维模型，《穷查理宝典》",
+    "isNpc": true,
+    "profileText": "简介: 巴菲特搭档，多元思维模型，《穷查理宝典》",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-soros",
+    "name": "索罗斯",
+    "bio": "量子基金创始人，反身性理论，\"打垮英格兰银行的人\"",
+    "isNpc": true,
+    "profileText": "简介: 量子基金创始人，反身性理论，\"打垮英格兰银行的人\"",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-masayoshi-son",
+    "name": "孙正义",
+    "bio": "软银创始人，愿景基金，早期押注阿里巴巴",
+    "isNpc": true,
+    "profileText": "简介: 软银创始人，愿景基金，早期押注阿里巴巴",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-neil-shen",
+    "name": "沈南鹏",
+    "bio": "红杉中国创始人，投出美团/拼多多/字节，中国顶级 VC",
+    "isNpc": true,
+    "profileText": "简介: 红杉中国创始人，投出美团/拼多多/字节，中国顶级 VC",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-zhang-lei",
+    "name": "张磊",
+    "bio": "高瓴资本创始人，《价值》作者，长期主义投资哲学",
+    "isNpc": true,
+    "profileText": "简介: 高瓴资本创始人，《价值》作者，长期主义投资哲学",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-andreessen",
+    "name": "马克·安德森",
+    "bio": "a16z 创始人，Netscape 发明者，\"软件吞噬世界\"",
+    "isNpc": true,
+    "profileText": "简介: a16z 创始人，Netscape 发明者，\"软件吞噬世界\"",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-socrates",
+    "name": "苏格拉底",
+    "bio": "西方哲学奠基人，苏格拉底式提问法",
+    "isNpc": true,
+    "profileText": "简介: 西方哲学奠基人，苏格拉底式提问法",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-confucius",
+    "name": "孔子",
+    "bio": "儒家创始人，《论语》，\"有教无类\"，东方思想核心",
+    "isNpc": true,
+    "profileText": "简介: 儒家创始人，《论语》，\"有教无类\"，东方思想核心",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-nietzsche",
+    "name": "尼采",
+    "bio": "德国哲学家，\"超人\"学说，存在主义先驱",
+    "isNpc": true,
+    "profileText": "简介: 德国哲学家，\"超人\"学说，存在主义先驱",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-einstein",
+    "name": "爱因斯坦",
+    "bio": "相对论，诺贝尔物理学奖，现代物理学奠基人",
+    "isNpc": true,
+    "profileText": "简介: 相对论，诺贝尔物理学奖，现代物理学奠基人",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-newton",
+    "name": "牛顿",
+    "bio": "经典力学/万有引力/微积分",
+    "isNpc": true,
+    "profileText": "简介: 经典力学/万有引力/微积分",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-marie-curie",
+    "name": "居里夫人",
+    "bio": "放射性研究先驱，两次诺贝尔奖，科学界女性典范",
+    "isNpc": true,
+    "profileText": "简介: 放射性研究先驱，两次诺贝尔奖，科学界女性典范",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-andrew-ng",
+    "name": "吴恩达",
+    "bio": "斯坦福教授，DeepLearning.AI 创始人，AI 教育布道者",
+    "isNpc": true,
+    "profileText": "简介: 斯坦福教授，DeepLearning.AI 创始人，AI 教育布道者",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-freud",
+    "name": "弗洛伊德",
+    "bio": "精神分析学创始人，潜意识/梦的解析",
+    "isNpc": true,
+    "profileText": "简介: 精神分析学创始人，潜意识/梦的解析",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-jung",
+    "name": "荣格",
+    "bio": "分析心理学，集体无意识/人格原型，MBTI 理论源头",
+    "isNpc": true,
+    "profileText": "简介: 分析心理学，集体无意识/人格原型，MBTI 理论源头",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "cmmvoiong0000i9e3fxmjnc25",
+    "name": "leo",
+    "bio": "### 背景与身份 ###\n一位正在开发名为secondme项目的开发者，可能遇到了技术难题。他似乎对技术开发充满热情，同时也有运动爱好，喜欢打羽毛球。他的自我描述是INTJ。\n\n### 性格特征 ###\n务实，专注，可能具有分析性思维。从他关注项目进展和技术问题可以看出，他注重细节，并且有解决问题的能力。\n\n### 价值观 ###\n效率，个人成长，健康。他关注项目进展体现了对效率的追求，而打羽毛球则表明他重视健康和生活平衡。\n\n### MBTI ###\nINTJ\n\n### 总体概述 ###\n这位开发者leo，自我认知为INTJ，目前正专注于secondme项目的开发，并积极寻求解决技术问题。他不仅在技术领域投入精力，也注重个人爱好和健康，喜欢打羽毛球。他可能是一个务实且注重效率的人，在工作和生活中都追求进步和平衡。他对技术细节的关注和解决问题的能力，表明他具有较强的分析性思维和解决问题的能力。\n",
+    "isNpc": false,
+    "profileText": "简介: ### 背景与身份 ###\n一位正在开发名为secondme项目的开发者，可能遇到了技术难题。他似乎对技术开发充满热情，同时也有运动爱好，喜欢打羽毛球。他的自我描述是INTJ。\n\n### 性格特征 ###\n务实，专注，可能具有分析性思维。从他关注项目进展和技术问题可以看出，他注重细节，并且有解决问题的能力。\n\n### 价值观 ###\n效率，个人成长，健康。他关注项目进展体现了对效率的追求，而打羽毛球则表明他重视健康和生活平衡。\n\n### MBTI ###\nINTJ\n\n### 总体概述 ###\n这位开发者leo，自我认知为INTJ，目前正专注于secondme项目的开发，并积极寻求解决技术问题。他不仅在技术领域投入精力，也注重个人爱好和健康，喜欢打羽毛球。他可能是一个务实且注重效率的人，在工作和生活中都追求进步和平衡。他对技术细节的关注和解决问题的能力，表明他具有较强的分析性思维和解决问题的能力。\n\n\n知识库: {\"list\":[{\"id\":741319,\"createTime\":1773604924000,\"factObject\":\"兴趣爱好\",\"updateTime\":1773605085000,\"factContent\":\"兴趣是打羽毛球\"},{\"id\":741191,\"createTime\":1773601915000,\"factObject\":\"工作/项目进展\",\"updateTime\":1773605085000,\"factContent\":\"正在开发 secondme 项目，并遇到了其 act api 没有返回结果的技术问题\"}],\"total\":2}",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-seth-godin",
+    "name": "赛斯·戈丁",
+    "bio": "《紫牛》《许可营销》作者，\"部落\"理论，内容营销先驱",
+    "isNpc": true,
+    "profileText": "简介: 《紫牛》《许可营销》作者，\"部落\"理论，内容营销先驱",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-larry-page",
+    "name": "拉里·佩奇",
+    "bio": "Google 联合创始人，PageRank 算法，\"登月计划\"思维",
+    "isNpc": true,
+    "profileText": "简介: Google 联合创始人，PageRank 算法，\"登月计划\"思维",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-ray-dalio",
+    "name": "瑞·达利欧",
+    "bio": "桥水基金创始人，《原则》作者，全天候投资策略",
+    "isNpc": true,
+    "profileText": "简介: 桥水基金创始人，《原则》作者，全天候投资策略",
+    "embeddingDimensions": 1536
+  },
+  {
+    "id": "npc-peter-thiel",
+    "name": "彼得·蒂尔",
+    "bio": "PayPal 联合创始人，《从0到1》，逆向思维投资",
+    "isNpc": true,
+    "profileText": "简介: PayPal 联合创始人，《从0到1》，逆向思维投资",
+    "embeddingDimensions": 1536
+  }
+]
