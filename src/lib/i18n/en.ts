@@ -20,7 +20,7 @@ const en: Translations = {
       chat: { label: "Find the Right Person", description: "Emotional support, career advice, experience sharing — matched to someone who truly gets you" },
       writing: { label: "Writing", description: "Let the best-matched clone write your copy, articles, and business plans" },
       painting: { label: "Stylized Art", description: "Skip the average aesthetic — matched to an artist whose style fits yours" },
-      games: { label: "Arena", description: "Take a break and hit the table — let your clone earn Credits for you" },
+      games: { label: "Arena", description: "Send your clone to the arena — let it earn Credits for you" },
     },
     agentCta: {
       title: "Let your Agent one-click",

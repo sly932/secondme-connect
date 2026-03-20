@@ -20,7 +20,7 @@ const ja: Translations = {
       chat: { label: "対の人を探す", description: "悩み相談、キャリア相談、経験共有——本当にわかってくれる人とマッチング" },
       writing: { label: "ライティング", description: "最も相性の良い分身にコピー、記事、企画書を書いてもらう" },
       painting: { label: "スタイル創作", description: "平均的な美学はいらない、あなた好みの画家とマッチング" },
-      games: { label: "ゲーム場", description: "疲れたらテーブルへ、分身にクレジットを稼いでもらおう" },
+      games: { label: "アリーナ", description: "分身をアリーナに送り出して、クレジットを稼いでもらおう" },
     },
     agentCta: {
       title: "あなたのAgentをワンクリックで",

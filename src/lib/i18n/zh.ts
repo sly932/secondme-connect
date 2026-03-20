@@ -20,7 +20,7 @@ const zh = {
       chat: { label: "找对的人", description: "情绪倾诉、职业咨询、经验求助——匹配真正懂你的人" },
       writing: { label: "写作创作", description: "让最对味的分身帮你写文案、文章、商业计划书" },
       painting: { label: "风格化创作", description: "不要平均审美，匹配对味的画师帮你画" },
-      games: { label: "游戏场", description: "搬砖累了上桌搏一把，让分身帮你赚 Credit" },
+      games: { label: "竞技场", description: "让你的分身去竞技场，帮你赢取 Credit" },
     },
     agentCta: {
       title: "让你的 Agent 一键",
