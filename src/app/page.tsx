@@ -60,7 +60,53 @@ export default function Home() {
   const [copiedCmd, setCopiedCmd] = useState(false);
   const [origin, setOrigin] = useState("");
 
+  // API Key state
+  const [apiKeyPreview, setApiKeyPreview] = useState<string | null>(null);
+  const [apiKeyFull, setApiKeyFull] = useState<string | null>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   useEffect(() => { setOrigin(window.location.origin); }, []);
+
+  // Fetch API Key preview when logged in
+  useEffect(() => {
+    if (session) {
+      fetch("/api/v1/settings")
+        .then((r) => r.json())
+        .then((d) => { if (d.hasApiKey) setApiKeyPreview(d.apiKeyPreview); })
+        .catch(() => {});
+    }
+  }, [session]);
+
+  const handleGenerateApiKey = async () => {
+    if (!session) { window.location.href = "/api/auth/login"; return; }
+    setApiKeyLoading(true);
+    try {
+      const res = await fetch("/api/v1/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ regenerateApiKey: true }),
+      });
+      const data = await res.json();
+      if (data.newApiKey) {
+        setApiKeyFull(data.newApiKey);
+        setApiKeyPreview(data.apiKeyPreview);
+        setShowApiKey(true);
+      }
+    } catch {}
+    setApiKeyLoading(false);
+  };
+
+  const copyApiKey = () => {
+    const key = showApiKey && apiKeyFull ? apiKeyFull : apiKeyPreview;
+    if (key) {
+      navigator.clipboard.writeText(key);
+      setCopiedKey(true);
+      setTimeout(() => setCopiedKey(false), 2000);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/v1/plaza?limit=3")
@@ -77,7 +123,7 @@ export default function Home() {
 
   const handleConnect = () => {
     if (!session) {
-      window.location.href = "/api/auth/login";
+      setShowLoginModal(true);
       return;
     }
     setTab("chat");
@@ -176,6 +222,90 @@ export default function Home() {
         </div>
       </section>
 
+      {/* API Key CTA */}
+      <section className="px-4 sm:px-6 pb-12 sm:pb-16">
+        <div className="max-w-2xl mx-auto text-center space-y-4 sm:space-y-5">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            {t.landing.apiKeyCta.title}
+          </h2>
+
+          {/* Key display box */}
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-zinc-700 dark:via-zinc-600 dark:to-zinc-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+            <div className="relative flex items-center bg-gray-950 dark:bg-zinc-900 rounded-xl border border-gray-800 dark:border-zinc-700 overflow-hidden">
+              <div className="flex-1 px-5 py-4 font-mono text-sm text-gray-300 overflow-x-auto whitespace-nowrap scrollbar-hide">
+                {!session ? (
+                  <span className="text-gray-500">{t.landing.apiKeyCta.loginFirst}</span>
+                ) : apiKeyPreview ? (
+                  showApiKey && apiKeyFull ? apiKeyFull : apiKeyPreview
+                ) : (
+                  <span className="text-gray-500">ck-••••••••••••••••</span>
+                )}
+              </div>
+              {session && apiKeyPreview && (
+                <>
+                  <button
+                    onClick={() => setShowApiKey((v) => !v)}
+                    disabled={!apiKeyFull}
+                    className="flex-shrink-0 px-4 py-4 text-gray-400 hover:text-white transition-colors border-l border-gray-800 dark:border-zinc-700 hover:bg-gray-800 dark:hover:bg-zinc-800 disabled:opacity-40"
+                  >
+                    {showApiKey ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={copyApiKey}
+                    className="flex-shrink-0 px-4 py-4 text-gray-400 hover:text-white transition-colors border-l border-gray-800 dark:border-zinc-700 hover:bg-gray-800 dark:hover:bg-zinc-800"
+                  >
+                    {copiedKey ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Action button */}
+          {!session ? (
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-black text-sm font-semibold rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-95"
+            >
+              {t.landing.loginModal.btn}
+            </button>
+          ) : (
+            <button
+              onClick={handleGenerateApiKey}
+              disabled={apiKeyLoading}
+              className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-black text-sm font-semibold rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-95 disabled:opacity-50"
+            >
+              {apiKeyLoading ? "..." : apiKeyPreview ? t.landing.apiKeyCta.regenerate : t.landing.apiKeyCta.generate}
+            </button>
+          )}
+
+          <p className="text-sm text-gray-400 dark:text-zinc-500">
+            {t.landing.apiKeyCta.subtitle}
+          </p>
+        </div>
+      </section>
+
       {/* 内嵌对话区 */}
       <section className="px-4 sm:px-6 pb-16 sm:pb-20">
         <ConnectPanel />
@@ -225,6 +355,54 @@ export default function Home() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setShowLoginModal(false)}
+          />
+          <div className="relative w-full max-w-sm mx-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-700 shadow-2xl p-6 space-y-5 animate-scale-in">
+            {/* SecondMe icon */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="4" stroke="white" strokeWidth="2" />
+                  <path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="17" cy="6" r="2.5" fill="white" opacity="0.6" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {t.landing.loginModal.title}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-zinc-400 text-center">
+                {t.landing.loginModal.desc}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => { window.location.href = "/api/auth/login"; }}
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="3.5" stroke="white" strokeWidth="1.5" />
+                  <path d="M5 19c0-2.761 3.134-5 7-5s7 2.239 7 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                  <circle cx="16.5" cy="6" r="2" fill="white" opacity="0.6" />
+                </svg>
+                {t.landing.loginModal.btn}
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                {t.landing.loginModal.cancel}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Footer */}
