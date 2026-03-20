@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import html2canvas from "html2canvas";
+// html2canvas 动态导入，避免 SSR 问题
 import { usePathname } from "next/navigation";
 import { useUserStore, useThemeStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import { useT, useLocale, type Locale } from "@/lib/i18n";
@@ -69,16 +69,30 @@ export function Navbar() {
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   const handleSaveShareCard = useCallback(async () => {
-    if (!shareCardRef.current) return;
-    const canvas = await html2canvas(shareCardRef.current, {
-      useCORS: true,
-      scale: 2,
-      backgroundColor: null,
-    });
-    const link = document.createElement("a");
-    link.download = "connect-portrait.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    const el = shareCardRef.current;
+    if (!el) return;
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(el, {
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: "#ffffff",
+      });
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "connect-portrait.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    } catch (err) {
+      console.error("Save share card failed:", err);
+    }
   }, []);
 
   const fetchPortrait = async () => {
