@@ -169,6 +169,27 @@ body {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
 }
 
+/* Box-drawing animation for Connect panel reveal */
+@keyframes drawPath {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawPathFadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes panelContentReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Scrollbar hide */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
