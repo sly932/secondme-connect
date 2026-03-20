@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" rx="160" ry="160" fill="#ffffff"></rect>
+  <text x="400" y="415" font-family="'Caveat', cursive" font-size="148" font-weight="700" fill="#000000" text-anchor="middle" dominant-baseline="middle">Connect</text>
+  <rect x="200" y="475" width="400" height="4" rx="2" fill="#000000" opacity="0.12"></rect>
+  <text x="400" y="518" font-family="'Caveat', cursive" font-size="38" font-weight="400" fill="#000000" text-anchor="middle" opacity="0.45">find the right one</text>
+</svg>
