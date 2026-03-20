@@ -14,3 +14,8 @@
 | 10 | SecondMe 接入 MCP | — | — | 还未计划 |
 | 11 | SecondMe 应用商店上架 | — | — | 还未计划 |
 | 12 | 增加分身肖像生成功能 | — | — | 还未计划 |
+| 13 | Landing Page 新增 API Key 生成模块 | — | — | ✅ 已完成（终端风格 UI + 生成/重新生成按钮 + 多语言） |
+| 14 | Landing Page Connect 按钮改为 SecondMe 登录弹窗 | — | — | ✅ 已完成（SecondMe 品牌图标 + 多语言） |
+| 15 | Embedding 切换 SiliconFlow + 全量重建 | — | — | ✅ 已完成（Qwen3-Embedding-0.6B, 1024维, 145用户全部重建） |
+| 16 | Navbar 同步档案按钮 | — | — | ✅ 已完成（异步调用 + spinner + toast + 速率限制） |
+| 17 | SecondMe API 全面测试 + Client ID/Secret 修复 | — | — | ✅ 已完成（Token Refresh / UserInfo / Shades / Softmemory / Chat） |
