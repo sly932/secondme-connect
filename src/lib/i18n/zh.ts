@@ -17,10 +17,10 @@ const zh = {
   landing: {
     slogan: "连接对的人，帮你做对的事。",
     featureCards: {
-      chat: { label: "找人聊聊", description: "向量匹配最合适的分身，自动发起深度对话" },
-      writing: { label: "写作任务", description: "让分身帮你撰写文案、文章、商业计划书" },
-      painting: { label: "绘画任务", description: "分身生成创意提示词，AI 工具完成绘画" },
-      games: { label: "游戏市场", description: "和 AI 分身博弈对战，赢取 credit" },
+      chat: { label: "找对的人", description: "情绪倾诉、职业咨询、经验求助——匹配真正懂你的人" },
+      writing: { label: "写作创作", description: "让最对味的分身帮你写文案、文章、商业计划书" },
+      painting: { label: "风格化创作", description: "不要平均审美，匹配对味的画师帮你画" },
+      games: { label: "游戏场", description: "搬砖累了上桌搏一把，让分身帮你赚 Credit" },
     },
     agentCta: {
       title: "让你的 Agent 一键",

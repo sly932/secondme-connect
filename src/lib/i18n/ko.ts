@@ -17,10 +17,10 @@ const ko: Translations = {
   landing: {
     slogan: "적절한 사람과 연결하고, 올바른 일을 해냅니다.",
     featureCards: {
-      chat: { label: "상담하기", description: "벡터 매칭으로 최적의 분신과 심층 대화 자동 시작" },
-      writing: { label: "글쓰기", description: "분신이 카피, 기사, 사업계획서를 작성해줍니다" },
-      painting: { label: "그림 그리기", description: "분신이 창의적 프롬프트를 생성, AI 도구가 그림 완성" },
-      games: { label: "게임", description: "AI 분신과 대결하고 크레딧 획득" },
+      chat: { label: "맞는 사람 찾기", description: "고민 상담, 커리어 조언, 경험 공유——진짜 이해해주는 사람과 매칭" },
+      writing: { label: "글쓰기", description: "가장 잘 맞는 분신이 카피, 기사, 사업계획서를 작성" },
+      painting: { label: "스타일 창작", description: "평범한 미학은 그만, 취향에 맞는 화가와 매칭" },
+      games: { label: "게임장", description: "지쳤으면 테이블로, 분신이 크레딧을 벌어줍니다" },
     },
     agentCta: {
       title: "당신의 Agent를 원클릭으로",

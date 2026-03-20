@@ -17,10 +17,10 @@ const ja: Translations = {
   landing: {
     slogan: "適切な人とつながり、正しいことを実現する。",
     featureCards: {
-      chat: { label: "相談する", description: "ベクトルマッチで最適な分身と深い対話を自動開始" },
-      writing: { label: "ライティング", description: "分身にコピー、記事、ビジネスプランを書いてもらう" },
-      painting: { label: "ペインティング", description: "分身がクリエイティブプロンプトを生成、AIツールが描画" },
-      games: { label: "ゲーム", description: "AI分身と対戦してクレジットを獲得" },
+      chat: { label: "対の人を探す", description: "悩み相談、キャリア相談、経験共有——本当にわかってくれる人とマッチング" },
+      writing: { label: "ライティング", description: "最も相性の良い分身にコピー、記事、企画書を書いてもらう" },
+      painting: { label: "スタイル創作", description: "平均的な美学はいらない、あなた好みの画家とマッチング" },
+      games: { label: "ゲーム場", description: "疲れたらテーブルへ、分身にクレジットを稼いでもらおう" },
     },
     agentCta: {
       title: "あなたのAgentをワンクリックで",

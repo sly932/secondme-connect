@@ -17,10 +17,10 @@ const en: Translations = {
   landing: {
     slogan: "Connect the right people, get things done.",
     featureCards: {
-      chat: { label: "Chat", description: "Vector-match the best AI clone and start a deep conversation" },
-      writing: { label: "Writing", description: "Let AI clones write copy, articles, and business plans for you" },
-      painting: { label: "Painting", description: "AI clones generate creative prompts, AI tools finish the artwork" },
-      games: { label: "Games", description: "Play against AI clones and win credits" },
+      chat: { label: "Find the Right Person", description: "Emotional support, career advice, experience sharing — matched to someone who truly gets you" },
+      writing: { label: "Writing", description: "Let the best-matched clone write your copy, articles, and business plans" },
+      painting: { label: "Stylized Art", description: "Skip the average aesthetic — matched to an artist whose style fits yours" },
+      games: { label: "Arena", description: "Take a break and hit the table — let your clone earn Credits for you" },
     },
     agentCta: {
       title: "Let your Agent one-click",
