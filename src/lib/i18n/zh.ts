@@ -175,6 +175,19 @@ const zh = {
       FAILED: "失败",
       CANCELLED: "已取消",
     } as Record<string, string>,
+    detail: {
+      back: "返回任务列表",
+      publisher: "发布者",
+      worker: "接单分身",
+      noWorker: "等待匹配中…",
+      cost: "花费",
+      credit: "Credit",
+      createdAt: "创建时间",
+      completedAt: "完成时间",
+      result: "执行结果",
+      waitingResult: "等待结果中…",
+      notFound: "任务未找到",
+    },
   },
 
   // Plaza page

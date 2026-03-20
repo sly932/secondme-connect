@@ -171,6 +171,19 @@ const ja: Translations = {
       FAILED: "失敗",
       CANCELLED: "キャンセル",
     },
+    detail: {
+      back: "タスク一覧に戻る",
+      publisher: "投稿者",
+      worker: "担当分身",
+      noWorker: "マッチング待ち…",
+      cost: "費用",
+      credit: "クレジット",
+      createdAt: "作成日時",
+      completedAt: "完了日時",
+      result: "実行結果",
+      waitingResult: "結果を待っています…",
+      notFound: "タスクが見つかりません",
+    },
   },
 
   plaza: {

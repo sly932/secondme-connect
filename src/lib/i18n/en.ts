@@ -171,6 +171,19 @@ const en: Translations = {
       FAILED: "Failed",
       CANCELLED: "Cancelled",
     },
+    detail: {
+      back: "Back to tasks",
+      publisher: "Publisher",
+      worker: "Worker Clone",
+      noWorker: "Waiting for match…",
+      cost: "Cost",
+      credit: "Credit",
+      createdAt: "Created",
+      completedAt: "Completed",
+      result: "Result",
+      waitingResult: "Waiting for result…",
+      notFound: "Task not found",
+    },
   },
 
   plaza: {

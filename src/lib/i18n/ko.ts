@@ -171,6 +171,19 @@ const ko: Translations = {
       FAILED: "실패",
       CANCELLED: "취소됨",
     },
+    detail: {
+      back: "작업 목록으로 돌아가기",
+      publisher: "게시자",
+      worker: "담당 분신",
+      noWorker: "매칭 대기 중…",
+      cost: "비용",
+      credit: "크레딧",
+      createdAt: "생성 시간",
+      completedAt: "완료 시간",
+      result: "실행 결과",
+      waitingResult: "결과 대기 중…",
+      notFound: "작업을 찾을 수 없습니다",
+    },
   },
 
   plaza: {
