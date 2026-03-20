@@ -22,12 +22,6 @@ export default function FeedPage() {
   const [search, setSearch] = useState("");
   const [now, setNow] = useState<number | null>(null);
 
-  // Cache: store posts per tab so switching doesn't re-fetch
-  const cacheRef = useRef<Record<FeedTab, { posts: FeedPost[]; page: number; hasMore: boolean } | null>>({
-    all: null,
-    mine: null,
-  });
-
   useEffect(() => {
     setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), 60_000);
@@ -45,27 +39,21 @@ export default function FeedPage() {
       const res = await fetch(`/api/v1/plaza?${params}`);
       const data = await res.json();
       if (data.success) {
-        const newPosts = append ? [...(cacheRef.current[currentTab]?.posts || []), ...data.posts] : data.posts;
-        const newHasMore = pageNum < data.pagination.totalPages;
-        setPosts(newPosts);
-        setHasMore(newHasMore);
-        cacheRef.current[currentTab] = { posts: newPosts, page: pageNum, hasMore: newHasMore };
+        if (append) {
+          setPosts((prev) => [...prev, ...data.posts]);
+        } else {
+          setPosts(data.posts);
+        }
+        setHasMore(pageNum < data.pagination.totalPages);
       }
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, [session?.user?.id]);
 
-  // Initial load & tab switch
+  // Initial load & tab switch — always re-fetch
   useEffect(() => {
-    const cached = cacheRef.current[tab];
-    if (cached && !search) {
-      setPosts(cached.posts);
-      setPage(cached.page);
-      setHasMore(cached.hasMore);
-      setLoading(false);
-      return;
-    }
     setPage(1);
+    setPosts([]);
     fetchPosts(1, search, tab);
   }, [tab, search, fetchPosts]);
 
@@ -92,11 +80,6 @@ export default function FeedPage() {
     return () => observer.disconnect();
   }, [hasMore, loading, posts.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleTabSwitch = (newTab: FeedTab) => {
-    if (newTab === tab) return;
-    setTab(newTab);
-  };
-
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 bg-gray-50/50 dark:bg-zinc-950">
       <div className="max-w-2xl mx-auto space-y-5">
@@ -108,7 +91,7 @@ export default function FeedPage() {
               {(["all", "mine"] as FeedTab[]).map((key) => (
                 <button
                   key={key}
-                  onClick={() => handleTabSwitch(key)}
+                  onClick={() => { if (key !== tab) setTab(key); }}
                   className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
                     tab === key
                       ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm"
@@ -128,7 +111,7 @@ export default function FeedPage() {
             <input
               type="text"
               value={search}
-              onChange={(e) => { setSearch(e.target.value); cacheRef.current = { all: null, mine: null }; }}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder={t.feed.searchPlaceholder}
               className="w-full bg-white dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none input-focus transition-all"
             />
