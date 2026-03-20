@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { FeedItem, type FeedPost } from "@/components/FeedItem";
 import { useT } from "@/lib/i18n";
 
@@ -10,6 +11,8 @@ type FeedTab = "all" | "mine";
 export default function FeedPage() {
   const t = useT();
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const expandPostId = searchParams.get("expand");
 
   const [tab, setTab] = useState<FeedTab>("all");
   const [posts, setPosts] = useState<FeedPost[]>([]);
@@ -162,7 +165,7 @@ export default function FeedPage() {
         {/* Feed list */}
         <div className="space-y-4">
           {posts.map((post) => (
-            <FeedItem key={post.id} post={post} now={now} />
+            <FeedItem key={post.id} post={post} now={now} defaultExpanded={post.id === expandPostId} />
           ))}
         </div>
 

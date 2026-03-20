@@ -133,10 +133,10 @@ export default function Home() {
   }
 
   // ---- Transition: ConnectPanel finished matching ----
-  const handleAllReady = useCallback((_postId: string | null) => {
+  const handleAllReady = useCallback((postId: string | null) => {
     setTransitioning(true);
     setTimeout(() => {
-      router.push("/feed");
+      router.push(postId ? `/feed?expand=${postId}` : "/feed");
     }, 600);
   }, [router]);
 
