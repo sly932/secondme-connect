@@ -120,6 +120,9 @@ const ja: Translations = {
     assignedTo: "{count}人の分身に割り当てました",
     taskCreated: "タスクが作成されました",
     createFailed: "作成に失敗しました",
+    smartPlaceholder: "チャット、執筆、お絵描き、ゲーム、自画像生成？何でも言ってください...",
+    recognizing: "理解中...",
+    portraitGenerated: "自画像が生成されました",
   },
 
   profile: {

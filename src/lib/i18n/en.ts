@@ -120,6 +120,9 @@ const en: Translations = {
     assignedTo: "Assigned to {count} clones",
     taskCreated: "Task created",
     createFailed: "Creation failed",
+    smartPlaceholder: "Chat, write, paint, play games, generate portrait? Just say it...",
+    recognizing: "Understanding...",
+    portraitGenerated: "Portrait generated",
   },
 
   profile: {

@@ -121,6 +121,9 @@ const zh = {
     assignedTo: "已分配给 {count} 个分身",
     taskCreated: "任务已创建",
     createFailed: "创建失败",
+    smartPlaceholder: "想聊天、写文案、画图、玩游戏、生成自画像？直接说就行...",
+    recognizing: "理解中...",
+    portraitGenerated: "自画像已生成",
   },
 
   // Profile page

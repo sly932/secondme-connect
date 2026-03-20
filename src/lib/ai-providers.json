@@ -2,9 +2,11 @@
   "providers": {
     "SILICONFLOW_IMAGE_URL": "https://api.siliconflow.cn/v1/images/generations",
     "SILICONFLOW_EMBEDDING_URL": "https://api.siliconflow.cn/v1/embeddings",
+    "OPENROUTER_CHAT_URL": "https://openrouter.ai/api/v1/chat/completions",
     "SILICONFLOW_IMAGE_MODEL": "Kwai-Kolors/Kolors",
     "SILICONFLOW_AVATAR_MODEL": "Qwen/Qwen-Image",
-    "SILICONFLOW_EMBEDDING_MODEL": "Qwen/Qwen3-Embedding-0.6B"
+    "SILICONFLOW_EMBEDDING_MODEL": "Qwen/Qwen3-Embedding-0.6B",
+    "OPENROUTER_INTENT_MODEL": "anthropic/claude-sonnet-4-6"
   },
   "services": {
     "taskImage": {
@@ -24,6 +26,12 @@
       "url": "SILICONFLOW_EMBEDDING_URL",
       "model": "SILICONFLOW_EMBEDDING_MODEL",
       "apiKeyEnv": "SILICONFLOW_API_KEY"
+    },
+    "intentRouter": {
+      "_comment": "用户输入意图识别，路由到对应接口（consult/writing/painting/game/portrait）",
+      "url": "OPENROUTER_CHAT_URL",
+      "model": "OPENROUTER_INTENT_MODEL",
+      "apiKeyEnv": "OPENROUTER_API_KEY"
     }
   }
 }

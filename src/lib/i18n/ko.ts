@@ -120,6 +120,9 @@ const ko: Translations = {
     assignedTo: "{count}명의 분신에게 할당",
     taskCreated: "작업이 생성되었습니다",
     createFailed: "생성 실패",
+    smartPlaceholder: "대화, 글쓰기, 그림, 게임, 자화상 생성? 그냥 말하세요...",
+    recognizing: "이해 중...",
+    portraitGenerated: "자화상이 생성되었습니다",
   },
 
   profile: {

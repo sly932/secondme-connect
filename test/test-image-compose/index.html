@@ -86,7 +86,7 @@
     }
     .toggle-btn:hover { border-color: #646cff; }
     .toggle-btn.active { border-color: #646cff; background: rgba(100, 108, 255, 0.15); }
-    .toggle-btn.active-green { border-color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+    .toggle-btn[data-model].active { border-color: #4ade80; background: rgba(74, 222, 128, 0.1); }
     .generate-btn {
       padding: 10px 28px;
       border-radius: 8px;
@@ -173,6 +173,33 @@
     .loading-cell .label-text { font-size: 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Request preview */
+    .request-preview {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 500px;
+      overflow-y: auto;
+      line-height: 1.5;
+      grid-column: 1 / -1;
+    }
+    .request-preview .key { color: #79c0ff; }
+    .request-preview .str { color: #a5d6ff; }
+    .request-preview .truncated { color: #f97583; font-style: italic; }
+    .req-tab-bar {
+      display: flex; gap: 8px; margin-bottom: 8px; grid-column: 1 / -1;
+    }
+    .req-tab {
+      padding: 6px 14px; border-radius: 6px; border: 1px solid #333;
+      background: transparent; color: #aaa; font-size: 12px; cursor: pointer;
+    }
+    .req-tab.active { border-color: #646cff; color: #fff; background: rgba(100,108,255,0.1); }
+
     /* Modal */
     .modal-overlay {
       display: none; position: fixed;
@@ -215,9 +242,12 @@
       </div>
       <div class="control-group">
         <span class="group-label">模型:</span>
-        <button class="toggle-btn active-green active" data-model="gemini">Gemini 2.5 Flash</button>
-        <button class="toggle-btn active-green active" data-model="gpt5mini">GPT-5 Mini</button>
+        <button class="toggle-btn active" data-model="gemini">Gemini 2.5 Flash</button>
+        <button class="toggle-btn active" data-model="gpt5">GPT-5 Image Mini</button>
       </div>
+      <button class="generate-btn" id="previewReqBtn" disabled style="background:#444;">
+        🔍 查看请求
+      </button>
       <button class="generate-btn" id="generateBtn" disabled>
         生成合成图 <span class="task-count" id="taskCount"></span>
       </button>
@@ -240,12 +270,13 @@
   <script>
     const uploadedImages = [];
     const selectedStyles = new Set(['cartoon', 'pixel']);
-    const selectedModels = new Set(['gemini', 'gpt5mini']);
+    const selectedModels = new Set(['gemini', 'gpt5']);
 
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const previewGrid = document.getElementById('previewGrid');
     const generateBtn = document.getElementById('generateBtn');
+    const previewReqBtn = document.getElementById('previewReqBtn');
     const resultsGrid = document.getElementById('resultsGrid');
     const taskCount = document.getElementById('taskCount');
     const modal = document.getElementById('modal');
@@ -276,7 +307,9 @@
     }
 
     function updateGenerateBtn() {
-      generateBtn.disabled = uploadedImages.length < 2 || selectedStyles.size === 0 || selectedModels.size === 0;
+      const disabled = uploadedImages.length < 2 || selectedStyles.size === 0 || selectedModels.size === 0;
+      generateBtn.disabled = disabled;
+      previewReqBtn.disabled = disabled;
     }
 
     // Drop zone
@@ -290,16 +323,39 @@
     });
     fileInput.addEventListener('change', () => handleFiles(fileInput.files));
 
+    const MAX_SIZE = 512; // 压缩到最大 512px
+
     function handleFiles(files) {
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
         const reader = new FileReader();
         reader.onload = (e) => {
-          uploadedImages.push({ name: file.name, dataUrl: e.target.result });
-          renderPreviews();
+          compressImage(e.target.result, file.name);
         };
         reader.readAsDataURL(file);
       }
+    }
+
+    function compressImage(dataUrl, name) {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > MAX_SIZE || h > MAX_SIZE) {
+          const ratio = Math.min(MAX_SIZE / w, MAX_SIZE / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.85);
+        const sizeKB = Math.round((compressed.length - compressed.indexOf(',')) / 1024 * 0.75);
+        console.log(`${name}: ${img.width}x${img.height} → ${w}x${h}, ~${sizeKB}KB`);
+        uploadedImages.push({ name, dataUrl: compressed });
+        renderPreviews();
+      };
+      img.src = dataUrl;
     }
 
     function renderPreviews() {
@@ -326,27 +382,23 @@
 
     // Prompts
     function getPrompt(style) {
+      const n = uploadedImages.length;
       const custom = document.getElementById('customPrompt').value.trim();
+
+      const rules = `Generate exactly one 512x512 image. Include all ${n} characters from the reference portraits. Keep each character's distinctive features recognizable.`;
+
       if (custom) {
-        return `${custom}\n\nStyle requirement: ${style === 'pixel' ? 'Pixel art / 16-bit retro style' : 'Keep the same cute cartoon/illustration style as the original portraits'}`;
+        return `${custom}\n\n${rules}\nStyle: ${style === 'pixel' ? 'Pixel art / 16-bit retro style' : 'Same cute cartoon/illustration style as the originals'}`;
       }
       if (style === 'pixel') {
-        return `Please generate a new image based on these character portraits.
-The image should show all these characters in a PIXEL ART style, sitting around a table chatting together.
-Convert each character into pixel art form while keeping their distinctive features recognizable.
-Use a retro pixel art aesthetic — 16-bit style with a cozy indoor scene.
-Each character should be clearly recognizable from their original portrait.`;
+        return `Generate one image of these ${n} characters sitting around a table chatting, in pixel art / 16-bit retro style. ${rules}`;
       }
-      return `Please generate a new image based on these character portraits.
-The image should show all these characters sitting together in a cozy café, chatting and having fun.
-IMPORTANT: Keep the same cute cartoon/illustration art style as the original portraits.
-The characters should look like they're from the same world — warm colors, soft lighting, detailed background.
-Make sure each character's appearance (hair, clothes, features) matches their original portrait closely.`;
+      return `Generate one image of these ${n} characters sitting together in a cozy café, chatting and having fun. Keep the same cute cartoon/illustration art style as the original portraits. ${rules}`;
     }
 
     const MODEL_LABELS = {
       gemini: { name: 'Gemini 2.5 Flash', cls: 'gemini' },
-      gpt5mini: { name: 'GPT-5 Mini', cls: 'gpt' },
+      gpt5: { name: 'GPT-5 Image Mini', cls: 'gpt' },
     };
     const STYLE_LABELS = { cartoon: '🎨 原图风格', pixel: '👾 像素风' };
 
@@ -412,13 +464,7 @@ Make sure each character's appearance (hair, clothes, features) matches their or
 
       const ml = MODEL_LABELS[task.model];
       const content = data.content || '';
-
-      // Extract image
-      const imgMatch = content.match(/!\[.*?\]\((.*?)\)/);
-      const b64Match = content.match(/data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)/);
-      let imageUrl = data.imageUrl || null;
-      if (b64Match) imageUrl = `data:image/${b64Match[1]};base64,${b64Match[2]}`;
-      else if (imgMatch && imgMatch[1].startsWith('http')) imageUrl = imgMatch[1];
+      const imageUrl = data.imageUrl || null;
 
       const div = document.createElement('div');
       div.className = 'result-item';
@@ -456,6 +502,83 @@ Make sure each character's appearance (hair, clothes, features) matches their or
         </div>
         <div class="text-result" style="color:#f88">${message}</div>`;
       slot.replaceWith(div);
+    }
+
+    // Build request payload (same as callAPI but returns the object)
+    function buildRequestPayload(style, model) {
+      const MODEL_IDS = {
+        gemini: 'google/gemini-2.5-flash-image',
+        gpt5: 'openai/gpt-5-image-mini',
+      };
+      return {
+        model: MODEL_IDS[model],
+        messages: [
+          {
+            role: 'user',
+            content: [
+              ...uploadedImages.map(img => ({
+                type: 'image_url',
+                image_url: { url: img.dataUrl },
+              })),
+              { type: 'text', text: getPrompt(style) },
+            ],
+          },
+        ],
+      };
+    }
+
+    // Truncate base64 for display
+    function truncateForDisplay(obj) {
+      return JSON.stringify(obj, (k, v) => {
+        if (typeof v === 'string' && v.startsWith('data:image')) {
+          const header = v.slice(0, v.indexOf(',') + 1);
+          return header + '<<BASE64_DATA_' + Math.round((v.length - header.length) / 1024) + 'KB>>';
+        }
+        return v;
+      }, 2);
+    }
+
+    // Preview request button
+    previewReqBtn.addEventListener('click', () => {
+      const tasks = [];
+      for (const style of selectedStyles) {
+        for (const model of selectedModels) {
+          tasks.push({ style, model });
+        }
+      }
+      if (tasks.length === 0) return;
+
+      // Tab bar + first request
+      let html = '<div class="req-tab-bar">';
+      tasks.forEach((t, i) => {
+        const ml = MODEL_LABELS[t.model];
+        html += `<button class="req-tab ${i === 0 ? 'active' : ''}" data-idx="${i}">${STYLE_LABELS[t.style]} × ${ml.name}</button>`;
+      });
+      html += '</div>';
+
+      // Pre-build all payloads
+      const payloads = tasks.map(t => buildRequestPayload(t.style, t.model));
+
+      tasks.forEach((t, i) => {
+        const display = truncateForDisplay(payloads[i]);
+        html += `<div class="request-preview" id="reqPreview-${i}" style="${i > 0 ? 'display:none' : ''}">${escapeHtml(display)}</div>`;
+      });
+
+      resultsGrid.innerHTML = html;
+
+      // Tab switching
+      resultsGrid.querySelectorAll('.req-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          resultsGrid.querySelectorAll('.req-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          resultsGrid.querySelectorAll('.request-preview').forEach(p => p.style.display = 'none');
+          document.getElementById(`reqPreview-${tab.dataset.idx}`).style.display = 'block';
+        });
+      });
+    });
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     updateTaskCount();

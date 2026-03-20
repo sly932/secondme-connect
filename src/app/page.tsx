@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useRef } from "react";
-import { usePanelStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
+import { useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import { useT, useLocale } from "@/lib/i18n";
 import { ConnectPanel } from "@/components/ConnectPanel";
 import Link from "next/link";
@@ -19,7 +19,6 @@ interface PlazaPost {
 
 export default function Home() {
   const { data: session } = useSession();
-  const { setTab, setTaskSubType } = usePanelStore();
   const logoFont = useFontStore((s) => s.logoFont);
   const t = useT();
   const { locale } = useLocale();
@@ -29,30 +28,24 @@ export default function Home() {
   const FEATURE_CARDS = [
     {
       id: "chat",
-      tab: "chat" as const,
       image: "/images/consulting.png",
       label: t.landing.featureCards.chat.label,
       description: t.landing.featureCards.chat.description,
     },
     {
       id: "writing",
-      tab: "tasks" as const,
-      subType: "WRITING" as const,
       image: "/images/writing.png",
       label: t.landing.featureCards.writing.label,
       description: t.landing.featureCards.writing.description,
     },
     {
       id: "painting",
-      tab: "tasks" as const,
-      subType: "PAINTING" as const,
       image: "/images/painting.png",
       label: t.landing.featureCards.painting.label,
       description: t.landing.featureCards.painting.description,
     },
     {
       id: "games",
-      tab: "games" as const,
       image: "/images/casino.jpg",
       label: t.landing.featureCards.games.label,
       description: t.landing.featureCards.games.description,
@@ -117,22 +110,20 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  const openPanel = (tab?: "chat" | "tasks" | "games", subType?: "WRITING" | "PAINTING") => {
+  const openPanel = () => {
     if (!session) {
       setShowLoginModal(true);
       return;
     }
-    if (tab) setTab(tab);
-    if (subType) setTaskSubType(subType);
     setPanelOpen(true);
   };
 
-  const handleCardClick = (card: typeof FEATURE_CARDS[number]) => {
-    openPanel(card.tab, card.subType);
+  const handleCardClick = () => {
+    openPanel();
   };
 
   const handleConnect = () => {
-    openPanel("chat");
+    openPanel();
   };
 
   const localeMap: Record<string, string> = { zh: "zh-CN", en: "en-US", ja: "ja-JP", ko: "ko-KR" };
@@ -236,7 +227,7 @@ export default function Home() {
             image: card.image,
             label: card.label,
             description: card.description,
-            onClick: () => handleCardClick(card),
+            onClick: () => handleCardClick(),
           }))}
         />
       </section>
