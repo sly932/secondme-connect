@@ -317,7 +317,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* ---- Connect Panel (stays visible, moves up during transition) ---- */}
+      {/* ---- Connect Panel with line-draw animation ---- */}
       {panelOpen && (
         <div
           className={`transition-all duration-500 ease-in-out ${
@@ -326,15 +326,50 @@ export default function Home() {
               : "px-4 sm:px-6 -mt-4"
           }`}
         >
-          <ConnectPanel onAllReady={handleAllReady} />
-          {!transitioning && (
-            <button
-              onClick={() => setPanelOpen(false)}
-              className="mt-3 text-sm text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors mx-auto block"
+          <div className="w-full max-w-2xl mx-auto relative">
+            {/* SVG 画线动画：两条路径从顶部中心同时出发 */}
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none z-10"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              style={{ animation: 'drawPathFadeOut 0.3s ease-out 0.9s forwards' }}
             >
-              {t.landing.loginModal.cancel || "收起"}
-            </button>
-          )}
+              <path
+                d="M 50,0 L 100,0 L 100,100 L 50,100"
+                pathLength="1"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                vectorEffect="non-scaling-stroke"
+                className="text-gray-300 dark:text-zinc-600"
+                style={{ strokeDasharray: 1, strokeDashoffset: 1, animation: 'drawPath 0.8s ease-out forwards' }}
+              />
+              <path
+                d="M 50,0 L 0,0 L 0,100 L 50,100"
+                pathLength="1"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                vectorEffect="non-scaling-stroke"
+                className="text-gray-300 dark:text-zinc-600"
+                style={{ strokeDasharray: 1, strokeDashoffset: 1, animation: 'drawPath 0.8s ease-out forwards' }}
+              />
+            </svg>
+
+            <div style={{ animation: 'panelContentReveal 0.4s ease-out 0.65s both' }}>
+              <ConnectPanel onAllReady={handleAllReady} />
+            </div>
+
+            {!transitioning && (
+              <button
+                onClick={() => setPanelOpen(false)}
+                className="mt-3 text-sm text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors mx-auto block"
+                style={{ animation: 'panelContentReveal 0.3s ease-out 1s both' }}
+              >
+                {t.landing.loginModal.cancel || "收起"}
+              </button>
+            )}
+          </div>
         </div>
       )}
 
