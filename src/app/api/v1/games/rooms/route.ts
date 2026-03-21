@@ -4,6 +4,7 @@ import logger from "@/lib/logger";
 import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } from "@/lib/api-auth";
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { executeBlackjackGame, executeTexasGame } from "@/lib/games/game-executor";
+import { TaskType, TaskStatus } from "@prisma/client";
 
 // POST /api/v1/games/rooms — 创建房间并开始游戏
 export async function POST(req: NextRequest) {
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
       .sort(() => Math.random() - 0.5)
       .slice(0, aiUserCount);
 
-    const room = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const creator = await tx.user.findUnique({
         where: { id: user.id },
         select: { credits: true },
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return await tx.gameRoom.create({
+      const gameRoom = await tx.gameRoom.create({
         data: {
           gameType,
           maxPlayers: players,
@@ -111,12 +112,51 @@ export async function POST(req: NextRequest) {
           },
         },
         include: {
-          players: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+          players: { include: { user: { select: { id: true, name: true, avatar: true, portraitUrl: true } } } },
         },
       });
+
+      // 创建动态 Post + Task（让游戏出现在 feed 中）
+      const gameLabel = gameType === "BLACKJACK" ? "21点" : "德州扑克";
+      const matchCandidates = aiUsers.map((ai) => {
+        const player = gameRoom.players.find((p) => p.userId === ai.id);
+        return {
+          userId: ai.id,
+          name: player?.user.name || ai.name,
+          avatar: player?.user.avatar || null,
+          bio: null,
+          similarity: 0,
+        };
+      });
+
+      const post = await tx.post.create({
+        data: {
+          content: `发起了一局${gameLabel}`,
+          authorId: user.id,
+          matchCandidates: matchCandidates,
+          matchedAt: new Date(),
+        },
+      });
+
+      await tx.task.create({
+        data: {
+          type: TaskType.GAME,
+          category: gameType as "BLACKJACK" | "TEXAS_HOLDEM",
+          status: TaskStatus.EXECUTING,
+          description: `${gameLabel} · ${players}人 · ${rounds}局`,
+          creditCost: totalCost,
+          publisherId: user.id,
+          postId: post.id,
+          gameRoomId: gameRoom.id,
+        },
+      });
+
+      return { room: gameRoom, postId: post.id };
     }, { timeout: 15000 });
 
-    logger.info("Game room created", { roomId: room.id, gameType, players, rounds });
+    const { room, postId } = result;
+
+    logger.info("Game room created", { roomId: room.id, postId, gameType, players, rounds });
 
     // 异步启动游戏
     const executor = gameType === "BLACKJACK" ? executeBlackjackGame : executeTexasGame;
@@ -132,6 +172,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      postId,
       room: {
         id: room.id,
         gameType: room.gameType,
@@ -141,8 +182,8 @@ export async function POST(req: NextRequest) {
         status: room.status,
         players: room.players.map((p) => ({
           id: p.id,
-          name: p.user.name,
-          avatar: p.user.avatar,
+          userId: p.userId,
+          user: { name: p.user.name, avatar: p.user.avatar, portraitUrl: p.user.portraitUrl },
           position: p.position,
           isCreator: p.isCreator,
           isAI: p.isAI,

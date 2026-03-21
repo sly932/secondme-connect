@@ -178,6 +178,7 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
 
     setSpecialImage("/images/casino.jpg");
     setGameRoomId(data.room?.id || null);
+    setPostId(data.postId || null);
 
     return (data.room?.players || [])
       .filter((p: { userId?: string; user?: { name?: string } }) => p.userId && p.userId !== session?.user?.id && p.user?.name)
@@ -317,7 +318,20 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
               className="w-full h-28 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none input-focus focus:outline-none transition-all"
             />
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
+              {/* Quick actions */}
+              <div className="flex flex-wrap gap-1.5">
+                {SAMPLE_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => setInput(chip)}
+                    className="px-3 py-1.5 text-xs bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/30 dark:to-indigo-900/30 text-violet-700 dark:text-violet-300 rounded-full border border-violet-200 dark:border-violet-800/60 hover:border-violet-400 dark:hover:border-violet-600 hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
               {/* Scene tags */}
               <div className="flex flex-wrap gap-1.5">
                 {CHIP_GROUPS.map((group, idx) => (

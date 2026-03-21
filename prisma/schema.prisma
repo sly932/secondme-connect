@@ -73,7 +73,9 @@ model Task {
   publisherId String
   workerId    String?
   postId      String?
+  gameRoomId  String?
   post        Post?         @relation("PostTasks", fields: [postId], references: [id])
+  gameRoom    GameRoom?     @relation("TaskGameRoom", fields: [gameRoomId], references: [id])
   publisher   User          @relation("publisher", fields: [publisherId], references: [id])
   worker      User?         @relation("worker", fields: [workerId], references: [id])
 
@@ -81,6 +83,7 @@ model Task {
   @@index([workerId])
   @@index([status])
   @@index([postId])
+  @@index([gameRoomId])
   @@map("tasks")
 }
 
@@ -112,6 +115,7 @@ model GameRoom {
   players      GamePlayer[]
   creator      User         @relation("roomCreator", fields: [creatorId], references: [id])
   rounds       GameRound[]
+  tasks        Task[]       @relation("TaskGameRoom")
 
   @@index([creatorId])
   @@index([status])
@@ -210,11 +214,14 @@ enum OrderMode {
 enum TaskType {
   CONSULT
   MARKETPLACE
+  GAME
 }
 
 enum TaskCategory {
   WRITING
   PAINTING
+  BLACKJACK
+  TEXAS_HOLDEM
 }
 
 enum GameType {
