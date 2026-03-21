@@ -121,12 +121,14 @@ function PortraitCard({ card, index, onClick }: { card: MatchCard; index: number
 function DetailModal({
   cards,
   initialIndex,
+  postId,
   postAuthor,
   postContent,
   onClose,
 }: {
   cards: MatchCard[];
   initialIndex: number;
+  postId: string;
   postAuthor: Author;
   postContent: string;
   onClose: () => void;
@@ -142,7 +144,7 @@ function DetailModal({
   const [slideAnim, setSlideAnim] = useState<"none" | "slide-left" | "slide-right">("none");
   const pendingIndex = useRef<number | null>(null);
 
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/feed?expand=${postId}` : "";
 
   const card = cards[currentIndex];
   if (!card) return null;
@@ -567,7 +569,7 @@ function DetailModal({
                 </div>
                 <div className="flex-shrink-0 rounded-md p-1" style={{ background: "#fff" }}>
                   <div className="w-14 h-14 flex items-center justify-center">
-                    <QRBlock url={siteUrl} />
+                    <QRBlock url={shareUrl} />
                   </div>
                 </div>
               </div>
@@ -625,8 +627,18 @@ function QRBlock({ url }: { url: string }) {
 export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) {
   const t = useT();
   const { data: session } = useSession();
+  const itemRef = useRef<HTMLDivElement>(null);
 
   const [expanded, setExpanded] = useState(defaultExpanded);
+
+  // 通过二维码跳转时，自动滚动到该帖子
+  useEffect(() => {
+    if (defaultExpanded && itemRef.current) {
+      setTimeout(() => {
+        itemRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, [defaultExpanded]);
   const [matchCards, setMatchCards] = useState<MatchCard[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -787,7 +799,7 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
   const taskIcon = TASK_ICONS[post.taskCategory || post.taskType] || "💬";
 
   return (
-    <>
+    <div ref={itemRef}>
       {/* ---- Feed card with hover effect ---- */}
       <div className="rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-zinc-700/80 hover:bg-gray-50/50 dark:hover:bg-zinc-900/50 hover:shadow-sm transition-all duration-200 px-3 py-3 -mx-3 cursor-pointer">
         {/* Query row: avatar → line → content */}
@@ -899,11 +911,12 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
         <DetailModal
           cards={matchCards}
           initialIndex={modalIndex}
+          postId={post.id}
           postAuthor={post.author}
           postContent={post.content}
           onClose={() => setModalIndex(null)}
         />
       )}
-    </>
+    </div>
   );
 }

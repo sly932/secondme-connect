@@ -136,7 +136,7 @@ const ja: Translations = {
     title: "フィード",
     all: "すべて",
     mine: "自分の",
-    matches: "件マッチ",
+    matches: "件タスク",
     comments: "件コメント",
     processing: "処理中...",
     failed: "タスク失敗",

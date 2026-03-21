@@ -136,7 +136,7 @@ const en: Translations = {
     title: "Feed",
     all: "All",
     mine: "Mine",
-    matches: "matches",
+    matches: "tasks",
     comments: "comments",
     processing: "Processing...",
     failed: "Task failed",

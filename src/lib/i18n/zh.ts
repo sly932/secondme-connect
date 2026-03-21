@@ -187,7 +187,7 @@ const zh = {
     title: "动态",
     all: "全部",
     mine: "我的",
-    matches: "个匹配",
+    matches: "个任务",
     comments: "条评论",
     processing: "处理中...",
     failed: "任务失败",

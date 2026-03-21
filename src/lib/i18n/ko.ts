@@ -136,7 +136,7 @@ const ko: Translations = {
     title: "피드",
     all: "전체",
     mine: "내 것",
-    matches: "개 매치",
+    matches: "개 작업",
     comments: "개 댓글",
     processing: "처리 중...",
     failed: "작업 실패",

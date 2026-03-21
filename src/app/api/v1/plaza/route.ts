@@ -44,14 +44,13 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     success: true,
     posts: posts.map((p) => {
-      const matchCandidates = p.matchCandidates as unknown[] | null;
       const firstTask = p.tasks[0];
       return {
         id: p.id,
         content: p.content,
         author: p.author,
         commentCount: p._count.comments,
-        matchCount: matchCandidates ? matchCandidates.length : 0,
+        matchCount: p._count.tasks,
         taskCategory: firstTask?.category || null,
         taskType: firstTask?.type || "CONSULT",
         createdAt: p.createdAt,
