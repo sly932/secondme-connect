@@ -144,7 +144,8 @@ const ko: Translations = {
     share: "공유",
     saveImage: "이미지 저장",
     back: "뒤로",
-    shareText: "Connect에서 {name}과 깊은 대화를 나눴어요. 당신도 해보세요!",
+    shareText: "내 분신이 Connect에서 {name}의 분신과 연결됐어요. 구경 오세요!",
+    shareTextPainting: "Connect에서 {name}에게 그림을 그려달라고 했어요. 당신도 체험해보세요!",
     shareScan: "스캔하여 Connect 체험",
   },
 

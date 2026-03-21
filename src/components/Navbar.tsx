@@ -4,7 +4,6 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-// html2canvas 动态导入，避免 SSR 问题
 import { usePathname } from "next/navigation";
 import { useUserStore, useThemeStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import { useT, useLocale, type Locale } from "@/lib/i18n";
@@ -71,24 +70,14 @@ export function Navbar() {
     const el = shareCardRef.current;
     if (!el) return;
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(el, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        backgroundColor: "#ffffff",
-      });
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "connect-portrait.png";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, "image/png");
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: "#ffffff" });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${name || "Connect"}-自画像.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (err) {
       console.error("Save share card failed:", err);
     }

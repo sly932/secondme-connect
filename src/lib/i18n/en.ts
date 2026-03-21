@@ -144,7 +144,8 @@ const en: Translations = {
     share: "Share",
     saveImage: "Save Image",
     back: "Back",
-    shareText: "I had a deep conversation with {name} on Connect. Try it out!",
+    shareText: "My avatar connected with {name}'s avatar on Connect. Come check it out!",
+    shareTextPainting: "I got {name} to paint me a picture on Connect. Come try it out!",
     shareScan: "Scan to try Connect",
   },
 

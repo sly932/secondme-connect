@@ -224,33 +224,18 @@ function DetailModal({
     const el = shareCardRef.current;
     if (!el) return;
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      // Force sRGB colors to avoid "lab()" parse errors in html2canvas
-      el.style.colorScheme = "light";
-      const canvas = await html2canvas(el, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        backgroundColor: "#ffffff",
-        // Ignore unsupported CSS color functions
-        ignoreElements: (element) => element.tagName === "STYLE",
-      });
-      el.style.colorScheme = "";
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `connect-${card.name}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, "image/png");
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: "#ffffff" });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${postAuthor.name}-${card.name}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (err) {
       console.error("Save share card failed:", err);
     }
-  }, [card.name]);
+  }, [card.name, postAuthor.name]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -507,10 +492,10 @@ function DetailModal({
             className="relative w-full max-w-xs mx-4 max-h-[80vh] flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Share card content (captured by html2canvas) — force light colors for capture */}
+            {/* Share card content */}
             <div
               ref={shareCardRef}
-              className="overflow-y-auto"
+              className="overflow-hidden"
               style={{ background: "#ffffff", color: "#111" }}
             >
               {/* Header */}
@@ -564,7 +549,7 @@ function DetailModal({
                   <img src={card.task.resultUrl} alt="painting" className="w-full rounded-lg" />
                 )}
                 {!isPainting && card.task?.result && (
-                  <div className="rounded-lg p-3" style={{ background: "#f9fafb" }}>
+                  <div className="rounded-lg p-3 overflow-hidden" style={{ background: "#f9fafb", maxHeight: 200 }}>
                     <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "#444" }}>
                       {card.task.result}
                     </p>
@@ -576,7 +561,7 @@ function DetailModal({
               <div className="px-5 py-3 flex items-end justify-between gap-2" style={{ borderTop: "1px solid #f0f0f0" }}>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium leading-relaxed" style={{ color: "#444" }}>
-                    {t.feed.shareText.replace("{name}", card.name)}
+                    {(isPainting ? t.feed.shareTextPainting : t.feed.shareText).replace("{name}", card.name)}
                   </p>
                   <p className="mt-0.5 text-[10px]" style={{ color: "#aaa" }}>
                     {t.feed.shareScan}
@@ -609,7 +594,7 @@ function DetailModal({
   );
 }
 
-// Simple QR code block using inline SVG data (for html2canvas compatibility)
+// Simple QR code block using inline SVG data
 function QRBlock({ url }: { url: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [QRComponent, setQR] = useState<React.ComponentType<any> | null>(null);

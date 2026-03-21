@@ -144,7 +144,8 @@ const ja: Translations = {
     share: "共有",
     saveImage: "画像を保存",
     back: "戻る",
-    shareText: "Connectで{name}と深い対話をしました。あなたも試してみて！",
+    shareText: "私の分身がConnectで{name}の分身とつながりました。見に来てね！",
+    shareTextPainting: "Connectで{name}に絵を描いてもらいました。あなたも体験してみて！",
     shareScan: "スキャンしてConnectを体験",
   },
 
