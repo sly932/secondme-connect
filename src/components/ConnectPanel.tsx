@@ -42,10 +42,10 @@ function SmallAvatar({ name, avatar, size = 32 }: { name: string; avatar: string
   );
 }
 
-function PortraitCard({ worker, index }: { worker: MatchedWorker; index: number }) {
+function PortraitCard({ worker, index, fill }: { worker: MatchedWorker; index: number; fill?: boolean }) {
   return (
     <div
-      className="relative w-16 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0 animate-fade-in-up"
+      className={`relative rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 animate-fade-in-up ${fill ? "w-full aspect-[4/5]" : "w-16 h-20 flex-shrink-0"}`}
       style={{ animationDelay: `${index * 150}ms`, animationFillMode: "both" }}
     >
       {worker.portraitUrl ? (
@@ -166,7 +166,7 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
     const res = await fetch("/api/v1/games/rooms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gameType: "BLACKJACK", maxPlayers: 4, minChips: 10, totalRounds: 5 }),
+      body: JSON.stringify({ gameType: "TEXAS_HOLDEM", maxPlayers: 6, minChips: 10, totalRounds: 5 }),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed");
@@ -404,25 +404,32 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
               </div>
             )}
 
-            {/* Matched worker portrait cards */}
-            {workers.length > 0 && (
+            {/* Game layout: casino image left + players grid right */}
+            {specialImage && workers.length > 0 && (
+              <div className="py-3 animate-fade-in-up" style={{ animationFillMode: "both" }}>
+                <div className="flex gap-3">
+                  {/* Casino image (appears first) */}
+                  <div className="w-[120px] h-[168px] rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0 animate-fade-in-up" style={{ animationFillMode: "both" }}>
+                    <img src={specialImage} alt="casino" className="w-full h-full object-cover" />
+                  </div>
+                  {/* Players grid 3 per row */}
+                  <div className="flex-1 grid grid-cols-3 gap-1.5 content-start">
+                    {workers.map((w, i) => (
+                      <PortraitCard key={w.id} worker={w} index={i} fill />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Normal layout: horizontal scroll (non-game) */}
+            {!specialImage && workers.length > 0 && (
               <div className="py-3">
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {workers.map((w, i) => (
                     <PortraitCard key={w.id} worker={w} index={i} />
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Special image (e.g. casino for game) */}
-            {specialImage && phase === "done" && (
-              <div className="py-2 animate-fade-in-up" style={{ animationDelay: `${workers.length * 150 + 200}ms`, animationFillMode: "both" }}>
-                <img
-                  src={specialImage}
-                  alt="special"
-                  className="w-full max-w-[280px] rounded-lg border border-gray-200 dark:border-zinc-700"
-                />
               </div>
             )}
 
