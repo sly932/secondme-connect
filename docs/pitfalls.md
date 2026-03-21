@@ -156,3 +156,73 @@ npx prisma db push
 - `src/lib/rate-limit.ts` — 限速器核心逻辑
 - `src/lib/api-auth.ts` — `applyRateLimit()` 集成函数
 - `docs/todo-list/security-hardening.md` — 安全加固完整计划
+
+## 5. 前端"保存图片"功能的连环坑（DOM 截图 + 跨域图片）
+
+**场景**: 分享卡片包含外部图片（SecondMe 头像 `object.me.bot`、SiliconFlow 生图结果 `s3.siliconflow.cn`、Supabase 自画像），点击"保存图片"需要将整个卡片截图为 PNG 下载。
+
+### 坑 1: html2canvas 不支持现代 CSS 颜色函数
+
+**问题**: 使用 `html2canvas` 截图时报错：
+```
+Attempting to parse an unsupported color function "lab"
+```
+
+**原因**: Tailwind CSS v4 默认使用 `oklch()` / `lab()` 等现代颜色函数，而 `html2canvas` 自己解析 CSS，不支持这些新函数，直接崩溃。
+
+**尝试过的无效方案**:
+- 设置 `el.style.colorScheme = "light"` — 不能阻止 Tailwind 输出 `lab()` 颜色
+- `ignoreElements: (el) => el.tagName === "STYLE"` — 颜色来源不只是 `<style>` 标签
+
+**最终方案**: 替换为 `html-to-image`，它使用 SVG `foreignObject` 让浏览器原生渲染，不自己解析 CSS，因此不存在颜色函数兼容问题。
+
+### 坑 2: html-to-image 跨域图片 CORS 失败
+
+**问题**: 换用 `html-to-image` 后，截图仍失败，错误为空对象 `{}`：
+```
+Save share card failed: {}
+```
+
+**原因**: `html-to-image` 内部会 `fetch` 所有 `<img>` 的 src 并转为内联 data URL，但外部图片服务器没有返回 `Access-Control-Allow-Origin` 头，浏览器拦截了请求：
+```
+Access to fetch at 'https://object.me.bot/...' from origin 'https://a2aconnect.online'
+has been blocked by CORS policy
+```
+
+涉及的外部域名：
+- `object.me.bot` — SecondMe 用户头像
+- `s3.siliconflow.cn` — SiliconFlow 生图结果（带签名的临时 URL）
+- Supabase Storage — 自画像（这个其实有 CORS，但其他两个没有）
+
+**尝试过的无效方案**:
+- 截图前直接 `fetch(img.src)` 转 data URL — 同样被 CORS 拦截，因为 fetch 也受同源策略限制
+- 在 `<img>` 上设置 `crossOrigin="anonymous"` — 需要服务器配合返回 CORS 头，我们控制不了第三方服务器
+
+### 坑 3: 移动端 `<a download>` 不触发下载
+
+**问题**: 桌面浏览器正常，但 iOS Safari / 微信内置浏览器中点击"保存图片"无反应。
+
+**原因**: 移动端浏览器对程序化创建的 `<a>` 元素 `.click()` 下载行为支持不一致，特别是 iOS Safari 基本不支持。
+
+**记录**: 曾尝试用 Web Share API 替代，但按钮文案是"保存图片"不是"分享"，用户体验不一致（会弹出系统分享面板而非直接下载）。目前桌面端走 `<a download>` 可以工作，移动端待后续优化。
+
+### 最终方案：服务端图片代理
+
+**核心思路**: 浏览器不能直接 fetch 跨域图片，但服务端没有 CORS 限制。
+
+**实现**:
+1. 新增 `GET /api/v1/proxy-image?url=xxx` — 服务端下载外部图片并返回
+2. `saveShareImage()` 截图前，遍历卡片内所有 `<img>`，通过代理接口下载并转为 base64 data URL
+3. 所有图片变成内联 base64 后，`html-to-image` 的 `toPng()` 正常截图
+4. 截图完成后恢复原始 src，不影响页面显示
+
+**文件清单**:
+- `src/app/api/v1/proxy-image/route.ts` — 图片代理接口
+- `src/lib/save-share-image.ts` — 截图 + 下载工具函数
+- `src/components/FeedItem.tsx` — 动态分享卡片
+- `src/components/Navbar.tsx` — 自画像分享卡片
+
+**教训总结**:
+- **不要用 `html2canvas`**: 它自己解析 CSS，跟不上浏览器的新特性（`lab()`, `oklch()` 等），Tailwind v4 项目基本不可用
+- **跨域图片问题没有纯前端方案**: 只要图片服务器不配合返回 CORS 头，前端无论用 fetch、canvas 还是 img.crossOrigin 都绕不过去，必须走服务端代理
+- **截图库选型**: `html-to-image` 优于 `html2canvas`，因为它利用浏览器原生渲染（SVG foreignObject），但仍需配合服务端代理解决跨域图片
