@@ -122,16 +122,6 @@ export function ImageCarousel({ cards: cardSet }: { cards: CarouselCard[] }) {
                     className="object-cover"
                     sizes="(max-width: 640px) 16rem, (max-width: 768px) 20rem, 28rem"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-                  <div className="relative flex h-full flex-col justify-end p-5 md:p-6">
-                    <p className="text-xs text-white/70 mb-1 leading-relaxed">
-                      {card.description}
-                    </p>
-                    <span className="text-xl md:text-2xl font-semibold tracking-tight text-white">
-                      {card.label}
-                    </span>
-                  </div>
                 </div>
               </div>
             );
