@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-03-20T22:11:56.346Z",
+  "generatedAt": "2026-03-20T23:25:53.032Z",
   "embeddingModel": "Qwen/Qwen3-Embedding-0.6B",
-  "totalPersonas": 9,
-  "totalQueries": 11,
-  "overallPrecision": 0.6363636363636364,
-  "overallAvgExpectedRank": 2,
+  "totalPersonas": 21,
+  "totalQueries": 24,
+  "overallPrecision": 0.8125,
+  "overallAvgExpectedRank": 1.7083333333333333,
   "byScene": [
     {
       "scene": "keyboard",
@@ -26,6 +26,34 @@
       "queryCount": 4,
       "avgPrecision": 0.625,
       "avgExpectedRank": 2
+    },
+    {
+      "scene": "study-abroad",
+      "label": "留学择校",
+      "queryCount": 4,
+      "avgPrecision": 0.875,
+      "avgExpectedRank": 1.75
+    },
+    {
+      "scene": "renting",
+      "label": "租房搬家",
+      "queryCount": 3,
+      "avgPrecision": 1,
+      "avgExpectedRank": 1.3333333333333333
+    },
+    {
+      "scene": "startup",
+      "label": "创业找合伙人",
+      "queryCount": 3,
+      "avgPrecision": 1,
+      "avgExpectedRank": 1.3333333333333333
+    },
+    {
+      "scene": "medical",
+      "label": "医疗健康",
+      "queryCount": 3,
+      "avgPrecision": 1,
+      "avgExpectedRank": 1.3333333333333333
     }
   ],
   "details": [
@@ -54,7 +82,7 @@
           "personaId": "eval-kb-002",
           "name": "张数码",
           "role": "外设测评博主",
-          "similarity": 0.4383477129731998,
+          "similarity": 0.43937656670634756,
           "isExpected": true,
           "rank": 3
         }
@@ -88,7 +116,7 @@
           "personaId": "eval-kb-002",
           "name": "张数码",
           "role": "外设测评博主",
-          "similarity": 0.37493624458557573,
+          "similarity": 0.3751994014749932,
           "isExpected": false,
           "rank": 3
         }
@@ -114,7 +142,7 @@
           "personaId": "eval-kb-002",
           "name": "张数码",
           "role": "外设测评博主",
-          "similarity": 0.6283650054684204,
+          "similarity": 0.6290098664425378,
           "isExpected": true,
           "rank": 2
         },
@@ -148,7 +176,7 @@
           "personaId": "eval-kb-002",
           "name": "张数码",
           "role": "外设测评博主",
-          "similarity": 0.4881432589420317,
+          "similarity": 0.4884208115790684,
           "isExpected": true,
           "rank": 2
         },
@@ -174,7 +202,7 @@
           "personaId": "eval-shop-001",
           "name": "李建国",
           "role": "高新区市场监管局工作人员",
-          "similarity": 0.6975276187102094,
+          "similarity": 0.696494768945896,
           "isExpected": true,
           "rank": 1
         },
@@ -182,7 +210,7 @@
           "personaId": "eval-shop-003",
           "name": "刘强",
           "role": "商业地产中介",
-          "similarity": 0.5598998924834936,
+          "similarity": 0.5602485384734521,
           "isExpected": false,
           "rank": 2
         },
@@ -190,7 +218,7 @@
           "personaId": "eval-shop-002",
           "name": "王芳",
           "role": "高新区咖啡店老板",
-          "similarity": 0.5541851782584067,
+          "similarity": 0.5560364949574214,
           "isExpected": true,
           "rank": 3
         }
@@ -208,7 +236,7 @@
           "personaId": "eval-shop-003",
           "name": "刘强",
           "role": "商业地产中介",
-          "similarity": 0.7078083824168874,
+          "similarity": 0.7081270871023844,
           "isExpected": true,
           "rank": 1
         },
@@ -216,7 +244,7 @@
           "personaId": "eval-shop-002",
           "name": "王芳",
           "role": "高新区咖啡店老板",
-          "similarity": 0.5790000304960727,
+          "similarity": 0.5805138697812072,
           "isExpected": true,
           "rank": 2
         },
@@ -224,7 +252,7 @@
           "personaId": "eval-shop-001",
           "name": "李建国",
           "role": "高新区市场监管局工作人员",
-          "similarity": 0.4751730231437932,
+          "similarity": 0.4728756096533443,
           "isExpected": false,
           "rank": 3
         }
@@ -242,7 +270,7 @@
           "personaId": "eval-shop-003",
           "name": "刘强",
           "role": "商业地产中介",
-          "similarity": 0.6055628683555327,
+          "similarity": 0.6050168416373335,
           "isExpected": false,
           "rank": 1
         },
@@ -250,7 +278,7 @@
           "personaId": "eval-shop-001",
           "name": "李建国",
           "role": "高新区市场监管局工作人员",
-          "similarity": 0.584093986312663,
+          "similarity": 0.5829462053032225,
           "isExpected": false,
           "rank": 2
         },
@@ -258,7 +286,7 @@
           "personaId": "eval-shop-002",
           "name": "王芳",
           "role": "高新区咖啡店老板",
-          "similarity": 0.5758506561827779,
+          "similarity": 0.5762875792732927,
           "isExpected": true,
           "rank": 3
         }
@@ -402,6 +430,448 @@
       "precision": 0.5,
       "avgExpectedRank": 2,
       "notes": "应匹配到了解面试流程的内部人"
+    },
+    {
+      "queryId": "q-edu-01",
+      "scene": "study-abroad",
+      "query": "CMU的MSCS和UCSD的CSE选哪个？我想毕业后留美工作",
+      "matches": [
+        {
+          "personaId": "eval-edu-001",
+          "name": "Emily Chen",
+          "role": "在读学生",
+          "similarity": 0.6922738509407355,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-edu-002",
+          "name": "凯文",
+          "role": "校友/已就业",
+          "similarity": 0.6572001355648266,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-edu-003",
+          "name": "王明辉",
+          "role": "留学顾问",
+          "similarity": 0.6533981312317598,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配两校的在读/毕业生，他们有第一手对比信息"
+    },
+    {
+      "queryId": "q-edu-02",
+      "scene": "study-abroad",
+      "query": "985CS背景，GPA 3.6，想申请美国Top 30的CS硕士，有什么选校建议？",
+      "matches": [
+        {
+          "personaId": "eval-edu-003",
+          "name": "王明辉",
+          "role": "留学顾问",
+          "similarity": 0.7367192914273853,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-edu-001",
+          "name": "Emily Chen",
+          "role": "在读学生",
+          "similarity": 0.6833362948731818,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-edu-002",
+          "name": "凯文",
+          "role": "校友/已就业",
+          "similarity": 0.6237524672661273,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配有选校经验的顾问和有类似背景的在读生"
+    },
+    {
+      "queryId": "q-edu-03",
+      "scene": "study-abroad",
+      "query": "CMU CS硕士两年总费用大概多少？有没有奖学金或者RA机会？",
+      "matches": [
+        {
+          "personaId": "eval-edu-001",
+          "name": "Emily Chen",
+          "role": "在读学生",
+          "similarity": 0.7192276287746034,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-edu-003",
+          "name": "王明辉",
+          "role": "留学顾问",
+          "similarity": 0.6294096376864652,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-edu-002",
+          "name": "凯文",
+          "role": "校友/已就业",
+          "similarity": 0.5385325044206694,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应匹配到有CMU费用明细的在读生"
+    },
+    {
+      "queryId": "q-edu-04",
+      "scene": "study-abroad",
+      "query": "2025年美国CS求职市场怎么样？留学生找工作难吗？",
+      "matches": [
+        {
+          "personaId": "eval-edu-003",
+          "name": "王明辉",
+          "role": "留学顾问",
+          "similarity": 0.6677276554580746,
+          "isExpected": false,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-edu-001",
+          "name": "Emily Chen",
+          "role": "在读学生",
+          "similarity": 0.6073775452979042,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-edu-002",
+          "name": "凯文",
+          "role": "校友/已就业",
+          "similarity": 0.5631439423392157,
+          "isExpected": true,
+          "rank": 3
+        }
+      ],
+      "precision": 0.5,
+      "avgExpectedRank": 2.5,
+      "notes": "应匹配到有求职经验的校友和正在求职的在读生"
+    },
+    {
+      "queryId": "q-rent-01",
+      "scene": "renting",
+      "query": "深圳南山区科技园附近，3000左右能租到什么样的房子？",
+      "matches": [
+        {
+          "personaId": "eval-rent-001",
+          "name": "小吴",
+          "role": "当地租客",
+          "similarity": 0.736914563204273,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-rent-002",
+          "name": "张阿姨",
+          "role": "房东",
+          "similarity": 0.6112006707626907,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-rent-003",
+          "name": "刘姐",
+          "role": "带娃家长",
+          "similarity": 0.37745741152044326,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配了解当地租金行情的租客和有房源的房东"
+    },
+    {
+      "queryId": "q-rent-02",
+      "scene": "renting",
+      "query": "大冲城市花园怎么样？住过的人能说下体验吗？",
+      "matches": [
+        {
+          "personaId": "eval-rent-002",
+          "name": "张阿姨",
+          "role": "房东",
+          "similarity": 0.5232120146569486,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-rent-001",
+          "name": "小吴",
+          "role": "当地租客",
+          "similarity": 0.42508697634099935,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-rent-003",
+          "name": "刘姐",
+          "role": "带娃家长",
+          "similarity": 0.37801774815144573,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应匹配到住过/拥有大冲城市花园房子的人"
+    },
+    {
+      "queryId": "q-rent-03",
+      "scene": "renting",
+      "query": "北京望京和酒仙桥哪个更适合带娃住？孩子快上小学了",
+      "matches": [
+        {
+          "personaId": "eval-rent-003",
+          "name": "刘姐",
+          "role": "带娃家长",
+          "similarity": 0.8091754812899673,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-rent-001",
+          "name": "小吴",
+          "role": "当地租客",
+          "similarity": 0.31659222458129244,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-rent-002",
+          "name": "张阿姨",
+          "role": "房东",
+          "similarity": 0.2685893342714419,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1,
+      "notes": "应优先匹配有两个区域带娃经验的家长"
+    },
+    {
+      "queryId": "q-biz-01",
+      "scene": "startup",
+      "query": "我在做一个宠物健康管理的App，想找一个懂供应链的合伙人",
+      "matches": [
+        {
+          "personaId": "eval-biz-001",
+          "name": "老陈",
+          "role": "潜在合伙人/供应链专家",
+          "similarity": 0.6948775631672757,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-biz-002",
+          "name": "阿飞",
+          "role": "同赛道创业者",
+          "similarity": 0.6395680926188438,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-biz-003",
+          "name": "Lisa Wang",
+          "role": "跨境物流服务商",
+          "similarity": 0.3708115960503785,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配有宠物供应链资源且想创业的人"
+    },
+    {
+      "queryId": "q-biz-02",
+      "scene": "startup",
+      "query": "宠物赛道创业有哪些坑？有过来人分享经验吗？",
+      "matches": [
+        {
+          "personaId": "eval-biz-002",
+          "name": "阿飞",
+          "role": "同赛道创业者",
+          "similarity": 0.6104685476755671,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-biz-001",
+          "name": "老陈",
+          "role": "潜在合伙人/供应链专家",
+          "similarity": 0.49413791072872126,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-biz-003",
+          "name": "Lisa Wang",
+          "role": "跨境物流服务商",
+          "similarity": 0.2660927466684742,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配有宠物赛道创业经历的人"
+    },
+    {
+      "queryId": "q-biz-03",
+      "scene": "startup",
+      "query": "做跨境电商需要找靠谱的物流合作方，中国发美国的，有推荐吗？",
+      "matches": [
+        {
+          "personaId": "eval-biz-003",
+          "name": "Lisa Wang",
+          "role": "跨境物流服务商",
+          "similarity": 0.6385031916207556,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-biz-001",
+          "name": "老陈",
+          "role": "潜在合伙人/供应链专家",
+          "similarity": 0.35246086503021895,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-biz-002",
+          "name": "阿飞",
+          "role": "同赛道创业者",
+          "similarity": 0.2649774872991104,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1,
+      "notes": "应优先匹配跨境物流服务商"
+    },
+    {
+      "queryId": "q-med-01",
+      "scene": "medical",
+      "query": "腰椎间盘突出，北京哪家医院的骨科比较好？需要手术吗？",
+      "matches": [
+        {
+          "personaId": "eval-med-002",
+          "name": "李医生",
+          "role": "骨科医生",
+          "similarity": 0.6984603939959045,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-med-001",
+          "name": "老张",
+          "role": "患者/亲历者",
+          "similarity": 0.6351625595419995,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-med-003",
+          "name": "阿强",
+          "role": "同病友家长",
+          "similarity": 0.27634184804228057,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应匹配到骨科医生和有手术经验的患者"
+    },
+    {
+      "queryId": "q-med-02",
+      "scene": "medical",
+      "query": "腰椎间盘突出做了微创手术，术后多久能恢复正常生活？",
+      "matches": [
+        {
+          "personaId": "eval-med-001",
+          "name": "老张",
+          "role": "患者/亲历者",
+          "similarity": 0.6119871236211268,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-med-002",
+          "name": "李医生",
+          "role": "骨科医生",
+          "similarity": 0.5179224763117078,
+          "isExpected": true,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-med-003",
+          "name": "阿强",
+          "role": "同病友家长",
+          "similarity": 0.2640951689769773,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1.5,
+      "notes": "应优先匹配有术后康复经验的患者"
+    },
+    {
+      "queryId": "q-med-03",
+      "scene": "medical",
+      "query": "孩子过敏性鼻炎反复发作，试了好多方法都不行，有没有过来人分享经验？",
+      "matches": [
+        {
+          "personaId": "eval-med-003",
+          "name": "阿强",
+          "role": "同病友家长",
+          "similarity": 0.7836192774864741,
+          "isExpected": true,
+          "rank": 1
+        },
+        {
+          "personaId": "eval-med-001",
+          "name": "老张",
+          "role": "患者/亲历者",
+          "similarity": 0.3426858757129005,
+          "isExpected": false,
+          "rank": 2
+        },
+        {
+          "personaId": "eval-med-002",
+          "name": "李医生",
+          "role": "骨科医生",
+          "similarity": 0.27147640392010464,
+          "isExpected": false,
+          "rank": 3
+        }
+      ],
+      "precision": 1,
+      "avgExpectedRank": 1,
+      "notes": "应优先匹配有同样经历的家长"
     }
   ]
 }

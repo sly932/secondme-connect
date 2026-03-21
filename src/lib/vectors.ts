@@ -33,7 +33,7 @@ export async function saveUserEmbedding(userId: string, embedding: number[]) {
 export async function findMatchingUsers(
   query: string,
   excludeUserId: string,
-  topN: number = 10
+  topN: number = 5
 ): Promise<MatchCandidate[]> {
   try {
     const queryEmbedding = await generateEmbedding(query);
@@ -52,7 +52,7 @@ export async function findMatchingUsers(
 export async function searchSimilarUsers(
   queryEmbedding: number[],
   excludeUserId: string,
-  topN: number = 10
+  topN: number = 5
 ): Promise<MatchCandidate[]> {
   const vectorStr = `[${queryEmbedding.join(",")}]`;
   logger.info("Searching similar users (vector)", { excludeUserId, topN });
@@ -81,7 +81,7 @@ export async function searchSimilarUsers(
 async function searchUsersBM25(
   query: string,
   excludeUserId: string,
-  topN: number = 10
+  topN: number = 5
 ): Promise<MatchCandidate[]> {
   logger.info("Searching similar users (BM25 fallback)", { excludeUserId, topN, queryLength: query.length });
 

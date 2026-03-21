@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     const effectiveTopN = topN || fullUser.autoTopN;
 
     // 匹配分身（向量优先，fallback BM25）
-    const candidates = await findMatchingUsers(description, user.id, 10);
+    const candidates = await findMatchingUsers(description, user.id, 5);
 
     if (candidates.length === 0) {
       return NextResponse.json({ message: "未找到匹配的分身", candidates: [] });

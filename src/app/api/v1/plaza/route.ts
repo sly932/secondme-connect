@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     if (!fullUser) return unauthorized();
 
     // 匹配分身（向量优先，fallback BM25）
-    const candidates = await findMatchingUsers(content, user.id, 10);
+    const candidates = await findMatchingUsers(content, user.id, 5);
     const matchCandidates = candidates.map((c) => ({
       userId: c.id,
       name: c.name,

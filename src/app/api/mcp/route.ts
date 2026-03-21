@@ -112,7 +112,7 @@ async function handleConsult(user: UserId, args: Record<string, unknown>) {
   });
   if (!fullUser) return errorResult("用户不存在");
 
-  const candidates = await findMatchingUsers(description, user.id, 10);
+  const candidates = await findMatchingUsers(description, user.id, 5);
   if (candidates.length === 0) return textResult({ message: "未找到匹配的分身", candidates: [] });
 
   const topN = (args.topN as number) || fullUser.autoTopN;
@@ -151,7 +151,7 @@ async function handleCreateTask(user: UserId, args: Record<string, unknown>) {
   });
   if (!fullUser) return errorResult("用户不存在");
 
-  const candidates = await findMatchingUsers(description, user.id, 10);
+  const candidates = await findMatchingUsers(description, user.id, 5);
   if (candidates.length === 0) return textResult({ message: "未找到匹配的分身" });
 
   const topN = (args.topN as number) || fullUser.autoTopN;

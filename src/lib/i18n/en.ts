@@ -71,11 +71,7 @@ const en: Translations = {
     tabGames: "Games",
     chatPlaceholder: "e.g., I've been stressed and can't sleep, any tips for managing emotions...",
     chatChips: [
-      "I keep having recurring dreams. What's the link between dreams and the subconscious?",
-      "Living alone in a big city for 3 years. How to cope with late-night loneliness?",
-      "More features but users are leaving. How to simplify the product?",
-      "Niche brand, limited budget. How to differentiate through content?",
-      "Feeling stuck after 5 years of work. How to build diverse mental models?",
+      "Generate a portrait for my avatar",
     ],
     chatChipGroups: [
       { label: "Shopping", chips: ["Is the HHKB keyboard worth it for coding?", "What's a fair price for a used HHKB?", "Budget $80, looking for a comfortable office keyboard"] },

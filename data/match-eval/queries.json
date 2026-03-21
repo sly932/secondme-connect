@@ -86,5 +86,109 @@
     "expectedMatches": ["eval-job-001", "eval-job-002"],
     "expectedRoles": ["目标公司在职员工", "目标公司离职员工"],
     "notes": "应匹配到了解面试流程的内部人"
+  },
+  {
+    "id": "q-edu-01",
+    "scene": "study-abroad",
+    "query": "CMU的MSCS和UCSD的CSE选哪个？我想毕业后留美工作",
+    "expectedMatches": ["eval-edu-001", "eval-edu-002"],
+    "expectedRoles": ["在读学生", "校友/已就业"],
+    "notes": "应优先匹配两校的在读/毕业生，他们有第一手对比信息"
+  },
+  {
+    "id": "q-edu-02",
+    "scene": "study-abroad",
+    "query": "985CS背景，GPA 3.6，想申请美国Top 30的CS硕士，有什么选校建议？",
+    "expectedMatches": ["eval-edu-003", "eval-edu-001"],
+    "expectedRoles": ["留学顾问", "在读学生"],
+    "notes": "应优先匹配有选校经验的顾问和有类似背景的在读生"
+  },
+  {
+    "id": "q-edu-03",
+    "scene": "study-abroad",
+    "query": "CMU CS硕士两年总费用大概多少？有没有奖学金或者RA机会？",
+    "expectedMatches": ["eval-edu-001", "eval-edu-003"],
+    "expectedRoles": ["在读学生", "留学顾问"],
+    "notes": "应匹配到有CMU费用明细的在读生"
+  },
+  {
+    "id": "q-edu-04",
+    "scene": "study-abroad",
+    "query": "2025年美国CS求职市场怎么样？留学生找工作难吗？",
+    "expectedMatches": ["eval-edu-002", "eval-edu-001"],
+    "expectedRoles": ["校友/已就业", "在读学生"],
+    "notes": "应匹配到有求职经验的校友和正在求职的在读生"
+  },
+  {
+    "id": "q-rent-01",
+    "scene": "renting",
+    "query": "深圳南山区科技园附近，3000左右能租到什么样的房子？",
+    "expectedMatches": ["eval-rent-001", "eval-rent-002"],
+    "expectedRoles": ["当地租客", "房东"],
+    "notes": "应优先匹配了解当地租金行情的租客和有房源的房东"
+  },
+  {
+    "id": "q-rent-02",
+    "scene": "renting",
+    "query": "大冲城市花园怎么样？住过的人能说下体验吗？",
+    "expectedMatches": ["eval-rent-001", "eval-rent-002"],
+    "expectedRoles": ["当地租客", "房东"],
+    "notes": "应匹配到住过/拥有大冲城市花园房子的人"
+  },
+  {
+    "id": "q-rent-03",
+    "scene": "renting",
+    "query": "北京望京和酒仙桥哪个更适合带娃住？孩子快上小学了",
+    "expectedMatches": ["eval-rent-003"],
+    "expectedRoles": ["带娃家长"],
+    "notes": "应优先匹配有两个区域带娃经验的家长"
+  },
+  {
+    "id": "q-biz-01",
+    "scene": "startup",
+    "query": "我在做一个宠物健康管理的App，想找一个懂供应链的合伙人",
+    "expectedMatches": ["eval-biz-001", "eval-biz-002"],
+    "expectedRoles": ["潜在合伙人/供应链专家", "同赛道创业者"],
+    "notes": "应优先匹配有宠物供应链资源且想创业的人"
+  },
+  {
+    "id": "q-biz-02",
+    "scene": "startup",
+    "query": "宠物赛道创业有哪些坑？有过来人分享经验吗？",
+    "expectedMatches": ["eval-biz-002", "eval-biz-001"],
+    "expectedRoles": ["同赛道创业者", "潜在合伙人/供应链专家"],
+    "notes": "应优先匹配有宠物赛道创业经历的人"
+  },
+  {
+    "id": "q-biz-03",
+    "scene": "startup",
+    "query": "做跨境电商需要找靠谱的物流合作方，中国发美国的，有推荐吗？",
+    "expectedMatches": ["eval-biz-003"],
+    "expectedRoles": ["跨境物流服务商"],
+    "notes": "应优先匹配跨境物流服务商"
+  },
+  {
+    "id": "q-med-01",
+    "scene": "medical",
+    "query": "腰椎间盘突出，北京哪家医院的骨科比较好？需要手术吗？",
+    "expectedMatches": ["eval-med-002", "eval-med-001"],
+    "expectedRoles": ["骨科医生", "患者/亲历者"],
+    "notes": "应匹配到骨科医生和有手术经验的患者"
+  },
+  {
+    "id": "q-med-02",
+    "scene": "medical",
+    "query": "腰椎间盘突出做了微创手术，术后多久能恢复正常生活？",
+    "expectedMatches": ["eval-med-001", "eval-med-002"],
+    "expectedRoles": ["患者/亲历者", "骨科医生"],
+    "notes": "应优先匹配有术后康复经验的患者"
+  },
+  {
+    "id": "q-med-03",
+    "scene": "medical",
+    "query": "孩子过敏性鼻炎反复发作，试了好多方法都不行，有没有过来人分享经验？",
+    "expectedMatches": ["eval-med-003"],
+    "expectedRoles": ["同病友家长"],
+    "notes": "应优先匹配有同样经历的家长"
   }
 ]

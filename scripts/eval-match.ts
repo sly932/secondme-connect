@@ -276,6 +276,10 @@ async function main() {
     keyboard: "键盘购买",
     "open-shop": "开店咨询",
     "job-search": "求职打听",
+    "study-abroad": "留学择校",
+    renting: "租房搬家",
+    startup: "创业找合伙人",
+    medical: "医疗健康",
   };
 
   let totalPrecision = 0;
