@@ -626,11 +626,13 @@ function QRBlock({ url }: { url: string }) {
 
 function SceneModal({
   sceneImageUrl,
+  postContent,
   postAuthor,
   workerNames,
   onClose,
 }: {
   sceneImageUrl: string;
+  postContent: string;
   postAuthor: Author;
   workerNames: string[];
   onClose: () => void;
@@ -685,6 +687,13 @@ function SceneModal({
               alt="scene"
               className="w-full rounded-xl"
             />
+          </div>
+
+          {/* Post question */}
+          <div className="px-5 pb-2">
+            <p className="text-sm leading-relaxed line-clamp-3" style={{ color: "#333" }}>
+              &ldquo;{postContent}&rdquo;
+            </p>
           </div>
 
           {/* Participants */}
@@ -1229,6 +1238,7 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
       {sceneModalOpen && sceneImageUrl && (
         <SceneModal
           sceneImageUrl={sceneImageUrl}
+          postContent={post.content}
           postAuthor={post.author}
           workerNames={matchCards.map((c) => c.name)}
           onClose={() => setSceneModalOpen(false)}
