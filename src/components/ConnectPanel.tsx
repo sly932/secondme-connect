@@ -117,14 +117,13 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
     window.location.href = "/api/auth/login";
   };
 
-  // Count loaded portrait cards and fire onAllReady when all are done
+  // Fire onAllReady when matching is done (skip for game — user clicks casino image instead)
   useEffect(() => {
-    if (phase === "done" && workers.length > 0 && onAllReady) {
-      // Small delay to let animations finish
+    if (phase === "done" && workers.length > 0 && onAllReady && intent !== "game") {
       const timer = setTimeout(() => onAllReady(postId), 800);
       return () => clearTimeout(timer);
     }
-  }, [phase, workers.length, onAllReady, postId]);
+  }, [phase, workers.length, onAllReady, postId, intent]);
 
   // ---- Dispatch functions that return matched workers ----
 
