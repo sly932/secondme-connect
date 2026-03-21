@@ -990,10 +990,23 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
     startSSE(cards);
   };
 
+  // 默认展开：进入视口时才触发 fetch，避免一次性加载所有
+  const hasAutoExpanded = useRef(false);
   useEffect(() => {
-    if (defaultExpanded && matchCards.length === 0) {
-      fetchDetail().then(startSSE);
-    }
+    if (!defaultExpanded || hasAutoExpanded.current || !itemRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAutoExpanded.current) {
+          hasAutoExpanded.current = true;
+          setExpanded(true);
+          fetchDetail().then(startSSE);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(itemRef.current);
+    return () => observer.disconnect();
   }, [defaultExpanded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleComment = async () => {
@@ -1108,15 +1121,28 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
               </div>
             )}
 
-            {/* Scene image (if available) */}
+            {/* Scene image + portrait cards to the right */}
             {sceneImageUrl && (
-              <div className="py-2">
+              <div className="py-2 flex items-start gap-3">
                 <img
                   src={sceneImageUrl}
                   alt="scene"
-                  className="w-full rounded-xl border border-gray-200 dark:border-zinc-700 cursor-pointer hover:opacity-90 transition-opacity"
+                  className="h-[160px] w-auto rounded-xl border border-gray-200 dark:border-zinc-700 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
                   onClick={() => setSceneModalOpen(true)}
                 />
+                {/* Portrait cards grid: 3 cols, to the right of scene image */}
+                {matchCards.length > 0 && (
+                  <div className="grid grid-cols-3 gap-1.5 content-start">
+                    {matchCards.map((card, i) => (
+                      <PortraitCard
+                        key={card.userId}
+                        card={card}
+                        index={i}
+                        onClick={() => setModalIndex(i)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1126,13 +1152,13 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
                 <img
                   src={matchCards[0].task.resultUrl}
                   alt="portrait"
-                  className="w-full max-w-[200px] rounded-xl border border-gray-200 dark:border-zinc-700 cursor-pointer hover:opacity-90 transition-opacity"
+                  className="h-[120px] w-auto rounded-xl border border-gray-200 dark:border-zinc-700 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => setPortraitModalOpen(true)}
                 />
               </div>
             )}
 
-            {/* Portrait cards row — hidden when scene image exists */}
+            {/* Portrait cards row — no scene image, no portrait */}
             {!sceneImageUrl && !isPortrait && matchCards.length > 0 && (
               <div className="py-2">
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
