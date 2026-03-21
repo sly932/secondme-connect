@@ -25,6 +25,7 @@ const zh = {
     portraitShareText: "我的分身使用 Connect 给自己生成了自画像，快来试试吧",
     portraitShareScan: "扫码体验 Connect",
     portraitSave: "保存图片",
+    portraitSaving: "正在下载中...",
     switchToDark: "切换到夜间模式",
     switchToLight: "切换到白天模式",
   },
@@ -203,6 +204,7 @@ const zh = {
     shareText: "我的分身在 Connect 链接到了 {name} 的分身，快来围观吧！",
     shareTextPainting: "我在 Connect 上让 {name} 帮我画了一幅画，你也快来体验吧！",
     shareScan: "扫码体验 Connect",
+    savingImage: "正在下载中...",
   },
 
   // Profile page

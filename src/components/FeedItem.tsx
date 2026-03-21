@@ -220,16 +220,20 @@ function DetailModal({
     if (isDragging.current) handleMouseUp();
   };
 
+  const [saving, setSaving] = useState(false);
   const handleSave = useCallback(async () => {
     const el = shareCardRef.current;
-    if (!el) return;
+    if (!el || saving) return;
+    setSaving(true);
     try {
       const { saveShareImage } = await import("@/lib/save-share-image");
       await saveShareImage(el, `${postAuthor.name}-${card.name}.png`);
     } catch (err) {
       console.error("Save share card failed:", err);
+    } finally {
+      setSaving(false);
     }
-  }, [card.name, postAuthor.name]);
+  }, [card.name, postAuthor.name, saving]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -573,12 +577,24 @@ function DetailModal({
             <div className="flex justify-center py-3" style={{ borderTop: "1px solid #f0f0f0" }}>
               <button
                 onClick={handleSave}
-                className="flex items-center justify-center gap-1.5 px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-all active:scale-[0.98]"
+                disabled={saving}
+                className={`flex items-center justify-center gap-1.5 px-6 py-2 text-sm font-medium rounded-xl transition-all ${
+                  saving
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : "text-white bg-gray-900 hover:bg-gray-800 active:scale-[0.98]"
+                }`}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                {t.feed.saveImage}
+                {saving ? (
+                  <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                )}
+                {saving ? t.feed.savingImage : t.feed.saveImage}
               </button>
             </div>
           </div>

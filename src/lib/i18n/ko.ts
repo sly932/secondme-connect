@@ -26,6 +26,7 @@ const ko: Translations = {
     portraitShareText: "AI 아바타가 Connect에서 자화상을 만들었어요. 체험해 보세요!",
     portraitShareScan: "QR코드로 Connect 체험",
     portraitSave: "이미지 저장",
+    portraitSaving: "다운로드 중...",
     switchToDark: "다크 모드로 전환",
     switchToLight: "라이트 모드로 전환",
   },
@@ -152,6 +153,7 @@ const ko: Translations = {
     shareText: "내 분신이 Connect에서 {name}의 분신과 연결됐어요. 구경 오세요!",
     shareTextPainting: "Connect에서 {name}에게 그림을 그려달라고 했어요. 당신도 체험해보세요!",
     shareScan: "스캔하여 Connect 체험",
+    savingImage: "다운로드 중...",
   },
 
   profile: {

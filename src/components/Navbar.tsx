@@ -66,16 +66,20 @@ export function Navbar() {
 
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
 
+  const [savingImage, setSavingImage] = useState(false);
   const handleSaveShareCard = useCallback(async () => {
     const el = shareCardRef.current;
-    if (!el) return;
+    if (!el || savingImage) return;
+    setSavingImage(true);
     try {
       const { saveShareImage } = await import("@/lib/save-share-image");
       await saveShareImage(el, `${name || "Connect"}-自画像.png`);
     } catch (err) {
       console.error("Save share card failed:", err);
+    } finally {
+      setSavingImage(false);
     }
-  }, [name]);
+  }, [name, savingImage]);
 
   const fetchPortrait = async () => {
     if (portraitFetched) return;
@@ -400,12 +404,24 @@ export function Navbar() {
                 </button>
                 <button
                   onClick={handleSaveShareCard}
-                  className="flex items-center justify-center gap-1.5 flex-1 py-2.5 text-sm font-medium text-white dark:text-black bg-gray-900 dark:bg-white rounded-xl hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all duration-200 active:scale-[0.98]"
+                  disabled={savingImage}
+                  className={`flex items-center justify-center gap-1.5 flex-1 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    savingImage
+                      ? "bg-gray-400 dark:bg-zinc-600 text-gray-200 dark:text-zinc-400 cursor-not-allowed"
+                      : "text-white dark:text-black bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-zinc-200 active:scale-[0.98]"
+                  }`}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  {t.nav.portraitSave}
+                  {savingImage ? (
+                    <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                      <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                    </svg>
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                  )}
+                  {savingImage ? t.nav.portraitSaving : t.nav.portraitSave}
                 </button>
               </div>
             </div>

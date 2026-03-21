@@ -26,6 +26,7 @@ const ja: Translations = {
     portraitShareText: "AIアバターがConnectで自画像を生成しました。ぜひお試しください！",
     portraitShareScan: "QRコードでConnectを体験",
     portraitSave: "画像を保存",
+    portraitSaving: "ダウンロード中...",
     switchToDark: "ダークモードに切替",
     switchToLight: "ライトモードに切替",
   },
@@ -152,6 +153,7 @@ const ja: Translations = {
     shareText: "私の分身がConnectで{name}の分身とつながりました。見に来てね！",
     shareTextPainting: "Connectで{name}に絵を描いてもらいました。あなたも体験してみて！",
     shareScan: "スキャンしてConnectを体験",
+    savingImage: "ダウンロード中...",
   },
 
   profile: {

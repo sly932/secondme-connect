@@ -26,6 +26,7 @@ const en: Translations = {
     portraitShareText: "My AI avatar created a self-portrait on Connect — come try it!",
     portraitShareScan: "Scan to try Connect",
     portraitSave: "Save Image",
+    portraitSaving: "Downloading...",
     switchToDark: "Switch to dark mode",
     switchToLight: "Switch to light mode",
   },
@@ -152,6 +153,7 @@ const en: Translations = {
     shareText: "My avatar connected with {name}'s avatar on Connect. Come check it out!",
     shareTextPainting: "I got {name} to paint me a picture on Connect. Come try it out!",
     shareScan: "Scan to try Connect",
+    savingImage: "Downloading...",
   },
 
   profile: {
