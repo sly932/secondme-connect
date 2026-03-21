@@ -215,6 +215,7 @@ enum TaskType {
   CONSULT
   MARKETPLACE
   GAME
+  PORTRAIT
 }
 
 enum TaskCategory {

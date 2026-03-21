@@ -191,30 +191,25 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
 
   const dispatchPortrait = async (): Promise<MatchedWorker[]> => {
     setPortraitLoading(true);
+
     // Check if user already has a portrait
     try {
       const getRes = await fetch("/api/v1/portrait");
       const getData = await getRes.json();
       if (getData.portraitUrl) {
         setPortraitUrl(getData.portraitUrl);
-        setPortraitLoading(false);
-        return [{ id: session?.user?.id || "self", name: userName || "Me", avatar: userAvatar, portraitUrl: getData.portraitUrl }];
       }
     } catch { /* ignore */ }
 
-    // Generate new portrait
-    try {
-      const postRes = await fetch("/api/v1/portrait", { method: "POST" });
-      const postData = await postRes.json();
-      if (postData.success && postData.portraitUrl) {
-        setPortraitUrl(postData.portraitUrl);
-        setPortraitLoading(false);
-        return [{ id: session?.user?.id || "self", name: userName || "Me", avatar: userAvatar, portraitUrl: postData.portraitUrl }];
-      }
-    } catch { /* ignore */ }
+    // Generate (creates Post + Task, async generation)
+    const postRes = await fetch("/api/v1/portrait", { method: "POST" });
+    const postData = await postRes.json();
+    if (!postData.success) throw new Error("Portrait generation failed");
 
+    setPostId(postData.postId || null);
     setPortraitLoading(false);
-    throw new Error("Portrait generation failed");
+
+    return [{ id: session?.user?.id || "self", name: userName || "Me", avatar: userAvatar, portraitUrl: portraitUrl }];
   };
 
   // ---- Fetch portrait URLs for matched workers ----
