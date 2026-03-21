@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUserStore, useFontStore, LOGO_FONT_CSS } from "@/lib/store";
 import { useT } from "@/lib/i18n";
@@ -84,6 +85,7 @@ function SkeletonNode({ index }: { index: number }) {
 
 export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
   const t = useT();
+  const router = useRouter();
   const { data: session } = useSession();
   const credits = useUserStore((s) => s.credits);
   const logoFont = useFontStore((s) => s.logoFont);
@@ -99,6 +101,7 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
   const [skeletonCount, setSkeletonCount] = useState(3);
   const [specialImage, setSpecialImage] = useState<string | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
+  const [gameRoomId, setGameRoomId] = useState<string | null>(null);
 
   // Portrait-specific state
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
@@ -107,6 +110,8 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
   const loadedCountRef = useRef(0);
 
   const SAMPLE_CHIPS = t.panel.chatChips;
+  const CHIP_GROUPS = t.panel.chatChipGroups;
+  const [expandedGroup, setExpandedGroup] = useState<number | null>(null);
 
   const handleLogin = () => {
     window.location.href = "/api/auth/login";
@@ -172,6 +177,7 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
     if (!data.success) throw new Error(data.message || "Failed");
 
     setSpecialImage("/images/casino.jpg");
+    setGameRoomId(data.room?.id || null);
 
     return (data.room?.players || [])
       .filter((p: { userId?: string; user?: { name?: string } }) => p.userId && p.userId !== session?.user?.id && p.user?.name)
@@ -311,16 +317,38 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
               className="w-full h-28 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 resize-none input-focus focus:outline-none transition-all"
             />
 
-            <div className="flex flex-wrap gap-2">
-              {SAMPLE_CHIPS.map((chip) => (
-                <button
-                  key={chip}
-                  onClick={() => setInput(chip)}
-                  className="px-3 py-1.5 text-xs bg-gray-50 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-400 rounded-full border border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700/80 hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  {chip}
-                </button>
-              ))}
+            <div className="space-y-2">
+              {/* Scene tags */}
+              <div className="flex flex-wrap gap-1.5">
+                {CHIP_GROUPS.map((group, idx) => (
+                  <button
+                    key={group.label}
+                    onClick={() => setExpandedGroup(expandedGroup === idx ? null : idx)}
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-all duration-200 ${
+                      expandedGroup === idx
+                        ? "bg-gray-900 dark:bg-white text-white dark:text-zinc-900 border-gray-900 dark:border-white"
+                        : "bg-gray-50 dark:bg-zinc-800/80 text-gray-500 dark:text-zinc-400 border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500"
+                    }`}
+                  >
+                    {group.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Expanded chips */}
+              {expandedGroup !== null && (
+                <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                  {CHIP_GROUPS[expandedGroup].chips.map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => { setInput(chip); setExpandedGroup(null); }}
+                      className="text-left px-3 py-2 text-xs bg-gray-50 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-400 rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700/80 transition-all duration-200 truncate"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {error && (
@@ -408,8 +436,14 @@ export function ConnectPanel({ onAllReady }: ConnectPanelProps) {
             {specialImage && workers.length > 0 && (
               <div className="py-3 animate-fade-in-up" style={{ animationFillMode: "both" }}>
                 <div className="flex gap-3">
-                  {/* Casino image (appears first) */}
-                  <div className="w-[120px] h-[168px] rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0 animate-fade-in-up" style={{ animationFillMode: "both" }}>
+                  {/* Casino image (clickable when done → enter game) */}
+                  <div
+                    className={`w-[120px] h-[168px] rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0 animate-fade-in-up transition-all ${
+                      phase === "done" && gameRoomId ? "cursor-pointer hover:scale-105 hover:shadow-lg hover:ring-2 hover:ring-gray-400/50 dark:hover:ring-zinc-500/50" : ""
+                    }`}
+                    style={{ animationFillMode: "both" }}
+                    onClick={() => { if (phase === "done" && gameRoomId) router.push(`/games/${gameRoomId}`); }}
+                  >
                     <img src={specialImage} alt="casino" className="w-full h-full object-cover" />
                   </div>
                   {/* Players grid 3 per row */}

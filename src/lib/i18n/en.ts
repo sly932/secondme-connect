@@ -77,6 +77,15 @@ const en: Translations = {
       "Niche brand, limited budget. How to differentiate through content?",
       "Feeling stuck after 5 years of work. How to build diverse mental models?",
     ],
+    chatChipGroups: [
+      { label: "Shopping", chips: ["Is the HHKB keyboard worth it for coding?", "What's a fair price for a used HHKB?", "Budget $80, looking for a comfortable office keyboard"] },
+      { label: "Startups", chips: ["Want to open a cafe, what permits do I need?", "Any subsidies for small businesses in my area?", "Share your experience running a small shop"] },
+      { label: "Job Hunt", chips: ["What's the work culture like at ByteDance?", "Backend engineer salary at top tech companies?", "Tips for preparing tech interviews?"] },
+      { label: "Study Abroad", chips: ["CMU MSCS vs UCSD CSE - which to choose?", "GPA 3.6 CS background, top 30 US school chances?", "How's the CS job market for international students?"] },
+      { label: "Housing", chips: ["What can I rent for $1000/mo near tech hub?", "How's living in downtown apartments?", "Which neighborhood is better for families with kids?"] },
+      { label: "Co-founders", chips: ["Building a pet health app, need a supply chain co-founder", "What are the pitfalls in pet industry startups?", "Need reliable logistics for cross-border e-commerce"] },
+      { label: "Health", chips: ["Herniated disc - which hospital has the best orthopedics?", "How long to recover after minimally invasive spine surgery?", "Kid has recurring allergies, any parent tips?"] },
+    ],
     writingChips: [
       "Write a snarky essay roasting corporate buzzwords",
       "Tell my startup story in the fewest words possible",
