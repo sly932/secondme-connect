@@ -3,6 +3,7 @@ import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } fr
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { findMatchingUsers } from "@/lib/vectors";
 import { executeWritingTask, executePaintingTask } from "@/lib/task-executor";
+import { generateSceneForTasks, resolveSceneType } from "@/lib/scene-image";
 import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
 import { TaskType, TaskCategory, TaskStatus } from "@prisma/client";
@@ -112,6 +113,17 @@ export async function POST(req: NextRequest) {
         };
       })
     );
+
+    // 异步生成场景图
+    const sceneType = resolveSceneType("MARKETPLACE", category);
+    if (sceneType) {
+      generateSceneForTasks(
+        tasks.map((t) => t.taskId),
+        user.id,
+        tasks.map((t) => t.worker.id),
+        sceneType
+      );
+    }
 
     return NextResponse.json({
       mode: "AUTO",

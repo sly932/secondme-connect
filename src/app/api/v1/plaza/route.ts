@@ -4,6 +4,7 @@ import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } fr
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { findMatchingUsers } from "@/lib/vectors";
 import { executeConsultTask } from "@/lib/task-executor";
+import { generateSceneForTasks } from "@/lib/scene-image";
 import logger from "@/lib/logger";
 import { TaskType, TaskStatus } from "@prisma/client";
 
@@ -165,6 +166,14 @@ export async function POST(req: NextRequest) {
         );
 
         logger.info("Auto consult tasks created", { postId: post.id, taskCount: tasks.length });
+
+        // 异步生成场景图
+        generateSceneForTasks(
+          tasks.map((t) => t.taskId),
+          user.id,
+          tasks.map((t) => t.worker.id),
+          "consult"
+        );
       }
     }
 

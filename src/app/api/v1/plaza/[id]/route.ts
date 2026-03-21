@@ -77,6 +77,30 @@ export async function GET(
     };
   });
 
+  // 自画像等特殊任务：没有 matchCandidates，直接从 tasks 构建
+  if (matchCards.length === 0 && post.tasks.length > 0) {
+    for (const task of post.tasks) {
+      if (task.worker) {
+        matchCards.push({
+          userId: task.worker.id,
+          name: task.worker.name,
+          avatar: task.worker.avatar,
+          bio: task.worker.bio,
+          similarity: 0,
+          portraitUrl: task.worker.portraitUrl ?? null,
+          task: {
+            taskId: task.id,
+            type: task.type,
+            category: task.category,
+            status: task.status,
+            result: task.result,
+            resultUrl: task.resultUrl,
+          },
+        });
+      }
+    }
+  }
+
   // 判断帖子的任务类型（咨询 / 写作 / 绘画）
   const firstTask = post.tasks[0];
   const taskCategory = firstTask?.category || null; // WRITING | PAINTING | null(=咨询)

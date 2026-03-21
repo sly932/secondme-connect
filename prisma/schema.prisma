@@ -64,9 +64,10 @@ model Task {
   category    TaskCategory?
   status      TaskStatus    @default(MATCHING)
   description String
-  result      String?
-  resultUrl   String?
-  creditCost  Int
+  result        String?
+  resultUrl     String?
+  sceneImageUrl String?
+  creditCost    Int
   startedAt   DateTime?
   completedAt DateTime?
   timeoutMs   Int?

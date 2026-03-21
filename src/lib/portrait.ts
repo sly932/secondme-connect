@@ -103,7 +103,7 @@ export async function generatePortraitForUser(userId: string): Promise<{ portrai
   if (!dbUser) throw new Error("User not found");
 
   const systemPrompt = buildPortraitSystemPrompt(dbUser.name, dbUser.bio, dbUser.shades);
-  const message = "根据你对自己身份的认知，以及你的兴趣、经历和个性，请完成你的像素风自画像提示词。";
+  const message = `你是${dbUser.name}，请根据你对自己的认知，完成你的像素风自画像提示词。`;
 
   // Step 1: 调用分身获取描述
   logger.info("Portrait: getting prompt from SecondMe", { userId });

@@ -1,5 +1,6 @@
 import { getService } from "./ai-providers";
 import { uploadSceneImage } from "./storage";
+import prisma from "./prisma";
 import logger from "./logger";
 
 // ---------------------------------------------------------------------------
@@ -282,4 +283,103 @@ export async function generateAndUploadSceneImage(
   );
 
   return { url, prompt: result.prompt };
+}
+
+// ---------------------------------------------------------------------------
+// 任务级便捷函数 — 匹配完成后异步调用
+// ---------------------------------------------------------------------------
+
+/** 从 TaskType/TaskCategory 映射到 SceneType */
+export function resolveSceneType(
+  taskType: string,
+  taskCategory?: string | null
+): SceneType | null {
+  if (taskType === "PORTRAIT") return null; // 自画像不生成场景图
+  if (taskType === "CONSULT") return "consult";
+  if (taskType === "GAME") {
+    if (taskCategory === "BLACKJACK") return "game.blackjack";
+    if (taskCategory === "TEXAS_HOLDEM") return "game.poker";
+    return "game.blackjack"; // fallback
+  }
+  // MARKETPLACE
+  if (taskCategory === "WRITING") return "writing";
+  if (taskCategory === "PAINTING") return "painting";
+  return "consult"; // fallback
+}
+
+/**
+ * 匹配完成后为一批 Task 生成场景图并写入 sceneImageUrl
+ *
+ * @param taskIds 这批任务的 ID 列表（同一个 Post 下）
+ * @param publisherId 发起者 userId
+ * @param workerIds 匹配到的 worker userId 列表
+ * @param scene 场景类型
+ *
+ * 异步调用，不阻塞主流程。出错只记日志不抛异常。
+ */
+export async function generateSceneForTasks(
+  taskIds: string[],
+  publisherId: string,
+  workerIds: string[],
+  scene: SceneType
+): Promise<void> {
+  try {
+    const config = SCENE_PROMPTS[scene];
+
+    // 收集参与者 portraitUrl — 发起者在前
+    const allUserIds = config.excludePublisher
+      ? workerIds
+      : [publisherId, ...workerIds];
+
+    const users = await prisma.user.findMany({
+      where: { id: { in: allUserIds } },
+      select: { id: true, portraitUrl: true },
+    });
+
+    // 按 allUserIds 顺序排列
+    const ordered = allUserIds
+      .map((id) => users.find((u) => u.id === id))
+      .filter((u) => u?.portraitUrl) as { id: string; portraitUrl: string }[];
+
+    if (ordered.length < 1) {
+      logger.warn("Scene image skipped: no portraits available", { taskIds, scene });
+      return;
+    }
+
+    // 下载自画像并转为 data URL
+    const portraitDataUrls = await Promise.all(
+      ordered.map(async (u) => {
+        const res = await fetch(u.portraitUrl);
+        if (!res.ok) throw new Error(`Download portrait failed for ${u.id}`);
+        const buf = Buffer.from(await res.arrayBuffer());
+        const mime = res.headers.get("content-type") || "image/png";
+        return `data:${mime};base64,${buf.toString("base64")}`;
+      })
+    );
+
+    const storageKey = `tasks_${taskIds[0]}`;
+    const result = await generateAndUploadSceneImage({
+      scene,
+      portraitDataUrls,
+      storageKey,
+    });
+
+    // 更新所有相关 Task 的 sceneImageUrl
+    await prisma.task.updateMany({
+      where: { id: { in: taskIds } },
+      data: { sceneImageUrl: result.url },
+    });
+
+    logger.info("Scene image generated for tasks", {
+      taskIds,
+      scene,
+      url: result.url,
+    });
+  } catch (err) {
+    logger.error("Scene image generation failed", {
+      taskIds,
+      scene,
+      error: (err as Error).message,
+    });
+  }
 }

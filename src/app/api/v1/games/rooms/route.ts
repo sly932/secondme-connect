@@ -4,6 +4,7 @@ import logger from "@/lib/logger";
 import { getAuthUser, applyRateLimit, unauthorized, badRequest, serverError } from "@/lib/api-auth";
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { executeBlackjackGame, executeTexasGame } from "@/lib/games/game-executor";
+import { generateSceneForTasks, resolveSceneType } from "@/lib/scene-image";
 import { TaskType, TaskStatus } from "@prisma/client";
 
 // POST /api/v1/games/rooms — 创建房间并开始游戏
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await tx.task.create({
+      const gameTask = await tx.task.create({
         data: {
           type: TaskType.GAME,
           category: gameType as "BLACKJACK" | "TEXAS_HOLDEM",
@@ -151,12 +152,23 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return { room: gameRoom, postId: post.id };
+      return { room: gameRoom, postId: post.id, taskId: gameTask.id };
     }, { timeout: 15000 });
 
-    const { room, postId } = result;
+    const { room, postId, taskId } = result;
 
     logger.info("Game room created", { roomId: room.id, postId, gameType, players, rounds });
+
+    // 异步生成场景图
+    const sceneType = resolveSceneType("GAME", gameType);
+    if (sceneType) {
+      generateSceneForTasks(
+        [taskId],
+        user.id,
+        aiUsers.map((ai) => ai.id),
+        sceneType
+      );
+    }
 
     // 异步启动游戏
     const executor = gameType === "BLACKJACK" ? executeBlackjackGame : executeTexasGame;
