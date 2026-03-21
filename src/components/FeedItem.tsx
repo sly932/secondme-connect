@@ -622,6 +622,256 @@ function QRBlock({ url }: { url: string }) {
   return <QRComponent value={url} size={64} level="M" />;
 }
 
+// ---- Scene Image Modal ----
+
+function SceneModal({
+  sceneImageUrl,
+  postAuthor,
+  workerNames,
+  onClose,
+}: {
+  sceneImageUrl: string;
+  postAuthor: Author;
+  workerNames: string[];
+  onClose: () => void;
+}) {
+  const t = useT();
+  const shareCardRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  const nameList = workerNames.length > 3
+    ? `${workerNames.slice(0, 3).join("、")}等${workerNames.length}人`
+    : workerNames.join("、");
+
+  const shareText = `${postAuthor.name}的分身在 Connect 和${nameList}的分身开了一场圆桌会议，快来围观吧！`;
+
+  const handleSave = useCallback(async () => {
+    const el = shareCardRef.current;
+    if (!el || saving) return;
+    setSaving(true);
+    try {
+      const { saveShareImage } = await import("@/lib/save-share-image");
+      await saveShareImage(el, `scene-${postAuthor.name}.png`);
+    } catch (err) {
+      console.error("Save scene card failed:", err);
+    } finally {
+      setSaving(false);
+    }
+  }, [saving, postAuthor.name]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[3px] animate-fade-in"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-sm mx-4 max-h-[85vh] flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden animate-scale-in">
+        {/* Share card content */}
+        <div
+          ref={shareCardRef}
+          className="overflow-hidden"
+          style={{ background: "#ffffff", color: "#111" }}
+        >
+          {/* Header */}
+          <div className="px-5 pt-5 pb-2 text-center">
+            <h3 className="text-base font-bold tracking-tight" style={{ color: "#111" }}>Connect</h3>
+          </div>
+
+          {/* Scene image */}
+          <div className="px-4 pb-3">
+            <img
+              src={sceneImageUrl}
+              alt="scene"
+              className="w-full rounded-xl"
+            />
+          </div>
+
+          {/* Participants */}
+          <div className="px-5 pb-2">
+            <div className="flex items-center gap-1.5">
+              <SmallAvatar name={postAuthor.name} avatar={postAuthor.avatar} size={20} />
+              <span className="text-xs font-medium" style={{ color: "#111" }}>{postAuthor.name}</span>
+              <span className="text-[10px]" style={{ color: "#aaa" }}>与 {nameList}</span>
+            </div>
+          </div>
+
+          {/* Footer: share text + QR code */}
+          <div className="px-5 py-3 flex items-end justify-between gap-2" style={{ borderTop: "1px solid #f0f0f0" }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium leading-relaxed" style={{ color: "#444" }}>
+                {shareText}
+              </p>
+              <p className="mt-0.5 text-[10px]" style={{ color: "#aaa" }}>
+                {t.feed.shareScan}
+              </p>
+            </div>
+            <div className="flex-shrink-0 rounded-md p-1" style={{ background: "#fff" }}>
+              <div className="w-14 h-14 flex items-center justify-center">
+                <QRBlock url={siteUrl} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Save button */}
+        <div className="flex justify-center py-3" style={{ borderTop: "1px solid #f0f0f0" }}>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={`flex items-center justify-center gap-1.5 px-6 py-2 text-sm font-medium rounded-xl transition-all ${
+              saving
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "text-white bg-gray-900 hover:bg-gray-800 active:scale-[0.98]"
+            }`}
+          >
+            {saving ? (
+              <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            )}
+            {saving ? t.feed.savingImage : t.feed.saveImage}
+          </button>
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 rounded-full bg-gray-100/80 dark:bg-zinc-800/80 text-gray-500 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-white transition-all backdrop-blur-sm"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---- Portrait Share Modal (QR → homepage) ----
+
+function PortraitShareModal({
+  portraitUrl,
+  authorName,
+  authorAvatar,
+  onClose,
+}: {
+  portraitUrl: string;
+  authorName: string;
+  authorAvatar: string | null;
+  onClose: () => void;
+}) {
+  const t = useT();
+  const shareCardRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  const handleSave = useCallback(async () => {
+    const el = shareCardRef.current;
+    if (!el || saving) return;
+    setSaving(true);
+    try {
+      const { saveShareImage } = await import("@/lib/save-share-image");
+      await saveShareImage(el, `${authorName}-自画像.png`);
+    } catch (err) {
+      console.error("Save portrait card failed:", err);
+    } finally {
+      setSaving(false);
+    }
+  }, [saving, authorName]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[3px] animate-fade-in"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-sm mx-4 max-h-[85vh] flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden animate-scale-in">
+        <div
+          ref={shareCardRef}
+          className="overflow-hidden"
+          style={{ background: "#ffffff", color: "#111" }}
+        >
+          {/* Header */}
+          <div className="px-5 pt-5 pb-2 text-center">
+            <h3 className="text-base font-bold tracking-tight" style={{ color: "#111" }}>Connect</h3>
+          </div>
+
+          {/* Portrait image */}
+          <div className="px-6 pb-3 flex justify-center">
+            <div className="w-56 h-56 rounded-xl overflow-hidden">
+              <img src={portraitUrl} alt="portrait" className="w-full h-full object-cover" />
+            </div>
+          </div>
+
+          {/* Author */}
+          <div className="px-5 pb-2 flex items-center justify-center gap-1.5">
+            <SmallAvatar name={authorName} avatar={authorAvatar} size={20} />
+            <span className="text-xs font-medium" style={{ color: "#111" }}>{authorName}</span>
+          </div>
+
+          {/* Footer: share text + QR code (→ homepage) */}
+          <div className="px-5 py-3 flex items-end justify-between gap-2" style={{ borderTop: "1px solid #f0f0f0" }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium leading-relaxed" style={{ color: "#444" }}>
+                {t.nav.portraitShareText}
+              </p>
+              <p className="mt-0.5 text-[10px]" style={{ color: "#aaa" }}>
+                {t.nav.portraitShareScan}
+              </p>
+            </div>
+            <div className="flex-shrink-0 rounded-md p-1" style={{ background: "#fff" }}>
+              <div className="w-14 h-14 flex items-center justify-center">
+                <QRBlock url={siteUrl} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Save button */}
+        <div className="flex justify-center py-3" style={{ borderTop: "1px solid #f0f0f0" }}>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={`flex items-center justify-center gap-1.5 px-6 py-2 text-sm font-medium rounded-xl transition-all ${
+              saving
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "text-white bg-gray-900 hover:bg-gray-800 active:scale-[0.98]"
+            }`}
+          >
+            {saving ? (
+              <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            )}
+            {saving ? t.feed.savingImage : t.feed.saveImage}
+          </button>
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 rounded-full bg-gray-100/80 dark:bg-zinc-800/80 text-gray-500 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-white transition-all backdrop-blur-sm"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ---- Main Component ----
 
 export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) {
@@ -641,15 +891,20 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
   }, [defaultExpanded]);
   const [matchCards, setMatchCards] = useState<MatchCard[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [sceneImageUrl, setSceneImageUrl] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // Modal state
   const [modalIndex, setModalIndex] = useState<number | null>(null);
+  const [sceneModalOpen, setSceneModalOpen] = useState(false);
+  const [portraitModalOpen, setPortraitModalOpen] = useState(false);
+
+  const isPortrait = post.taskType === "PORTRAIT";
 
   const sseCleanupRef = useRef<(() => void) | null>(null);
-  const cacheRef = useRef<{ matchCards: MatchCard[]; comments: Comment[]; fetchedAt: number } | null>(null);
+  const cacheRef = useRef<{ matchCards: MatchCard[]; comments: Comment[]; sceneImageUrl: string | null; fetchedAt: number } | null>(null);
 
   useEffect(() => {
     return () => { sseCleanupRef.current?.(); };
@@ -664,6 +919,7 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
       if (!hasInProgress && age < 5 * 60 * 1000) {
         setMatchCards(cacheRef.current.matchCards);
         setComments(cacheRef.current.comments);
+        setSceneImageUrl(cacheRef.current.sceneImageUrl);
         return cacheRef.current.matchCards;
       }
     }
@@ -676,7 +932,8 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
         const cards: MatchCard[] = data.matchCards || [];
         setMatchCards(cards);
         setComments(data.comments || []);
-        cacheRef.current = { matchCards: cards, comments: data.comments || [], fetchedAt: Date.now() };
+        setSceneImageUrl(data.sceneImageUrl || null);
+        cacheRef.current = { matchCards: cards, comments: data.comments || [], sceneImageUrl: data.sceneImageUrl || null, fetchedAt: Date.now() };
         return cards;
       }
     } catch { /* ignore */ }
@@ -851,8 +1108,32 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
               </div>
             )}
 
-            {/* Portrait cards row (clickable → opens modal) */}
-            {matchCards.length > 0 && (
+            {/* Scene image (if available) */}
+            {sceneImageUrl && (
+              <div className="py-2">
+                <img
+                  src={sceneImageUrl}
+                  alt="scene"
+                  className="w-full rounded-xl border border-gray-200 dark:border-zinc-700 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setSceneModalOpen(true)}
+                />
+              </div>
+            )}
+
+            {/* Portrait: show result image directly (clickable) */}
+            {isPortrait && !sceneImageUrl && matchCards.length > 0 && matchCards[0]?.task?.resultUrl && (
+              <div className="py-2">
+                <img
+                  src={matchCards[0].task.resultUrl}
+                  alt="portrait"
+                  className="w-full max-w-[200px] rounded-xl border border-gray-200 dark:border-zinc-700 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setPortraitModalOpen(true)}
+                />
+              </div>
+            )}
+
+            {/* Portrait cards row — hidden when scene image exists */}
+            {!sceneImageUrl && !isPortrait && matchCards.length > 0 && (
               <div className="py-2">
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {matchCards.map((card, i) => (
@@ -915,6 +1196,26 @@ export function FeedItem({ post, defaultExpanded = false, now }: FeedItemProps) 
           postAuthor={post.author}
           postContent={post.content}
           onClose={() => setModalIndex(null)}
+        />
+      )}
+
+      {/* ---- Scene Image Modal ---- */}
+      {sceneModalOpen && sceneImageUrl && (
+        <SceneModal
+          sceneImageUrl={sceneImageUrl}
+          postAuthor={post.author}
+          workerNames={matchCards.map((c) => c.name)}
+          onClose={() => setSceneModalOpen(false)}
+        />
+      )}
+
+      {/* ---- Portrait Modal (reuse SceneModal style, QR → homepage) ---- */}
+      {portraitModalOpen && matchCards[0]?.task?.resultUrl && (
+        <PortraitShareModal
+          portraitUrl={matchCards[0].task.resultUrl}
+          authorName={post.author.name}
+          authorAvatar={post.author.avatar}
+          onClose={() => setPortraitModalOpen(false)}
         />
       )}
     </div>

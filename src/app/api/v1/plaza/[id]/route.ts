@@ -39,6 +39,7 @@ export async function GET(
           status: true,
           result: true,
           resultUrl: true,
+          sceneImageUrl: true,
           workerId: true,
           worker: { select: { id: true, name: true, avatar: true, bio: true, portraitUrl: true } },
         },
@@ -106,6 +107,9 @@ export async function GET(
   const taskCategory = firstTask?.category || null; // WRITING | PAINTING | null(=咨询)
   const taskType = firstTask?.type || "CONSULT"; // CONSULT | MARKETPLACE
 
+  // 场景图（同一批 task 共用，取第一个非空的）
+  const sceneImageUrl = post.tasks.find((t) => t.sceneImageUrl)?.sceneImageUrl || null;
+
   return NextResponse.json({
     success: true,
     post: {
@@ -120,5 +124,6 @@ export async function GET(
     comments: post.comments,
     hasMoreComments: post._count.comments > post.comments.length,
     matchCards,
+    sceneImageUrl,
   });
 }

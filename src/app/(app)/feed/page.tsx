@@ -148,7 +148,7 @@ export default function FeedPage() {
         {/* Feed list */}
         <div className="space-y-4">
           {posts.map((post) => (
-            <FeedItem key={post.id} post={post} now={now} defaultExpanded={post.id === expandPostId} />
+            <FeedItem key={post.id} post={post} now={now} defaultExpanded={true} />
           ))}
         </div>
 
