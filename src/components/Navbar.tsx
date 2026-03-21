@@ -70,18 +70,12 @@ export function Navbar() {
     const el = shareCardRef.current;
     if (!el) return;
     try {
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: "#ffffff" });
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `${name || "Connect"}-自画像.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const { saveShareImage } = await import("@/lib/save-share-image");
+      await saveShareImage(el, `${name || "Connect"}-自画像.png`);
     } catch (err) {
       console.error("Save share card failed:", err);
     }
-  }, []);
+  }, [name]);
 
   const fetchPortrait = async () => {
     if (portraitFetched) return;
