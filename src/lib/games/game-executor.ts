@@ -196,40 +196,13 @@ async function getAIDecision(
 
 /** 获取用户的有效 access token (自动刷新) */
 async function getUserToken(userId: string): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { accessToken: true, tokenExpiry: true, refreshToken: true, secondmeId: true },
-  });
-
-  if (!user) return null;
-
-  // 如果 token 过期，尝试刷新
-  if (new Date() > user.tokenExpiry) {
-    try {
-      const { refreshAccessToken } = await import("../secondme");
-      const data = await refreshAccessToken(user.refreshToken);
-      const tokenData = {
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token || user.refreshToken,
-          tokenExpiry: new Date(Date.now() + (data.expires_in || 7200) * 1000),
-        };
-      await prisma.user.update({
-        where: { id: userId },
-        data: tokenData,
-      });
-      // 同步更新绑定的 NPC
-      await prisma.user.updateMany({
-        where: { boundUserId: userId, isNpc: true },
-        data: tokenData,
-      });
-      return data.access_token;
-    } catch {
-      logger.error("Failed to refresh token for game AI", { userId });
-      return user.accessToken; // 尝试用旧 token
-    }
+  try {
+    const { getValidAccessToken } = await import("../secondme");
+    return await getValidAccessToken(userId);
+  } catch {
+    logger.error("Failed to get valid token for game AI", { userId });
+    return null;
   }
-
-  return user.accessToken;
 }
 
 // ============================================================

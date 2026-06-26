@@ -64,6 +64,40 @@ export async function refreshAccessToken(refreshToken: string) {
   return data.data;
 }
 
+/**
+ * 获取有效的 accessToken —— 过期时自动用 refreshToken 刷新，并同步更新 DB（含绑定的 NPC）
+ */
+export async function getValidAccessToken(userId: string): Promise<string> {
+  const { default: prisma } = await import("./prisma");
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { accessToken: true, refreshToken: true, tokenExpiry: true },
+  });
+  if (!user) throw new Error(`User not found: ${userId}`);
+
+  if (new Date() < user.tokenExpiry) return user.accessToken;
+
+  logger.info("Token expired, refreshing", { userId });
+  try {
+    const data = await refreshAccessToken(user.refreshToken);
+    const tokenData = {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || user.refreshToken,
+      tokenExpiry: new Date(Date.now() + (data.expires_in || 7200) * 1000),
+    };
+    await prisma.user.update({ where: { id: userId }, data: tokenData });
+    await prisma.user.updateMany({
+      where: { boundUserId: userId, isNpc: true },
+      data: tokenData,
+    });
+    logger.info("Token refreshed successfully", { userId });
+    return data.access_token;
+  } catch (err) {
+    logger.error("Token refresh failed, using old token", { userId, error: (err as Error).message });
+    return user.accessToken;
+  }
+}
+
 // ============================================================
 // SecondMe API 调用
 // ============================================================

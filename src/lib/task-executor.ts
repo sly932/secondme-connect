@@ -1,5 +1,5 @@
 import prisma from "./prisma";
-import { chatStream } from "./secondme";
+import { chatStream, getValidAccessToken } from "./secondme";
 import { deductCredits, addCredits, refundCredits } from "./credits";
 import logger from "./logger";
 import { TaskStatus } from "@prisma/client";
@@ -78,18 +78,17 @@ export async function executeConsultTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const [publisher, worker] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: publisherId },
-        select: { accessToken: true, name: true, bio: true },
-      }),
-      prisma.user.findUnique({
-        where: { id: workerId },
-        select: { accessToken: true },
-      }),
+    // 获取有效 token（过期自动刷新）
+    const [publisherToken, workerToken] = await Promise.all([
+      getValidAccessToken(publisherId),
+      getValidAccessToken(workerId),
     ]);
+
+    const publisher = await prisma.user.findUnique({
+      where: { id: publisherId },
+      select: { name: true, bio: true },
+    });
     if (!publisher) throw new Error("Publisher not found");
-    if (!worker) throw new Error("Worker not found");
 
     const { workerName, rolePrompt: workerSystemPrompt } = await getWorkerRolePrompt(workerId);
 
@@ -117,7 +116,7 @@ export async function executeConsultTask(
     // ========== Round 1: 用户 → 匹配分身 ==========
     logger.info("Consult round 1: asking worker", { taskId });
     const stream1 = await chatStream(
-      worker.accessToken,
+      workerToken,
       workerSecondmeId,
       description,
       workerSystemPrompt
@@ -139,7 +138,7 @@ export async function executeConsultTask(
       // 发起方分身回应
       logger.info(`Consult round ${round}: publisher responds`, { taskId });
       const stream2 = await chatStream(
-        publisher.accessToken,
+        publisherToken,
         publisherSecondmeId,
         r1.text, // 直接传对方的回复作为消息，session 会维护上下文
         publisherSessionId ? undefined : publisherSystemPrompt, // system prompt 仅首次
@@ -156,7 +155,7 @@ export async function executeConsultTask(
       // 匹配分身回应
       logger.info(`Consult round ${round}: worker responds`, { taskId });
       const stream3 = await chatStream(
-        worker.accessToken,
+        workerToken,
         workerSecondmeId,
         r2.text,
         undefined, // system prompt 已在 R1 设定
@@ -226,11 +225,8 @@ export async function executeWritingTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const [worker, workerProfile, publisherUser] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: workerId },
-        select: { accessToken: true },
-      }),
+    const workerToken = await getValidAccessToken(workerId);
+    const [workerProfile, publisherUser] = await Promise.all([
       prisma.user.findUnique({
         where: { id: workerId },
         select: { name: true, bio: true, shades: true },
@@ -240,7 +236,6 @@ export async function executeWritingTask(
         select: { name: true, bio: true, shades: true },
       }),
     ]);
-    if (!worker) throw new Error("Worker not found");
 
     // 统一的写作 system prompt（NPC 和非 NPC 一致）
     const workerLines: string[] = [];
@@ -273,7 +268,7 @@ export async function executeWritingTask(
       ? `## 提问者背景\n${publisherLines.join("\n")}\n\n## 写作需求\n${description}`
       : description;
 
-    const stream = await chatStream(worker.accessToken, workerSecondmeId, writingMessage, writingSystemPrompt);
+    const stream = await chatStream(workerToken, workerSecondmeId, writingMessage, writingSystemPrompt);
     const { text: result } = await streamToText(stream, TIMEOUT_WRITING, (partial) => {
       taskEvents.emit(taskId, { result: partial, status: "EXECUTING" });
     });
@@ -326,17 +321,11 @@ export async function executePaintingTask(
     });
     await updateTaskStatus(taskId, TaskStatus.EXECUTING);
 
-    const [worker, paintingPublisher] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: workerId },
-        select: { accessToken: true },
-      }),
-      prisma.user.findUnique({
-        where: { id: publisherId },
-        select: { name: true, bio: true, shades: true },
-      }),
-    ]);
-    if (!worker) throw new Error("Worker not found");
+    const workerToken = await getValidAccessToken(workerId);
+    const paintingPublisher = await prisma.user.findUnique({
+      where: { id: publisherId },
+      select: { name: true, bio: true, shades: true },
+    });
 
     // Step 1: 让分身生成绘画 prompt
     const paintingSystemPrompt = [
@@ -360,7 +349,7 @@ export async function executePaintingTask(
       : description;
 
     const stream = await chatStream(
-      worker.accessToken,
+      workerToken,
       workerSecondmeId,
       paintingMessage,
       paintingSystemPrompt

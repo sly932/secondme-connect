@@ -1,6 +1,6 @@
 import prisma from "./prisma";
 import logger from "./logger";
-import { chatStream } from "./secondme";
+import { chatStream, getValidAccessToken } from "./secondme";
 import { uploadPortrait } from "./storage";
 import { getService } from "./ai-providers";
 
@@ -94,7 +94,6 @@ export async function generatePortraitForUser(userId: string): Promise<{ portrai
     select: {
       id: true,
       secondmeId: true,
-      accessToken: true,
       name: true,
       bio: true,
       shades: true,
@@ -102,12 +101,13 @@ export async function generatePortraitForUser(userId: string): Promise<{ portrai
   });
   if (!dbUser) throw new Error("User not found");
 
+  const accessToken = await getValidAccessToken(userId);
   const systemPrompt = buildPortraitSystemPrompt(dbUser.name, dbUser.bio, dbUser.shades);
   const message = `你是${dbUser.name}，请根据你对自己的认知，完成你的像素风自画像提示词。`;
 
   // Step 1: 调用分身获取描述
   logger.info("Portrait: getting prompt from SecondMe", { userId });
-  const stream = await chatStream(dbUser.accessToken, dbUser.secondmeId, message, systemPrompt);
+  const stream = await chatStream(accessToken, dbUser.secondmeId, message, systemPrompt);
   const rawResponse = await parseSSE(stream);
 
   const prompt = rawResponse.trim();
